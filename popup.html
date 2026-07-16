@@ -6,10 +6,28 @@
 </head>
 <body>
 
-<h2>🌿 PromptMeter</h2>
+<div class="popup-container">
+    <div class="popup-header">
+        <h2>🌿 PromptMeter</h2>
+        <span class="badge">Coach</span>
+    </div>
+    
+    <div class="stats-preview">
+        <div class="stat-box">
+            <span class="stat-label">Carbon Footprint</span>
+            <span id="popup-carbon" class="stat-value">0.0g</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">Avg Efficiency</span>
+            <span id="popup-efficiency" class="stat-value">100%</span>
+        </div>
+    </div>
+    
+    <button id="open-dashboard-btn" class="dashboard-btn">Open Dashboard</button>
+</div>
 
-<p>Extension Loaded Successfully!</p>
-
+<!-- Load storage layer to fetch statistics locally -->
+<script src="utils/storage.js"></script>
 <script src="popup.js"></script>
 
 </body>

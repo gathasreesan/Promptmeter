@@ -15,7 +15,17 @@
       "matches": [
         "https://chatgpt.com/*"
       ],
+      "css": [
+        "content.css"
+      ],
       "js": [
+        "utils/tiktoken.min.js",
+        "utils/tokenizer.js",
+        "utils/calculator.js",
+        "utils/storage.js",
+        "utils/optimizer.js",
+        "utils/recommendations.js",
+        "utils/gamification.js",
         "content.js"
       ]
     }
