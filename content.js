@@ -35,15 +35,17 @@ let wasOptimized = false;
 let lastSavedTokens = 0;
 let lastSavedCarbon = 0;
 
-// Helper to query the prompt input box with robust selectors
+// Helper to query the prompt input box with robust selectors for all ChatGPT DOM versions
 function getPromptBox() {
     return document.querySelector("#prompt-textarea") ||
+        document.querySelector('.ProseMirror') ||
         document.querySelector('div[contenteditable="true"]') ||
         document.querySelector('textarea[placeholder*="Message"]') ||
+        document.querySelector('textarea[data-id]') ||
         document.querySelector('textarea');
 }
 
-// State management for attachments (Module 13)
+// State management for attachments
 let activeAttachments = { images: [], documents: [] };
 let lastNonEmptyAttachments = { images: [], documents: [] };
 
@@ -94,18 +96,30 @@ function handleInput(e) {
         return;
     }
 
-    const originalText = e.target.value || e.target.textContent || e.target.innerText || "";
-
     clearTimeout(debounceTimer);
 
-    if (originalText.trim().length < 5) {
-        hideOptimizationCard();
-        return;
-    }
-
+    // 450ms debounce: read text INSIDE callback so it's always the latest value
     debounceTimer = setTimeout(() => {
-        analyzeAndOfferOptimization(originalText);
-    }, 750);
+        const promptBox = getPromptBox();
+        // Bug #2 fix: read text fresh at analysis time, not at keystroke time
+        const currentText = promptBox
+            ? (promptBox.value || promptBox.textContent || "").trim()
+            : (e && e.target ? (e.target.value || e.target.textContent || "").trim() : "");
+
+        if (currentText.length < 5) {
+            hideOptimizationCard();
+            return;
+        }
+
+        // Detect attachments only when user pauses typing
+        const detected = detectAttachments();
+        if (detected.images.length > 0 || detected.documents.length > 0) {
+            activeAttachments = detected;
+            lastNonEmptyAttachments = detected;
+        }
+
+        analyzeAndOfferOptimization(currentText);
+    }, 450);
 }
 
 // 2. Hide the optimization card
@@ -165,12 +179,15 @@ function analyzeAndOfferOptimization(text) {
     const optimized = PromptMeterOptimizer.optimizePrompt(text);
     const analysis = PromptMeterOptimizer.analyzePrompt(text);
 
-    if (optimized !== text && analysis.score < 95) {
+    if (optimized && optimized.trim() !== text.trim()) {
         const origTokens = PromptMeterTokenizer.countTokens(text);
         const optTokens = PromptMeterTokenizer.countTokens(optimized);
         const tokensSaved = Math.max(0, origTokens - optTokens);
 
-        if (tokensSaved > 0) {
+        // Require at least 2 tokens saved or 5% character reduction to trigger overlay
+        const charSavingsPct = ((text.length - optimized.length) / text.length) * 100;
+
+        if (tokensSaved >= 2 || charSavingsPct >= 5.0) {
             const elecSaved = tokensSaved * PromptMeterCalculator.config.electricityPerToken;
             const carbonSaved = elecSaved * PromptMeterCalculator.config.carbonIntensity;
 
@@ -186,7 +203,8 @@ function analyzeAndOfferOptimization(text) {
 function applyOptimization(optimizedText) {
     const promptBox = getPromptBox();
     if (promptBox) {
-        const originalText = promptBox.value || promptBox.textContent || promptBox.innerText || "";
+        // Bug #1 fix: use textContent (no forced layout reflow like innerText)
+        const originalText = promptBox.value || promptBox.textContent || "";
         const origTokens = PromptMeterTokenizer.countTokens(originalText);
         const optTokens = PromptMeterTokenizer.countTokens(optimizedText);
         const tokensSaved = Math.max(0, origTokens - optTokens);
@@ -200,18 +218,59 @@ function applyOptimization(optimizedText) {
             lastSavedCarbon = carbonSaved;
         }
 
+        // Set ignored text so PromptMeter doesn't re-evaluate what was just applied
+        ignoredPromptText = optimizedText;
+
         promptBox.focus();
 
         if (promptBox.tagName === 'TEXTAREA' || promptBox.tagName === 'INPUT') {
-            promptBox.value = optimizedText;
+            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set ||
+                                 Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+            if (nativeSetter) {
+                nativeSetter.call(promptBox, optimizedText);
+            } else {
+                promptBox.value = optimizedText;
+            }
         } else {
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-            document.execCommand('insertText', false, optimizedText);
+            // For contenteditable div (modern ChatGPT ProseMirror / Lexical)
+            try {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(promptBox);
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                const success = document.execCommand('insertText', false, optimizedText);
+                if (!success) {
+                    promptBox.textContent = optimizedText;
+                }
+            } catch (e) {
+                promptBox.textContent = optimizedText;
+            }
         }
 
-        const inputEvent = new Event('input', { bubbles: true });
-        promptBox.dispatchEvent(inputEvent);
+        // Dispatch synthetic events so React and ProseMirror update internal state cleanly
+        try {
+            promptBox.dispatchEvent(new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                inputType: 'insertText',
+                data: optimizedText
+            }));
+        } catch (e) {}
+        promptBox.dispatchEvent(new Event('input', { bubbles: true }));
+        promptBox.dispatchEvent(new Event('change', { bubbles: true }));
+
+        // Enable ChatGPT's Send button and trigger state refresh
+        setTimeout(() => {
+            const sendBtn = document.querySelector('button[data-testid="send-button"]') ||
+                            document.querySelector('button[aria-label*="Send"]') ||
+                            (promptBox.closest('form') ? promptBox.closest('form').querySelector('button[type="submit"]') : null);
+            if (sendBtn) {
+                sendBtn.removeAttribute('disabled');
+                sendBtn.disabled = false;
+            }
+        }, 50);
     }
     hideOptimizationCard();
 }
@@ -266,9 +325,10 @@ function findPrecedingUserPrompt(assistantElement) {
                 prev.querySelector('.agent-turn') ||
                 prev.querySelector('.result-streaming') ||
                 prev.querySelector('button[aria-label="Read aloud"]');
-            if (!isAssistant && prev.innerText.trim().length > 0) {
+            const content = (prev.textContent || "").trim();
+            if (!isAssistant && content.length > 0) {
                 const userMsg = prev.querySelector('[data-message-author-role="user"]') || prev;
-                return userMsg.innerText || userMsg.textContent || "";
+                return userMsg.textContent || "";
             }
             prev = prev.previousElementSibling;
         }
@@ -284,9 +344,10 @@ function findPrecedingUserPrompt(assistantElement) {
                 turn.querySelector('.agent-turn') ||
                 turn.querySelector('.result-streaming') ||
                 turn.querySelector('button[aria-label="Read aloud"]');
-            if (!isAssistant && turn.innerText.trim().length > 0) {
+            const content = (turn.textContent || "").trim();
+            if (!isAssistant && content.length > 0) {
                 const userMsg = turn.querySelector('[data-message-author-role="user"]') || turn;
-                return userMsg.innerText || userMsg.textContent || "";
+                return userMsg.textContent || "";
             }
         }
     }
@@ -369,25 +430,24 @@ function handleResponseCaptured(prompt, response) {
     });
 }
 
-// 8. Main observer with debounced generation completion
-const observer = new MutationObserver((mutations) => {
+// 8. Main observer with debounced generation completion & robust input binding
+function bindInputListeners() {
     const promptBox = getPromptBox();
-    if (promptBox) {
-        promptBox.removeEventListener("input", handleInput);
+    if (promptBox && !promptBox.dataset.promptmeterBound) {
+        promptBox.dataset.promptmeterBound = "true";
         promptBox.addEventListener("input", handleInput);
-
-        const detected = detectAttachments();
-        if (detected.images.length > 0 || detected.documents.length > 0) {
-            activeAttachments = detected;
-            lastNonEmptyAttachments = detected;
-        } else {
-            const text = promptBox.value || promptBox.textContent || promptBox.innerText || "";
-            if (text.trim().length > 0) {
-                activeAttachments = { images: [], documents: [] };
-                lastNonEmptyAttachments = { images: [], documents: [] };
-            }
-        }
+        promptBox.addEventListener("paste", handleInput);
     }
+}
+
+// Run initial binding immediately
+bindInputListeners();
+
+// 9. Mutation Observer with 400ms throttling - 100% of DOM operations run throttled to prevent main thread lockup
+let observerThrottleTimeout = null;
+
+function processDOMUpdates() {
+    bindInputListeners();
 
     const assistantMessages = getAssistantMessages();
     if (assistantMessages.length > 0) {
@@ -397,9 +457,12 @@ const observer = new MutationObserver((mutations) => {
             latestAssistantMessage.classList.contains('result-streaming') ||
             latestAssistantMessage.querySelector('.result-streaming') !== null ||
             document.querySelector('button[aria-label="Stop generating"]') !== null ||
+            document.querySelector('button[aria-label="Stop response"]') !== null ||
+            document.querySelector('button[aria-label*="Stop"]') !== null ||
+            document.querySelector('button[data-testid="stop-button"]') !== null ||
             document.querySelector('.result-streaming') !== null;
 
-        const responseText = (latestAssistantMessage.innerText || latestAssistantMessage.textContent || "").trim();
+        const responseText = (latestAssistantMessage.textContent || "").trim();
 
         if (isCurrentlyStreaming) {
             isStreaming = true;
@@ -418,12 +481,19 @@ const observer = new MutationObserver((mutations) => {
             }, 800);
         }
     }
+}
+
+const observer = new MutationObserver((mutations) => {
+    if (!observerThrottleTimeout) {
+        observerThrottleTimeout = setTimeout(() => {
+            observerThrottleTimeout = null;
+            processDOMUpdates();
+        }, 400);
+    }
 });
 
-// Watch document
+// Watch document childList only (prevents attribute thrashing on animated elements)
 observer.observe(document.body, {
     childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["class"]
+    subtree: true
 });

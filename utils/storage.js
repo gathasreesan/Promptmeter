@@ -60,6 +60,26 @@ const PromptMeterStorage = {
     },
 
     /**
+     * Delete a single conversation turn from history by its timestamp.
+     * @param {string} timestamp - ISO timestamp of the turn to delete.
+     * @param {Function} callback - Optional callback on completion returning updated history array.
+     */
+    deleteTurn: function (timestamp, callback) {
+        if (!timestamp) return;
+
+        this.getHistory((history) => {
+            const updatedHistory = history.filter(turn => turn.timestamp !== timestamp);
+
+            chrome.storage.local.set({ history: updatedHistory }, () => {
+                console.log(`🗑️ PromptMeter [Storage]: Turn record deleted (${timestamp}).`);
+                if (typeof callback === 'function') {
+                    callback(updatedHistory);
+                }
+            });
+        });
+    },
+
+    /**
      * Calculates sum and average analytics across all conversation records.
      * Useful for powering the dashboard charts and counters.
      * @param {Function} callback - Callback function passed the aggregated stats object.

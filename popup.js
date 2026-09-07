@@ -46,19 +46,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Fetch stats and render preview in the popup
     if (typeof PromptMeterStorage !== 'undefined') {
-        PromptMeterStorage.getStats((stats) => {
-            document.getElementById("popup-carbon").textContent = `${stats.totalCarbon.toFixed(1)}g`;
-            document.getElementById("popup-efficiency").textContent = `${stats.avgEfficiency}%`;
-            
-            // Adjust efficiency color dynamically
-            const effEl = document.getElementById("popup-efficiency");
-            if (stats.avgEfficiency >= 90) {
-                effEl.style.color = "#2E7D32"; // Green
-            } else if (stats.avgEfficiency >= 70) {
-                effEl.style.color = "#F9A825"; // Amber
-            } else {
-                effEl.style.color = "#D32F2F"; // Red
-            }
-        });
+        try {
+            PromptMeterStorage.getStats((stats) => {
+                const carbonEl = document.getElementById("popup-carbon");
+                const effEl = document.getElementById("popup-efficiency");
+
+                if (carbonEl) {
+                    const carbonVal = isNaN(stats.totalCarbon) ? 0 : stats.totalCarbon;
+                    carbonEl.textContent = `${carbonVal.toFixed(1)}g`;
+                }
+
+                if (effEl) {
+                    const effVal = isNaN(stats.avgEfficiency) ? 100 : stats.avgEfficiency;
+                    effEl.textContent = `${effVal}%`;
+
+                    // Adjust efficiency color dynamically
+                    if (effVal >= 90) {
+                        effEl.style.color = "#2E7D32"; // Green
+                    } else if (effVal >= 70) {
+                        effEl.style.color = "#F9A825"; // Amber
+                    } else {
+                        effEl.style.color = "#D32F2F"; // Red
+                    }
+                }
+            });
+        } catch (err) {
+            console.warn("PromptMeter [Popup]: Stats fetch failed.", err);
+        }
     }
 });

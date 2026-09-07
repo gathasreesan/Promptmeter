@@ -231,6 +231,36 @@ export default function App() {
 
     const sortedHistory = [...filteredHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    const handleClearHistory = () => {
+        if (window.confirm("Are you sure you want to delete all queries in your log? This action cannot be undone.")) {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({ history: [] }, () => {
+                    setHistory([]);
+                    setIsMockData(false);
+                });
+            } else {
+                setHistory([]);
+                setIsMockData(false);
+            }
+        }
+    };
+
+    const handleDeleteTurn = (timestamp) => {
+        if (window.confirm("Are you sure you want to delete this query log entry?")) {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local && !isMockData) {
+                chrome.storage.local.get({ history: [] }, (result) => {
+                    const logs = result.history || [];
+                    const updatedLogs = logs.filter(item => item.timestamp !== timestamp);
+                    chrome.storage.local.set({ history: updatedLogs }, () => {
+                        setHistory(updatedLogs);
+                    });
+                });
+            } else {
+                setHistory(prev => prev.filter(item => item.timestamp !== timestamp));
+            }
+        }
+    };
+
     // Dynamic Sustainability Rating logic
     let ratingName = "High Impact Prompter";
     let ratingColor = "#D32F2F"; // Error Red
@@ -400,13 +430,23 @@ export default function App() {
                     <div className="glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1B1F1C' }}>Queries Log</h3>
-                            <input 
-                                type="text" 
-                                placeholder="Search queries..." 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ background: '#F7F9F4', border: '1px solid #DCE8DD', borderRadius: '12px', padding: '8px 16px', color: '#1B1F1C', fontSize: '13px', width: '240px', outline: 'none' }}
-                            />
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Search queries..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{ background: '#F7F9F4', border: '1px solid #DCE8DD', borderRadius: '12px', padding: '8px 16px', color: '#1B1F1C', fontSize: '13px', width: '240px', outline: 'none' }}
+                                />
+                                {history.length > 0 && (
+                                    <button 
+                                        onClick={handleClearHistory}
+                                        style={{ background: 'rgba(211, 47, 47, 0.08)', color: '#D32F2F', border: '1px solid rgba(211, 47, 47, 0.2)', borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
+                                    >
+                                        🗑️ Clear All Logs
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div style={{ overflowX: 'auto' }}>
@@ -414,12 +454,12 @@ export default function App() {
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid #DCE8DD', color: '#55605A' }}>
                                         <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Date</th>
-                                        <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', width: '32%' }}>Prompt</th>
-                                        <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', width: '32%' }}>Response</th>
+                                        <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', width: '50%' }}>Prompt</th>
                                         <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', textAlign: 'right' }}>Tokens</th>
                                         <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', textAlign: 'right' }}>Carbon</th>
                                         <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center' }}>Savings</th>
                                         <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', textAlign: 'right' }}>Score</th>
+                                        <th style={{ padding: '12px 10px', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -453,9 +493,6 @@ export default function App() {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px 10px', wordBreak: 'break-word', color: '#55605A', lineHeight: '1.4' }}>
-                                                    {item.response.length > 100 ? item.response.substring(0, 100) + '...' : item.response}
-                                                </td>
                                                 <td style={{ padding: '16px 10px', textAlign: 'right', fontWeight: '600', color: '#1B1F1C' }}>
                                                     {item.totalTokens.toLocaleString()}
                                                 </td>
@@ -475,6 +512,24 @@ export default function App() {
                                                     <span style={{ background: item.efficiencyScore >= 90 ? 'rgba(46, 125, 50, 0.08)' : item.efficiencyScore >= 70 ? 'rgba(249, 168, 37, 0.08)' : 'rgba(211, 47, 47, 0.08)', color: item.efficiencyScore >= 90 ? '#43A047' : item.efficiencyScore >= 70 ? '#F9A825' : '#D32F2F', padding: '4px 10px', borderRadius: '12px', border: '1px solid #DCE8DD', fontSize: '11px', fontWeight: '700', display: 'inline-block' }}>
                                                         {item.efficiencyScore}%
                                                     </span>
+                                                </td>
+                                                <td style={{ padding: '16px 10px', textAlign: 'center' }}>
+                                                    <button 
+                                                        onClick={() => handleDeleteTurn(item.timestamp)}
+                                                        title="Delete query log entry"
+                                                        style={{ 
+                                                            background: 'rgba(211, 47, 47, 0.08)', 
+                                                            color: '#D32F2F', 
+                                                            border: '1px solid rgba(211, 47, 47, 0.2)', 
+                                                            borderRadius: '8px', 
+                                                            padding: '6px 10px', 
+                                                            fontSize: '12px', 
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.15s ease'
+                                                        }}
+                                                    >
+                                                        🗑️
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))

@@ -36,7 +36,7 @@ npm run build
 - Click the **PromptMeter Extension icon** in Chrome for a quick stats overview.
 - Click **"Open Dashboard"** to launch the full-page dashboard with 3 tabs:
   - **Overview:** Charts, carbon & token KPIs, coaching streak, weekly challenges.
-  - **Queries Log:** History of all prompts, attachments, responses, and token scores.
+  - **Queries Log:** History of all prompts, attachments, responses, and token scores, with options to delete individual log entries (🗑️) or clear all query logs.
   - **Advisor Insights:** Health score ring, recommendations, and badge unlock grid.
 
 ---
@@ -67,7 +67,7 @@ npm run build
 [Phase 2: Core Math & NLP Engines]
   ├── utils/calculator.js: Research-backed environmental formulas
   ├── utils/tokenizer.js: Tiktoken BPE + heuristic token counter
-  └── utils/optimizer.js: Rule-based regex scoring & cleaner
+  └── utils/optimizer.js: Grammar correction, typo/slang fixer, rule-based scoring & prompt rewriter
 
 [Phase 3: ChatGPT In-Page Integration]
   ├── MutationObserver for streaming lifecycle & message capture
