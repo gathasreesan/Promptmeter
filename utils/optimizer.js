@@ -13,8 +13,11 @@ const PromptMeterOptimizer = {
         // Politeness phrases that add no semantic meaning
         politeness: /\b(please|thank\s+you|thanks|could\s+you|would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|kindly|hope\s+you\s+are\s+well)\b/gi,
         
+        // Conversational preambles that add no instruction value
+        preambles: /\b(i\s+am\s+bored|i'm\s+bored|so\s+i\s+want\s+to|i\s+want\s+to|i\s+need\s+to|i\s+would\s+like\s+to|i\s+would\s+like\s+you\s+to|i\s+was\s+wondering\s+if)\b/gi,
+
         // Filler/wordy phrases that can be expressed in fewer words
-        fillerPhrases: /\b(in\s+order\s+to|due\s+to\s+the\s+fact\s+that|as\s+a\s+matter\s+of\s+fact|more\s+or\s+less|virtually|for\s+all\s+intents\s+and\s+purposes|i\s+was\s+wondering\s+if|can\s+you\s+help\s+me)\b/gi,
+        fillerPhrases: /\b(in\s+order\s+to|due\s+to\s+the\s+fact\s+that|as\s+a\s+matter\s+of\s+fact|more\s+or\s+less|virtually|for\s+all\s+intents\s+and\s+purposes|can\s+you\s+help\s+me)\b/gi,
         
         // Duplicate adjacent words: e.g. "write write", "the the"
         repeatedWords: /\b(\w+)\s+\1\b/gi
@@ -51,7 +54,15 @@ const PromptMeterOptimizer = {
             flags.push(`Excessive politeness/filler detected (deducted ${deduction} points)`);
         }
 
-        // 3. Check for Wordy/Filler Phrases
+        // 3. Check for Conversational Preambles
+        const preambleMatches = cleanPrompt.match(this.rules.preambles);
+        if (preambleMatches && preambleMatches.length > 0) {
+            const deduction = Math.min(20, preambleMatches.length * 10);
+            score -= deduction;
+            flags.push(`Conversational preambles detected (deducted ${deduction} points)`);
+        }
+
+        // 4. Check for Wordy/Filler Phrases
         const fillerMatches = cleanPrompt.match(this.rules.fillerPhrases);
         if (fillerMatches && fillerMatches.length > 0) {
             const deduction = Math.min(20, fillerMatches.length * 10);
@@ -59,14 +70,14 @@ const PromptMeterOptimizer = {
             flags.push(`Redundant filler phrases detected (deducted ${deduction} points)`);
         }
 
-        // 4. Check for Adjacent Word Repetition
+        // 5. Check for Adjacent Word Repetition
         const repetitionMatches = cleanPrompt.match(this.rules.repeatedWords);
         if (repetitionMatches && repetitionMatches.length > 0) {
             score -= 10;
             flags.push("Adjacent repeated words detected (deducted 10 points)");
         }
 
-        // 5. History-based analysis: Duplicate Prompts & Regenerations
+        // 6. History-based analysis: Duplicate Prompts & Regenerations
         if (history && history.length > 0) {
             const lastTurn = history[history.length - 1];
             
@@ -108,22 +119,30 @@ const PromptMeterOptimizer = {
 
         let optimized = prompt;
 
-        // 1. Remove greetings at the very beginning of the prompt/sentences
-        // e.g. "Hello ChatGPT," "Hi,", "Good morning!"
-        optimized = optimized.replace(/^\s*(?:hello|hi|hey|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening)\b(?:\s+chatgpt)?(?:[,!.\s]*)/gi, '');
+        // 1. Pipeline of regexes to iteratively clean conversational start filler
+        const startRegexes = [
+            /^\s*(?:hello|hi|hey|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening)\b(?:\s+chatgpt)?(?:[,!.\s]*)/gi,
+            /^\s*(?:i\s+am\s+bored\s+so\s+i\s+want\s+to|i'm\s+bored\s+so\s+i\s+want\s+to|i\s+am\s+bored\s+so|i'm\s+bored\s+so|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
+            /^\s*(?:i\s+was\s+wondering\s+if\s+you\s+could|i\s+just\s+wanted\s+to\s+ask\s+if\s+you\s+can|can\s+you\s+help\s+me\s+with|could\s+you\s+help\s+me\s+with|can\s+you\s+help\s+me\s+to|could\s+you\s+help\s+me\s+to)\b\s*/gi,
+            /^\s*(?:i\s+would\s+like\s+you\s+to|i\s+would\s+like\s+to|i\s+want\s+to|i\s+need\s+to)\b\s*/gi,
+            /^\s*(?:can\s+you|could\s+you|would\s+you|please)\b\s*/gi
+        ];
 
-        // 2. Remove politeness/greetings in the middle or end
-        // e.g. "could you please help me write", "can you please", "would you mind summarizing"
-        optimized = optimized.replace(/\b(?:could\s+you\s+please|can\s+you\s+please|would\s+you\s+mind|can\s+you\s+help\s+me|could\s+you|can\s+you)\b\s*/gi, '');
+        let previousLength;
+        do {
+            previousLength = optimized.length;
+            for (const rx of startRegexes) {
+                optimized = optimized.replace(rx, '');
+            }
+        } while (optimized.length < previousLength); // Repeat if something was stripped
+
+        // 2. Remove politeness markers anywhere in the sentence
+        optimized = optimized.replace(/\bplease\b\s*/gi, '');
+        optimized = optimized.replace(/\b(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|can\s+you\s+help\s+me|could\s+you|can\s+you)\b\s*/gi, '');
         
-        // Remove trailing or isolated thanks/thank you
+        // Remove trailing or isolated thanks/thank you/kindly
         optimized = optimized.replace(/\b(?:thank\s+you|thanks|kindly)(?:[,!.\s]*)$/gi, '');
         optimized = optimized.replace(/\b(?:thank\s+you|thanks|kindly)\b(?:[,!.\s]*)/gi, '');
-
-        // Remove simple standalone "please" at the start of sentences
-        optimized = optimized.replace(/(?:^|[.!?]\s+)(?:please)\s+/gi, (match) => {
-            return match.replace(/please\s+/i, '');
-        });
 
         // 3. Replace wordy/filler phrases with direct equivalents
         optimized = optimized.replace(/\bin\s+order\s+to\b/gi, 'to');

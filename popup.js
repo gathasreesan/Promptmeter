@@ -1,12 +1,50 @@
 // popup.js
 
 document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("toggle-promptmeter");
+    const statusBadge = document.getElementById("popup-status-badge");
+    const statusBanner = document.getElementById("status-banner");
+    const statusText = document.getElementById("status-text");
+
     // 1. Open the dashboard tab on button click
     document.getElementById("open-dashboard-btn").addEventListener("click", () => {
         chrome.tabs.create({ url: chrome.runtime.getURL("dashboard/index.html") });
     });
 
-    // 2. Fetch stats and render preview in the popup
+    // Helper to update toggle UI elements
+    function updateToggleUI(isEnabled) {
+        if (toggle) toggle.checked = isEnabled;
+        if (statusBadge) {
+            statusBadge.textContent = isEnabled ? "Active" : "Paused";
+            statusBadge.className = isEnabled ? "badge" : "badge disabled";
+        }
+        if (statusBanner) {
+            statusBanner.className = isEnabled ? "status-banner" : "status-banner disabled";
+        }
+        if (statusText) {
+            statusText.textContent = isEnabled ? "Coach is actively monitoring" : "Coach is paused on ChatGPT";
+        }
+    }
+
+    // 2. Fetch current enabled state from storage (default: true)
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get({ isEnabled: true }, (result) => {
+            const isEnabled = result.isEnabled !== false;
+            updateToggleUI(isEnabled);
+        });
+
+        // 3. Listen for toggle switch changes
+        if (toggle) {
+            toggle.addEventListener("change", (e) => {
+                const isEnabled = e.target.checked;
+                chrome.storage.local.set({ isEnabled: isEnabled }, () => {
+                    updateToggleUI(isEnabled);
+                });
+            });
+        }
+    }
+
+    // 4. Fetch stats and render preview in the popup
     if (typeof PromptMeterStorage !== 'undefined') {
         PromptMeterStorage.getStats((stats) => {
             document.getElementById("popup-carbon").textContent = `${stats.totalCarbon.toFixed(1)}g`;
@@ -15,11 +53,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // Adjust efficiency color dynamically
             const effEl = document.getElementById("popup-efficiency");
             if (stats.avgEfficiency >= 90) {
-                effEl.style.color = "#34d399"; // Green
+                effEl.style.color = "#2E7D32"; // Green
             } else if (stats.avgEfficiency >= 70) {
-                effEl.style.color = "#fbbf24"; // Amber
+                effEl.style.color = "#F9A825"; // Amber
             } else {
-                effEl.style.color = "#f87171"; // Red
+                effEl.style.color = "#D32F2F"; // Red
             }
         });
     }

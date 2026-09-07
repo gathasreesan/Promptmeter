@@ -1,34 +1,50 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+    <meta charset="UTF-8">
     <title>PromptMeter</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="popup-container">
-    <div class="popup-header">
-        <h2>🌿 PromptMeter</h2>
-        <span class="badge">Coach</span>
-    </div>
-    
-    <div class="stats-preview">
-        <div class="stat-box">
-            <span class="stat-label">Carbon Footprint</span>
-            <span id="popup-carbon" class="stat-value">0.0g</span>
+    <div class="popup-container">
+        <div class="popup-header">
+            <div class="header-brand">
+                <h2>🌿 PromptMeter</h2>
+                <span id="popup-status-badge" class="badge">Active</span>
+            </div>
+            <label class="switch" title="Toggle PromptMeter On/Off">
+                <input type="checkbox" id="toggle-promptmeter" checked>
+                <span class="slider round"></span>
+            </label>
         </div>
-        <div class="stat-box">
-            <span class="stat-label">Avg Efficiency</span>
-            <span id="popup-efficiency" class="stat-value">100%</span>
-        </div>
-    </div>
-    
-    <button id="open-dashboard-btn" class="dashboard-btn">Open Dashboard</button>
-</div>
 
-<!-- Load storage layer to fetch statistics locally -->
-<script src="utils/storage.js"></script>
-<script src="popup.js"></script>
+        <div id="status-banner" class="status-banner">
+            <span class="status-dot"></span>
+            <span id="status-text">Coach is actively monitoring</span>
+        </div>
+
+        <div class="stats-preview">
+            <div class="stat-box stat-box-carbon">
+                <span class="stat-label">Carbon Footprint</span>
+                <span id="popup-carbon" class="stat-value">0.0g</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Avg Efficiency</span>
+                <span id="popup-efficiency" class="stat-value">100%</span>
+            </div>
+        </div>
+
+        <button id="open-dashboard-btn" class="dashboard-btn">Open Dashboard</button>
+    </div>
+
+    <!-- Load storage layer to fetch statistics locally -->
+    <script src="utils/storage.js"></script>
+    
+    <script src="popup.js"></script>
 
 </body>
+
 </html>

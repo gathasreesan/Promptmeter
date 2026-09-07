@@ -1,69 +1,121 @@
 /* dashboard/src/index.css */
 
-body {
-    margin: 0;
-    padding: 0;
-    background: radial-gradient(circle at top right, #111827, #030712);
-    color: #e5e7eb;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    min-height: 100vh;
+:root {
+  /* Core Backgrounds & Spacing */
+  --bg-primary: #F7F9F4;
+  --bg-secondary: #EEF5EC;
+  --bg-sidebar: #F2F7F2;
+  --bg-card: #FFFFFF;
+  --bg-hover-card: #F9FCF8;
+  --border-color: #DCE8DD;
+  --divider-color: #E7EFE7;
+  
+  /* Brand Accents */
+  --color-primary: #2E7D32;
+  --color-secondary: #4CAF50;
+  --color-mint: #81C784;
+  --color-sage: #A5D6A7;
+  --gradient-accent: linear-gradient(135deg, #2E7D32, #66BB6A);
+  
+  /* Typographic Hierarchy */
+  --text-primary: #1B1F1C;
+  --text-secondary: #55605A;
+  --text-muted: #7A857E;
+  --text-disabled: #A8B0AA;
+  
+  /* Buttons & Navigation */
+  --bg-hover: rgba(46, 125, 50, 0.08);
+  --bg-selected: #E8F5E9;
+  --btn-primary: #2E7D32;
+  --btn-primary-hover: #256B2A;
+  --btn-secondary: #FFFFFF;
+  --btn-secondary-border: #DCE8DD;
+  --btn-secondary-hover: #EEF5EC;
+  
+  /* Status Colors */
+  --color-success: #43A047;
+  --color-warning: #F9A825;
+  --color-error: #D32F2F;
+  --color-carbon: #EF6C00;
+  --color-info: #1976D2;
+  
+  /* Elevation Shadows & Radius */
+  --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
+  --radius-card: 18px;
+  --radius-btn: 12px;
+  --radius-input: 12px;
 }
 
-/* Custom Scrollbar */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* Headings in Sora */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', sans-serif;
+  color: var(--text-primary);
+}
+
+/* Custom Design System Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #030712;
+  background: var(--bg-sidebar);
 }
 ::-webkit-scrollbar-thumb {
-    background: #1f2937;
-    border-radius: 3px;
+  background: var(--color-primary);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #374151;
+  background: var(--color-secondary);
 }
 
-/* Glassmorphism Panel styles */
+/* Unified Card Class (White background, 18px radius, soft shadow, 24px padding) */
 .glass-panel {
-    background: rgba(17, 24, 39, 0.45);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-premium);
+  padding: 24px;
+  box-sizing: border-box;
 }
 
-.glow-green {
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.3) !important;
-}
-
+/* Micro-transitions on KPI Cards */
 .kpi-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.25s ease;
 }
-
 .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-mint);
+  background: var(--bg-hover-card);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(46, 125, 50, 0.12);
 }
 
+/* Button & Nav Interaction Styles */
 .nav-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #9ca3af;
-    cursor: pointer;
-    transition: all 0.15s ease;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-btn);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
 }
-
+.nav-btn:hover {
+  background: var(--bg-hover);
+  color: var(--color-primary);
+}
 .nav-btn.active {
-    background: #10b981;
-    color: #ffffff;
-    border-color: #10b981;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-}
-
-.nav-btn:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f3f4f6;
+  background: var(--bg-selected);
+  color: var(--color-primary);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-btn) var(--radius-btn) 0;
 }

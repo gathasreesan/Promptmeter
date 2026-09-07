@@ -1,5 +1,23 @@
 /* content.css */
 
+:root {
+  --bg-card: #FFFFFF;
+  --bg-surface: #EEF5EC;
+  --border-color: #DCE8DD;
+  --radius-card: 18px;
+  --radius-btn: 12px;
+  --color-primary: #2E7D32;
+  --color-secondary: #4CAF50;
+  --color-error: #D32F2F;
+  --text-primary: #1B1F1C;
+  --text-secondary: #55605A;
+  --text-muted: #7A857E;
+  --btn-primary-hover: #256B2A;
+  --btn-secondary-border: #DCE8DD;
+  --btn-secondary-hover: #EEF5EC;
+  --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
+}
+
 .promptmeter-opt-card {
     position: fixed;
     bottom: 120px; /* Float right above the standard ChatGPT text input wrapper */
@@ -7,15 +25,15 @@
     transform: translateX(-50%) translateY(20px);
     width: 90%;
     max-width: 580px;
-    background: rgba(23, 23, 23, 0.85); /* Premium glassmorphic dark slate */
+    background: var(--bg-card); /* Card Background */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
+    border: 1px solid var(--border-color); /* Border Color */
+    border-radius: var(--radius-card); /* Card Radius */
     padding: 16px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
-    color: #ececec;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    box-shadow: var(--shadow-premium); /* Premium Shadow */
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     z-index: 999999;
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -33,15 +51,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
     margin-bottom: 12px;
 }
 
 .promptmeter-opt-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #10b981; /* Emerald Green theme color */
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--color-primary); /* Primary Accent */
+    font-family: 'Sora', sans-serif;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -53,13 +72,15 @@
 }
 
 .promptmeter-metric-pill {
-    background: rgba(16, 185, 129, 0.12);
-    color: #34d399;
+    background: var(--bg-surface);
+    color: var(--color-primary); /* Primary Green */
     padding: 2px 8px;
-    border-radius: 12px;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    font-weight: 500;
-    font-size: 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .promptmeter-opt-diff {
@@ -72,24 +93,25 @@
 .promptmeter-diff-box {
     font-size: 13px;
     line-height: 1.5;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn); /* Button/Input Radius */
     word-break: break-word;
     max-height: 120px;
     overflow-y: auto;
+    border: 1px solid var(--border-color);
 }
 
 .promptmeter-diff-original {
-    background: rgba(239, 68, 68, 0.08); /* Translucent red */
-    border-left: 3px solid #ef4444;
-    color: #fca5a5;
+    background: rgba(211, 47, 47, 0.05); /* Translucent red */
+    border-left: 3px solid var(--color-error);
+    color: #b91c1c;
     text-decoration: line-through;
 }
 
 .promptmeter-diff-optimized {
-    background: rgba(16, 185, 129, 0.08); /* Translucent green */
-    border-left: 3px solid #10b981;
-    color: #d1fae5;
+    background: rgba(46, 125, 50, 0.05); /* Translucent green */
+    border-left: 3px solid var(--color-primary);
+    color: #15803d;
 }
 
 .promptmeter-opt-actions {
@@ -99,13 +121,13 @@
 }
 
 .promptmeter-opt-btn {
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: var(--radius-btn); /* Button Radius */
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
-    border: none;
     transition: background 0.15s ease, transform 0.1s ease;
+    box-sizing: border-box;
 }
 
 .promptmeter-opt-btn:active {
@@ -113,19 +135,21 @@
 }
 
 .promptmeter-btn-accept {
-    background: #10b981;
-    color: #ffffff;
+    background: var(--color-primary);
+    color: #FFFFFF;
+    border: none;
 }
 
 .promptmeter-btn-accept:hover {
-    background: #059669;
+    background: var(--btn-primary-hover);
 }
 
 .promptmeter-btn-ignore {
-    background: rgba(255, 255, 255, 0.08);
-    color: #d1d5db;
+    background: var(--btn-secondary); /* White secondary button */
+    color: var(--text-primary);
+    border: 1px solid var(--btn-secondary-border);
 }
 
 .promptmeter-btn-ignore:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--btn-secondary-hover);
 }
