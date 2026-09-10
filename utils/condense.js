@@ -18,7 +18,64 @@
  * Runs on masked text, so a placeholder is opaque. Any sentence holding one is treated
  * as protected content and never dropped.
  */
+// The trained phrase classifier, when one is loaded. Optional by design: with no model
+// present every path below falls back to the rules alone and behaviour is unchanged.
+const PM_ML = (typeof PromptMeterML !== 'undefined')
+    ? PromptMeterML
+    : (typeof require !== 'undefined' ? require('./ml-classifier.js').PromptMeterML : null);
+
 const PromptMeterCondense = {
+    // --- Machine-learning assist ------------------------------------------------------
+    //
+    // The classifier is a second opinion, never the decision maker. It is consulted in
+    // exactly two situations, and the asymmetry between them is deliberate:
+    //
+    //   VETO     the rules want to drop a sentence, but the model is confident it is
+    //            IMPORTANT. The sentence stays. Cheap to be wrong -- a few extra tokens.
+    //
+    //   PROPOSE  the rules want to keep a sentence and no rule matched it, but the model
+    //            is very confident it is removable. It goes. Expensive to be wrong, so
+    //            the bar is much higher, and the existing guards still apply on top.
+    //
+    // A sentence the rules classify as core -- it asks something, constrains the output,
+    // or holds protected content -- is never offered to the model at all. No confidence
+    // level lets the classifier delete the user's actual request.
+    ML_KEEP_VETO: 0.75,
+    ML_DROP_PROPOSE: 0.90,
+
+    /** The classifier, or null when no model is loaded. */
+    ml: function () {
+        return (PM_ML && PM_ML.isAvailable()) ? PM_ML : null;
+    },
+
+    /**
+     * True when the model is confident enough that a piece of text carries the
+     * instruction to overrule a rule that wanted to remove it.
+     * @param {string} text
+     * @returns {boolean}
+     */
+    mlVetoesRemoval: function (text) {
+        const engine = this.ml();
+        if (!engine) return false;
+
+        const advice = engine.advise(text);
+        return Boolean(advice && advice.keep >= this.ML_KEEP_VETO);
+    },
+
+    /**
+     * True when the model is confident enough that a piece of text is filler, padding or
+     * repetition to suggest removing it where no rule matched.
+     * @param {string} text
+     * @returns {boolean}
+     */
+    mlProposesRemoval: function (text) {
+        const engine = this.ml();
+        if (!engine) return false;
+
+        const advice = engine.advise(text);
+        return Boolean(advice && advice.removable >= this.ML_DROP_PROPOSE);
+    },
+
     // Below this length a prompt is not an essay, and sentence pruning stays off.
     MIN_WORDS: 35,
 
@@ -112,7 +169,7 @@ const PromptMeterCondense = {
         'revise', 'guide', 'quiz', 'test', 'practice', 'start', 'begin',
         'what', 'why', 'how', 'when', 'where', 'which', 'who', 'whose',
         'can', 'could', 'should', 'would', 'will', 'is', 'are', 'do', 'does', 'did',
-        'need', 'want', 'any', 'please'
+        'need', 'want', 'please'
     ],
 
     // Verbs that are the request itself rather than its subject. A remainder built only
@@ -188,7 +245,7 @@ const PromptMeterCondense = {
         "ME\\s+(?:study|studies)\\s+(?:at|in)\\s+(?:a|an|the|my)\\b",
         "MEBE\\s+(?:studying|enrolled)\\s+(?:at|in)\\s+(?:a|an|the|my)\\b",
         // Excuses and non-preparation.
-        "ME\\s+(?:did\\s*n[o']?t|didn'?t|do\\s*n[o']?t|don'?t|have\\s*n[o']?t|haven'?t|has\\s*n[o']?t|hasn'?t|never|hardly|barely)\\s+(?:attend|attended|study|studied|prepare|prepared|revise|revised|open|opened|touch|touched|listen|listened|show\\s+up|pay\\s+attention|understand|understood|get\\s+it|follow|grasp|remember)",
+        "ME\\s+ADV(?:did\\s*n[o']?t|didn'?t|do\\s*n[o']?t|don'?t|have\\s*n[o']?t|haven'?t|has\\s*n[o']?t|hasn'?t|never|hardly|barely)\\s+ADV(?:attend|attended|study|studied|prepare|prepared|revise|revised|open|opened|touch|touched|listen|listened|show\\s+up|pay\\s+attention|understand|understood|get\\s+it|follow|grasp|remember)",
         // The same excuse once its subject has already been removed with an earlier
         // clause: "I googled it but did not understand".
         "(?:did\\s*n[o']?t|didn'?t|do\\s*n[o']?t|don'?t|could\\s*n[o']?t|couldn'?t)\\s+(?:understand|get\\s+it|follow|grasp|remember|know)\\b",
@@ -222,7 +279,11 @@ const PromptMeterCondense = {
 
         // A context clause may run over ordinary words, but never into a request or
         // across a connective that introduces the next clause.
-        const stop = `(?:${ask}|${connective})`;
+        // "now" and "also" open a clause often enough to be lead-ins, but they also sit
+        // harmlessly inside one ("...for 2 months now"). Stopping a context clause on
+        // them strands the word as its own sentence, so they are excluded here.
+        const hardStop = connective.split('|').filter(w => w !== 'now' && w !== 'also').join('|');
+        const stop = `(?:${ask}|${hardStop})`;
         const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’./+#-]+){0,10}`;
 
         // A context clause is recognised in exactly two positions: at the start of a
@@ -234,7 +295,9 @@ const PromptMeterCondense = {
         // patterns would fire on ordinary subordinate clauses -- "explain what happens
         // when I have an exam" -- where the same words are part of the question.
         const leadIn = `(?:${connective}|anyway|basically|actually)`;
-        const lead = `(?:(?<=^|[.!?;,]|\\n)\\s*(?:${leadIn}\\s+){0,2}|(?<=\\s)(?:${leadIn}\\s+){1,2})`;
+        // A lead-in may be followed by a comma rather than a space ("So basically, I am
+        // in 3rd year ..."), which would otherwise strand it at the front of the prompt.
+        const lead = `(?:(?<=^|[.!?;,]|\\n)\\s*(?:${leadIn}[,\\s]+){0,2}|(?<=\\s)(?:${leadIn}[,\\s]+){1,2})`;
 
         // Occasions are often named with a noun in front of a noun -- "project review",
         // "exam paper", "interview round" -- so a noun may also act as a modifier.
@@ -245,9 +308,14 @@ const PromptMeterCondense = {
         // one token rather than as ME followed by BE.
         const meBe = `(?:i|we)(?:\\s*'m|\\s*'re|\\s+(?:am|are|is|was|were|been|m|re))`;
 
+        // ADV is an optional adverb slot: "I honestly do not understand" reads as a clause
+        // shape the negation patterns would otherwise miss.
+        const adverb = "(?:honestly\\s+|really\\s+|actually\\s+|literally\\s+|still\\s+|simply\\s+|just\\s+|even\\s+|truly\\s+)?";
+
         const expand = (core) => core
             .replace(/EVENT/g, event)
             .replace(/\bMEBE\b/g, meBe)
+            .replace(/\bADV\b/g, adverb)
             .replace(/\bME\b/g, "(?:i|we)")
             .replace(/\bBE\b/g, "(?:am|'m|m|are|'re|is|was|were|been)");
 
@@ -312,9 +380,15 @@ const PromptMeterCondense = {
         for (let pass = 0; pass < 2; pass++) {
             for (const rx of this.situational) {
                 rx.lastIndex = 0;
-                // A clause holding protected content is never removed, however
-                // situational it looks -- the span may be what the question is about.
-                out = out.replace(rx, match => match.indexOf(this.MASK_OPEN) !== -1 ? match : ' ');
+                out = out.replace(rx, match => {
+                    // A clause holding protected content is never removed, however
+                    // situational it looks -- the span may be what the question is about.
+                    if (match.indexOf(this.MASK_OPEN) !== -1) return match;
+                    // Second opinion: the pattern matched, but if the model reads this
+                    // clause as the instruction itself, leave it alone.
+                    if (this.mlVetoesRemoval(match)) return match;
+                    return ' ';
+                });
             }
         }
 
@@ -492,16 +566,30 @@ const PromptMeterCondense = {
         });
 
         const kept = classified.filter(entry => {
+            // A sentence that asks, constrains, or holds protected content is the
+            // user's request. The rules keep it and the model is never asked.
             if (entry.info.core) return true;
-            if (entry.info.lowValue) return false;
+
+            if (entry.info.lowValue) {
+                // Rules say drop. The model may veto.
+                return this.mlVetoesRemoval(entry.text);
+            }
 
             // Keep a non-core sentence only if it carries genuinely new subject matter.
             const fresh = entry.words.filter(word => !known.has(word));
             if (fresh.length >= this.MIN_NEW_TERMS) {
+                // Rules say keep. The model may propose dropping it -- new vocabulary
+                // is not the same as new information, and this is where a blacklist is
+                // blind: "I have been revising all night for tomorrow" introduces four
+                // unseen words and says nothing the model can act on.
+                if (this.mlProposesRemoval(entry.text)) return false;
+
                 fresh.forEach(word => known.add(word));
                 return true;
             }
-            return false;
+
+            // Rules say drop: no request, no new subject matter. The model may veto.
+            return this.mlVetoesRemoval(entry.text);
         });
 
         // Never return nothing: if every sentence looked droppable, keep the original.

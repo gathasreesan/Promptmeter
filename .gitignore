@@ -11,3 +11,7 @@ desktop.ini
 # Logs
 *.log
 npm-debug.log*
+
+# Python bytecode from the ML trainer
+__pycache__/
+*.pyc

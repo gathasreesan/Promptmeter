@@ -14,6 +14,7 @@
 const { PromptMeterOptimizer } = require('../utils/optimizer.js');
 const { PromptMeterProtect } = require('../utils/protect.js');
 const { PromptMeterCondense } = require('../utils/condense.js');
+const { PromptMeterML } = require('../utils/ml-classifier.js');
 
 let passed = 0;
 const failures = [];
@@ -428,6 +429,76 @@ preserved('...but the subject is kept',
 exact('a trailing occasion that is the only subject stays',
     'write a study plan for my exam', 'Write a study plan for my exam');
 
+// --- Negation parity: meaning must never invert ----------------------------
+//
+// The strongest statement of "optimization does not change meaning": a prompt and its
+// negated twin must never optimize to the same text. If they ever collide, some rule
+// has swallowed the word that distinguished them.
+
+const negationPairs = [
+    ['i had a good day', 'i had a not good day'],
+    ['please explain why this works', 'please explain why this does not work'],
+    ['hey can you write a summary that is long', 'hey can you write a summary that is not long'],
+    ['tell me what is working in this code', 'tell me what is not working in this code'],
+    ['should I use var in javascript?', 'should I not use var in javascript?'],
+    ['explain why this is a good idea', 'explain why this is not a good idea'],
+    ['make sure it is case sensitive', 'make sure it is not case sensitive'],
+    ['use recursion for this solution please', 'do not use recursion for this solution please'],
+    ['I had a good day, teach me ML', 'I had a bad day, teach me ML']
+];
+
+for (const [positive, negative] of negationPairs) {
+    const a = PromptMeterOptimizer.optimizePrompt(positive).toLowerCase();
+    const b = PromptMeterOptimizer.optimizePrompt(negative).toLowerCase();
+    record(`[negation] ${JSON.stringify(negative.slice(0, 42))}`, a !== b,
+        `both collapsed to ${JSON.stringify(a)}`);
+}
+
+// A negation word may never be dropped outright, whatever else is stripped around it
+const NEGATORS = /\b(not|never|without|except|unless|don't|no)\b/gi;
+const negationCorpus = [
+    'give me a detailed but not too long explanation of recursion',
+    'summarize this without using any jargon',
+    'explain everything except the math part',
+    'do not include code examples, just explain the concept',
+    'unless it is impossible, use only standard library functions',
+    'never use recursion here please, thanks!',
+    'explain why my code does not compile',
+    'this is not working, please help me fix it',
+    'hey chatgpt, please do not use jargon, thanks so much!'
+];
+
+for (const prompt of negationCorpus) {
+    const out = PromptMeterOptimizer.optimizePrompt(prompt);
+    const before = (prompt.match(NEGATORS) || []).length;
+    const after = (out.match(NEGATORS) || []).length;
+    record(`[negation-kept] ${JSON.stringify(prompt.slice(0, 42))}`, after >= before,
+        `${before} negation words in, ${after} out\n      got: ${JSON.stringify(out)}`);
+}
+
+// --- End-to-end showcase: every category at once ---------------------------
+
+exact('a padded one-liner reduces to its instruction',
+    'hey chatgpt!! i have an exam tomorrow and im really stressed, ' +
+    'could you please kindly teach me machine learning? thanks so much!!',
+    'Teach me machine learning.');
+
+const KITCHEN_SINK =
+    'Hello ChatGPT, good morning! I hope you are doing well today. So basically, I am in ' +
+    '3rd year college and my semester exams are coming up next week, and I have not studied ' +
+    'anything at all. I am really really stressed and I only have 2 days left. My professor ' +
+    'gave us a huge syllabus and I honestly do not understand any of it. I was wondering if ' +
+    'you could please kindly give me a detailed and comprehensive and thorough explanation ' +
+    'of operating systems for my exam? Sorry if this is a dumb question. Thanks a lot in ' +
+    'advance, I would really appreciate it!!! 😅😅😅';
+
+exact('a wall of preamble reduces to its instruction',
+    KITCHEN_SINK, 'Give me a detailed explanation of operating systems.');
+
+// Removing a clause must not leave a word behind as its own sentence
+stripped('no stranded fragments survive the removals', KITCHEN_SINK,
+    ['in advance', 'any of it', 'basically', 'sorry', 'dumb question', '😅']);
+
 // Stripping must be idempotent and must never empty the prompt
 const situationalCorpus = [
     'hey I have an exam tomorrow teach me ML',
@@ -447,6 +518,111 @@ for (const prompt of situationalCorpus) {
 
     record(`[situational-non-empty] ${JSON.stringify(prompt.slice(0, 40))}`,
         once.trim().length > 0, 'produced empty output');
+}
+
+// ---------------------------------------------------------------------------
+// 7. Machine-learning assist
+// ---------------------------------------------------------------------------
+//
+// The contract this section pins down: the classifier may only REFINE a rule
+// decision. With the model switched off the optimizer must behave exactly as the
+// rule-based tests above expect -- which is why those tests carry no ML setup.
+
+record('[ml] a trained model is loaded', PromptMeterML.isAvailable(),
+    'ml-classifier could not find ml-model.js -- run: cd ml && python train.py');
+
+if (PromptMeterML.isAvailable()) {
+    // Sanity: the four classes behave as labeled on clear-cut examples
+    const expectations = [
+        ['Explain how binary search works with an example', 'IMPORTANT'],
+        ['Write a python function that reverses a linked list', 'IMPORTANT'],
+        ['Hello ChatGPT I hope you are doing well today', 'FILLER'],
+        ['I have an exam tomorrow and I am really stressed', 'FILLER'],
+        ['I would like you to please go ahead and', 'REDUNDANT'],
+        ['The report must include the data and the report must include the charts', 'REPETITIVE']
+    ];
+
+    for (const [text, expected] of expectations) {
+        const advice = PromptMeterML.advise(text);
+        record(`[ml] classifies ${JSON.stringify(text.slice(0, 38))}`,
+            advice !== null && advice.label === expected,
+            `expected ${expected}, got ${advice ? advice.label : 'ABSTAIN'}`);
+    }
+
+    // Abstention: no recognised vocabulary means no opinion, never a guess
+    record('[ml] abstains on unknown vocabulary',
+        PromptMeterML.advise('zzz qqq xkcd') === null,
+        'model returned a label for text it has no evidence about');
+
+    record('[ml] abstains on empty input',
+        PromptMeterML.advise('') === null, 'model did not abstain on empty text');
+
+    // keep and removable must partition the probability mass
+    const partition = PromptMeterML.advise('Explain how binary search works');
+    record('[ml] keep and removable sum to 1',
+        partition !== null && Math.abs((partition.keep + partition.removable) - 1) < 1e-9,
+        `got ${partition ? partition.keep + partition.removable : 'null'}`);
+
+    // --- The assist changes real outcomes ---------------------------------
+    //
+    // Both middle sentences are backstory, but each introduces several words the
+    // rest of the prompt never uses. The vocabulary rule alone therefore keeps
+    // them; the classifier is what identifies them as filler.
+    const MIXED =
+        'Write a python script that parses server logs and extracts error codes. ' +
+        'I have been revising all night for tomorrow morning viva examination honestly. ' +
+        'The output should be a csv file sorted by timestamp. ' +
+        'My hostel roommate kept playing loud music throughout the entire evening yesterday. ' +
+        'Handle malformed lines without crashing the whole program.';
+
+    const withMl = PromptMeterOptimizer.optimizePrompt(MIXED);
+
+    // Disable the assist by making both thresholds unreachable, then restore.
+    const savedVeto = PromptMeterCondense.ML_KEEP_VETO;
+    const savedPropose = PromptMeterCondense.ML_DROP_PROPOSE;
+    PromptMeterCondense.ML_KEEP_VETO = 2;
+    PromptMeterCondense.ML_DROP_PROPOSE = 2;
+    const rulesOnly = PromptMeterOptimizer.optimizePrompt(MIXED);
+    PromptMeterCondense.ML_KEEP_VETO = savedVeto;
+    PromptMeterCondense.ML_DROP_PROPOSE = savedPropose;
+
+    record('[ml] the assist changes the outcome at all', withMl !== rulesOnly,
+        'ML made no difference -- it is not wired in');
+
+    record('[ml] backstory the vocabulary rule kept is dropped',
+        !withMl.toLowerCase().includes('roommate') && !withMl.toLowerCase().includes('revising'),
+        `got: ${JSON.stringify(withMl)}`);
+
+    record('[ml] rules alone would have kept that backstory',
+        rulesOnly.toLowerCase().includes('roommate'),
+        'the rules already dropped it, so this case proves nothing about the ML');
+
+    // The instruction and every constraint must survive the assist
+    for (const fragment of ['python script', 'error codes', 'csv file', 'malformed lines']) {
+        record(`[ml] instruction survives the assist: ${JSON.stringify(fragment)}`,
+            withMl.toLowerCase().includes(fragment),
+            `got: ${JSON.stringify(withMl)}`);
+    }
+
+    // Switching the assist off must leave the rule-based behaviour untouched.
+    // This is the regression that matters: ship a bad model, lose nothing.
+    PromptMeterCondense.ML_KEEP_VETO = 2;
+    PromptMeterCondense.ML_DROP_PROPOSE = 2;
+    for (const prompt of ['hey I have an exam tomorrow teach me ML',
+                          'Hello ChatGPT! Could you please explain closures? Thanks in advance!',
+                          'I have an exam tomorrow']) {
+        const off = PromptMeterOptimizer.optimizePrompt(prompt);
+        PromptMeterCondense.ML_KEEP_VETO = savedVeto;
+        PromptMeterCondense.ML_DROP_PROPOSE = savedPropose;
+        const on = PromptMeterOptimizer.optimizePrompt(prompt);
+        PromptMeterCondense.ML_KEEP_VETO = 2;
+        PromptMeterCondense.ML_DROP_PROPOSE = 2;
+
+        record(`[ml] short prompts are unaffected either way: ${JSON.stringify(prompt.slice(0, 34))}`,
+            off === on, `off: ${JSON.stringify(off)}\n      on:  ${JSON.stringify(on)}`);
+    }
+    PromptMeterCondense.ML_KEEP_VETO = savedVeto;
+    PromptMeterCondense.ML_DROP_PROPOSE = savedPropose;
 }
 
 // ---------------------------------------------------------------------------
