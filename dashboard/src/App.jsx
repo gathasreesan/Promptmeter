@@ -4,6 +4,8 @@ import { PromptMeterRecommendations } from '../../utils/recommendations.js';
 import { PromptMeterGamification } from '../../utils/gamification.js';
 import { PromptMeterStorage } from '../../utils/storage.js';
 import { PromptMeterTheme } from '../../utils/theme.js';
+import { PromptMeterTokenizer } from '../../utils/tokenizer.js';
+import { PromptMeterCalculator } from '../../utils/calculator.js';
 
 // Every colour is a CSS variable, so light and dark are handled entirely by the
 // stylesheet and nothing here needs to know which theme is active.
@@ -57,7 +59,7 @@ const RATINGS = [
         color: COLOR.primary,
         wash: 'var(--wash-success)',
         washStrong: 'var(--wash-success-strong)',
-        description: "Splendid! Your prompting structure avoids greetings and polite fillers, maximizing reasoning tokens while minimizing cooling water and carbon footprints."
+        description: "Splendid! Your prompting structure avoids greetings and polite fillers, maximizing reasoning tokens while minimizing your carbon footprint."
     },
     {
         min: 70,
@@ -97,13 +99,15 @@ const getMockHistory = () => {
             prompt: isOpt
                 ? "Write a python script to parse server logs."
                 : "Hello ChatGPT, could you please write write a python script to parse log files? thank you!",
+            originalPrompt: isOpt
+                ? "Hey ChatGPT!! I was just wondering if you could please kindly write write a python script to parse server logs? Thanks a lot in advance!"
+                : null,
             response: `Here is a lightweight Python script that parses server logs using regex...`,
             promptTokens: isOpt ? 10 : Math.round(20 * multiplier),
             responseTokens: Math.round(110 * multiplier),
             totalTokens: isOpt ? 120 : Math.round(130 * multiplier),
             electricity: parseFloat((isOpt ? 0.120 : 0.130 * multiplier).toFixed(4)),
             carbon: parseFloat((isOpt ? 0.043 : 0.047 * multiplier).toFixed(4)),
-            water: parseFloat((isOpt ? 0.180 : 0.195 * multiplier).toFixed(4)),
             efficiencyScore: isOpt ? 100 : Math.round(68 + (i * 3.2) % 22),
             wasOptimized: isOpt,
             tokensSaved: isOpt ? 10 : 0,
@@ -329,16 +333,89 @@ const AttachmentPills = ({ item }) => {
     );
 };
 
+// What the optimizer actually changed, for one turn. Only rendered when the original
+// text was recorded -- turns logged before that was stored, and turns the user never
+// optimized, have nothing to compare against.
+const ComparisonBox = ({ item }) => {
+    const before = PromptMeterTokenizer.countTokens(item.originalPrompt);
+    const after = PromptMeterTokenizer.countTokens(item.prompt);
+    const saved = Math.max(0, before - after);
+    const percent = before > 0 ? Math.round((saved / before) * 100) : 0;
+
+    // Recomputed rather than read off the record, so the figure always matches the two
+    // texts shown directly above it.
+    const carbonSaved = PromptMeterCalculator.savings(saved).carbon;
+
+    return (
+        <div className="comparison-box">
+            <div className="comparison-head">
+                <span className="comparison-title">✂️ What the coach removed</span>
+                <span className="comparison-headline">
+                    {before} → {after} tokens
+                    <em>{percent}% shorter</em>
+                </span>
+            </div>
+
+            <div className="comparison-panes">
+                <div className="comparison-pane comparison-before">
+                    <span className="comparison-label">Original</span>
+                    <p>{item.originalPrompt}</p>
+                </div>
+                <div className="comparison-pane comparison-after">
+                    <span className="comparison-label">Optimized</span>
+                    <p>{item.prompt}</p>
+                </div>
+            </div>
+
+            <div className="comparison-metrics">
+                <div className="comparison-metric">
+                    <span className="comparison-metric-value">{before}</span>
+                    <span className="comparison-metric-label">Tokens before</span>
+                </div>
+                <div className="comparison-metric">
+                    <span className="comparison-metric-value">{after}</span>
+                    <span className="comparison-metric-label">Tokens after</span>
+                </div>
+                <div className="comparison-metric is-saved">
+                    <span className="comparison-metric-value">−{saved}</span>
+                    <span className="comparison-metric-label">Tokens saved</span>
+                </div>
+                <div className="comparison-metric is-saved">
+                    <span className="comparison-metric-value">−{carbonSaved.toFixed(3)}g</span>
+                    <span className="comparison-metric-label">CO₂ avoided</span>
+                </div>
+                <div className="comparison-metric is-saved">
+                    <span className="comparison-metric-value">{percent}%</span>
+                    <span className="comparison-metric-label">Reduction</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const QueryRow = ({ item, onDelete }) => {
     const rating = RATINGS.find(r => item.efficiencyScore >= r.min);
     const scoreColor = item.efficiencyScore >= 90 ? COLOR.success : rating.color;
 
+    const [expanded, setExpanded] = useState(false);
+    const hasComparison = Boolean(item.originalPrompt && item.originalPrompt !== item.prompt);
+
     return (
-        <tr>
+        <React.Fragment>
+        <tr className={expanded ? 'row-expanded' : ''}>
             <td className="cell-muted">{formatTimestamp(item.timestamp)}</td>
             <td className="cell-prompt" style={{ width: '50%' }}>
                 <div>{item.prompt.length > 100 ? item.prompt.substring(0, 100) + '...' : item.prompt}</div>
                 <AttachmentPills item={item} />
+                {hasComparison && (
+                    <button
+                        className="comparison-toggle"
+                        aria-expanded={expanded}
+                        onClick={() => setExpanded(!expanded)}
+                    >
+                        {expanded ? '▾' : '▸'} {expanded ? 'Hide' : 'Compare'} original vs optimized
+                    </button>
+                )}
             </td>
             <td className="cell-numeric">{item.totalTokens.toLocaleString()}</td>
             <td className="cell-numeric" style={{ color: COLOR.carbon }}>{item.carbon.toFixed(2)}g</td>
@@ -369,6 +446,13 @@ const QueryRow = ({ item, onDelete }) => {
                 </button>
             </td>
         </tr>
+
+        {hasComparison && expanded && (
+            <tr className="comparison-row">
+                <td colSpan="7"><ComparisonBox item={item} /></td>
+            </tr>
+        )}
+        </React.Fragment>
     );
 };
 
@@ -640,7 +724,12 @@ export default function App() {
 
     const query = searchTerm.toLowerCase();
     const visibleRows = history
-        .filter(item => item.prompt.toLowerCase().includes(query) || item.response.toLowerCase().includes(query))
+        // The original text is searched too, so a phrase the coach removed still finds
+        // the turn it was removed from.
+        .filter(item =>
+            item.prompt.toLowerCase().includes(query) ||
+            item.response.toLowerCase().includes(query) ||
+            (item.originalPrompt || '').toLowerCase().includes(query))
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     // The sample dataset lives only in component state, so it is never written back to storage

@@ -1,0 +1,71 @@
+{
+  "trainedAt": "2026-09-10T10:35:36+00:00",
+  "model": "TfidfVectorizer(1,2) + LogisticRegression(C=4.0, balanced)",
+  "samples": {
+    "total": 512,
+    "train": 384,
+    "test": 128,
+    "perClass": {
+      "FILLER": 128,
+      "IMPORTANT": 134,
+      "REDUNDANT": 120,
+      "REPETITIVE": 130
+    }
+  },
+  "accuracy": 0.7109,
+  "macro": {
+    "precision": 0.7101,
+    "recall": 0.7075,
+    "f1": 0.7068
+  },
+  "weighted": {
+    "precision": 0.7124,
+    "recall": 0.7109,
+    "f1": 0.7097
+  },
+  "perClass": {
+    "FILLER": {
+      "precision": 0.6389,
+      "recall": 0.7188,
+      "f1": 0.6765,
+      "support": 32
+    },
+    "IMPORTANT": {
+      "precision": 0.8056,
+      "recall": 0.8529,
+      "f1": 0.8286,
+      "support": 34
+    },
+    "REDUNDANT": {
+      "precision": 0.6552,
+      "recall": 0.6333,
+      "f1": 0.6441,
+      "support": 30
+    },
+    "REPETITIVE": {
+      "precision": 0.7407,
+      "recall": 0.625,
+      "f1": 0.678,
+      "support": 32
+    }
+  },
+  "binary": {
+    "note": "IMPORTANT = KEEP, the other three = DROP; the call the optimizer makes",
+    "accuracy": 0.9062,
+    "precision": 0.8756,
+    "recall": 0.8892,
+    "f1": 0.882
+  },
+  "crossValidation": {
+    "folds": 5,
+    "meanAccuracy": 0.7792,
+    "stdAccuracy": 0.0263,
+    "scores": [
+      0.767,
+      0.8155,
+      0.8039,
+      0.7451,
+      0.7647
+    ]
+  }
+}

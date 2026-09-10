@@ -113,7 +113,6 @@ const PromptMeterStorage = {
             totalTokens: sum('totalTokens'),
             totalElectricity: round(sum('electricity')),
             totalCarbon: round(sum('carbon')),
-            totalWater: round(sum('water')),
             totalTokensSaved: sum('tokensSaved'),
             totalCarbonSaved: sum('carbonSaved'),
             avgEfficiency: history.length > 0 ? Math.round(efficiencyTotal / history.length) : 0

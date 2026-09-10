@@ -23,6 +23,8 @@
       "js": [
         "utils/theme.js",
         "utils/protect.js",
+        "utils/ml-model.js",
+        "utils/ml-classifier.js",
         "utils/condense.js",
         "utils/tokenizer.js",
         "utils/calculator.js",

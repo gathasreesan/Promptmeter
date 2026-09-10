@@ -462,6 +462,131 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ---------------------------------------------------------------------------
+   Original vs optimized comparison, expanded under a query row
+   --------------------------------------------------------------------------- */
+
+.comparison-toggle {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.comparison-toggle:hover { text-decoration: underline; }
+
+/* The expanded row carries no padding of its own; the box inside supplies it. */
+.data-table tr.comparison-row { border-bottom: 1px solid var(--border-color); }
+.data-table tr.comparison-row > td { padding: 0 10px 16px; }
+.data-table tr.row-expanded { border-bottom: none; }
+
+.comparison-box {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  padding: 14px 16px;
+}
+
+.comparison-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.comparison-title {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.comparison-headline {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.comparison-headline em {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--wash-success-strong);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* Side by side where there is room, stacked once the panes would be too narrow
+   to read a prompt in. */
+.comparison-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .comparison-panes { grid-template-columns: 1fr; }
+}
+
+.comparison-pane {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  padding: 10px 12px;
+}
+.comparison-pane p {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.comparison-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.comparison-before { border-left: 3px solid var(--color-error); }
+.comparison-before p { color: var(--text-secondary); }
+.comparison-after { border-left: 3px solid var(--color-primary); }
+.comparison-after p { color: var(--text-primary); font-weight: 500; }
+
+.comparison-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.comparison-metric {
+  flex: 1 1 90px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  padding: 8px 10px;
+  text-align: center;
+}
+.comparison-metric-value {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.comparison-metric-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.comparison-metric.is-saved .comparison-metric-value { color: var(--color-primary); }
+
+/* ---------------------------------------------------------------------------
    Advisor insights & achievements
    --------------------------------------------------------------------------- */
 

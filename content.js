@@ -143,6 +143,9 @@ let ignoredPromptText = "";
 let wasOptimized = false;
 let lastSavedTokens = 0;
 let lastSavedCarbon = 0;
+// The prompt as the user wrote it, before Accept replaced it. Kept so the dashboard can
+// show what the optimization actually changed rather than only how much it saved.
+let lastOriginalPrompt = "";
 
 // State for attachments
 let activeAttachments = { images: [], documents: [] };
@@ -445,6 +448,7 @@ function applyOptimization(optimizedText) {
         wasOptimized = true;
         lastSavedTokens = tokensSaved;
         lastSavedCarbon = PromptMeterCalculator.savings(tokensSaved).carbon;
+        lastOriginalPrompt = originalText.trim();
     }
 
     // Don't re-evaluate the text that was just applied
@@ -624,17 +628,18 @@ function handleResponseCaptured(prompt, response) {
             totalTokens: totalTokens,
             electricity: footprint.electricity,
             carbon: footprint.carbon,
-            water: footprint.water,
             efficiencyScore: analysis.score,
             wasOptimized: wasOptimized,
             tokensSaved: wasOptimized ? lastSavedTokens : 0,
             carbonSaved: wasOptimized ? lastSavedCarbon : 0,
+            originalPrompt: wasOptimized ? lastOriginalPrompt : null,
             timestamp: new Date().toISOString()
         }, attachmentCounts);
 
         wasOptimized = false;
         lastSavedTokens = 0;
         lastSavedCarbon = 0;
+        lastOriginalPrompt = "";
 
         PromptMeterStorage.saveTurn(turnData, () => {
             console.log(`✅ Turn saved (Score: ${analysis.score}%).`);

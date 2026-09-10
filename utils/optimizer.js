@@ -170,7 +170,7 @@ const PromptMeterOptimizer = {
         },
         {
             label: "Sign-off & gratitude padding detected", per: 6, cap: 12,
-            rx: /\b(?:thanks?\s+(?:in\s+advance|so\s+much|a\s+(?:lot|ton|bunch))|much\s+appreciated|appreciate\s+(?:it|any\s+help)|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to)\b/gi
+            rx: /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?|much\s+appreciated|appreciate\s+(?:it|any\s+help)|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to)\b/gi
         },
         {
             label: "Urgency padding detected", per: 6, cap: 6,
@@ -248,7 +248,7 @@ const PromptMeterOptimizer = {
         // Hedging, apology and self-deprecation
         /\b(?:sorry\s+(?:if|for)\s+(?:this\s+is|the)\s+(?:a\s+)?(?:dumb|stupid|silly|basic|long|obvious)[\w\s]{0,12}|i\s+know\s+this\s+(?:might\s+be|is|sounds)\s+(?:a\s+)?(?:basic|dumb|stupid|silly|obvious)[\w\s]{0,12}|this\s+may(?:be)?\s+(?:be\s+)?(?:a\s+)?(?:dumb|stupid|basic)\s+question|not\s+sure\s+if\s+(?:this|that)(?:'s|\s+is)\s+(?:right|correct|clear)|correct\s+me\s+if\s+(?:i'?m|i\s+am)\s+wrong|i\s+hope\s+(?:this|that)\s+makes\s+sense|(?:i\s+was\s+)?just\s+wondering|(?:i\s+was\s+)?just\s+curious|out\s+of\s+curiosity)\b[,!.\s]*/gi,
         // Sign-offs and gratitude tails
-        /\b(?:thanks?\s+(?:in\s+advance|so\s+much|a\s+(?:lot|ton|bunch))|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
+        /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
         // Urgency padding: an LLM cannot act on it, so it is pure token cost
         /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
@@ -291,6 +291,8 @@ const PromptMeterOptimizer = {
     // ("I am trying to build X"), because mid-clause it is ordinary grammar
     // ("explain what I am trying to do"). The unanchored group is padding anywhere.
     wrapperStrippers: [
+        // Left behind when the junk rules eat "I was just wondering" off the front
+        /(?<=^|[.!?]|[,;]|\n)\s*if\s+you\s+(?:could|can|would)(?:\s+maybe|\s+please|\s+kindly)?\s+/gim,
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:i'?m|i\s+am)\s+trying\s+to|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:could|would|can)(?:\s+maybe)?|i\s+wonder(?:ed)?\s+if\s+you\s+(?:could|can|would)|(?:i'?m|i\s+am)\s+looking\s+for\s+(?:a\s+way\s+to|help\s+(?:with|to)))\b\s*/gim,
         /\b(?:i\s+need\s+help\s+(?:with|on|to)|i\s+could\s+use\s+(?:some\s+)?help\s+(?:with|on)|any\s+chance\s+you\s+(?:could|can))\b\s*/gi
     ],
@@ -567,7 +569,7 @@ const PromptMeterOptimizer = {
         // "Could you help me X?" becomes "Help me X?" once the wrapper is stripped, but
         // an imperative is not a question. Swap the mark for a full stop.
         optimized = optimized.replace(
-            /(^|[.!?]\s+)((?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug)\b[^.!?\n]*)\?/gi,
+            /(^|[.!?]\s+)((?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|define|derive|prove|simplify|elaborate|clarify)\b[^.!?\n]*)\?/gi,
             (match, lead, body) => `${lead}${body}.`);
 
         // Stage 6a: repair the joins left behind by mid-sentence removals, then tidy
@@ -604,6 +606,9 @@ const PromptMeterOptimizer = {
             .replace(/^[.,:;\-\u2013\u2014\s]+/, '')
             .replace(/[ \t]+/g, ' ')
             .replace(/,(?:\s*,)+/g, ',')
+            // A removed sentence can leave its full stop beside the previous one.
+            // Exactly two collapse; three are left alone, because that is an ellipsis.
+            .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
             .replace(/\s+([,.?!;:])/g, '$1')
             // Closing up spaces can re-form a run ("! !" -> "!!"), so collapse again
             .replace(/([!?])\1+/g, '$1')

@@ -1,0 +1,513 @@
+text,label
+Write a python script that reads a csv file and returns a dictionary,IMPORTANT
+Explain how binary search works with an example,IMPORTANT
+The essay needs to be exactly 500 words long,IMPORTANT
+"Use only the standard library, no external packages",IMPORTANT
+Compare supervised and unsupervised learning,IMPORTANT
+My code throws a TypeError on line 42,IMPORTANT
+The API returns a 401 even though the token is valid,IMPORTANT
+Summarize the causes of the french revolution,IMPORTANT
+Give me five examples of recursion in javascript,IMPORTANT
+Format the answer as a markdown table,IMPORTANT
+Teach me the OSI model layer by layer,IMPORTANT
+Do not include code examples in your answer,IMPORTANT
+The function should handle empty input gracefully,IMPORTANT
+Convert this SQL query into a mongodb aggregation,IMPORTANT
+What is the time complexity of quicksort in the worst case,IMPORTANT
+Refactor this component to use react hooks,IMPORTANT
+Explain the difference between mutable and immutable objects,IMPORTANT
+I need a study plan covering pointers arrays and linked lists,IMPORTANT
+Make sure the output is valid JSON,IMPORTANT
+Debug why my for loop skips the last element,IMPORTANT
+List the advantages of normalization in databases,IMPORTANT
+Translate this paragraph into french,IMPORTANT
+The deadline calculation must exclude weekends,IMPORTANT
+Write unit tests for the login controller,IMPORTANT
+Explain gradient descent in simple terms,IMPORTANT
+The dataset has 10000 rows and 12 columns,IMPORTANT
+Show me how to set up a virtual environment in python,IMPORTANT
+Optimize this query which currently takes 8 seconds,IMPORTANT
+Describe how TCP handshaking works,IMPORTANT
+Generate a regex that matches indian phone numbers,IMPORTANT
+The report should include a conclusion and references,IMPORTANT
+Explain what a closure is and when you would use one,IMPORTANT
+Build a responsive navbar that collapses on mobile,IMPORTANT
+Calculate the compound interest over five years,IMPORTANT
+My server crashes when two users log in at once,IMPORTANT
+Rewrite this paragraph in a formal academic tone,IMPORTANT
+Include at least three peer reviewed sources,IMPORTANT
+Explain the difference between process and thread,IMPORTANT
+Create a flowchart for the login workflow,IMPORTANT
+The animation should run at 60 frames per second,IMPORTANT
+Outline the steps of the software testing lifecycle,IMPORTANT
+Find the bug in this recursive fibonacci function,IMPORTANT
+Answer in bullet points not paragraphs,IMPORTANT
+Explain how indexes speed up database lookups,IMPORTANT
+Write a shell script that backs up a folder daily,IMPORTANT
+Describe the CAP theorem with real world examples,IMPORTANT
+The password must be at least twelve characters,IMPORTANT
+Explain polymorphism in object oriented programming,IMPORTANT
+Convert this class component into a functional one,IMPORTANT
+Give me practice questions on graph traversal,IMPORTANT
+What causes a stack overflow in recursion,IMPORTANT
+Design a schema for a library management system,IMPORTANT
+Explain the difference between GET and POST,IMPORTANT
+The chart should use a logarithmic y axis,IMPORTANT
+Walk me through the backpropagation algorithm,IMPORTANT
+Identify the security flaw in this authentication code,IMPORTANT
+Summarize this article in under 100 words,IMPORTANT
+Explain how garbage collection works in java,IMPORTANT
+Write a function that reverses a linked list in place,IMPORTANT
+The migration must be reversible,IMPORTANT
+Compare REST and GraphQL for a mobile client,IMPORTANT
+Explain why my docker container exits immediately,IMPORTANT
+Give a step by step derivation of the quadratic formula,IMPORTANT
+The UI must remain accessible to screen readers,IMPORTANT
+Explain how DNS resolution works,IMPORTANT
+Create a study timetable for six subjects in two weeks,IMPORTANT
+Show the SQL to join three tables on a foreign key,IMPORTANT
+Explain deadlock and how to prevent it,IMPORTANT
+"My regex matches too much text, fix it",IMPORTANT
+Describe the architecture of a three tier application,IMPORTANT
+Explain what happens when you type a url in a browser,IMPORTANT
+The solution must run in linear time,IMPORTANT
+Write documentation for this public API endpoint,IMPORTANT
+Explain the difference between authentication and authorization,IMPORTANT
+Hello ChatGPT how are you today,FILLER
+Hi there hope you are doing well,FILLER
+Good morning I hope this message finds you well,FILLER
+Hey buddy quick question for you,FILLER
+Thanks a lot in advance for your help,FILLER
+Thank you so much for your time and assistance,FILLER
+I really appreciate you taking the time to read this,FILLER
+Sorry if this is a dumb question,FILLER
+I know this might sound silly but here goes,FILLER
+Please please please help me out here,FILLER
+You are the best AI assistant ever,FILLER
+I hope I am not bothering you with this,FILLER
+Cheers and best regards,FILLER
+Looking forward to your response,FILLER
+Have a great day ahead,FILLER
+I have an exam tomorrow and I am really stressed,FILLER
+My semester exams are coming up next week,FILLER
+I am in third year college studying engineering,FILLER
+I only have two days left before the deadline,FILLER
+I have not studied anything at all this semester,FILLER
+My professor gave us a huge syllabus to cover,FILLER
+I missed the lecture last tuesday,FILLER
+I woke up late today and everything went wrong,FILLER
+I am panicking a little bit right now,FILLER
+I googled it but did not understand anything,FILLER
+I saw a video about this on youtube yesterday,FILLER
+My friend told me to ask you about this,FILLER
+I have been learning python for about two months,FILLER
+I am feeling completely lost and overwhelmed,FILLER
+Honestly I am just really tired today,FILLER
+Um uh so yeah anyway here is my question,FILLER
+You know what I mean right,FILLER
+If that makes any sense at all,FILLER
+Just wondering out of curiosity,FILLER
+This is urgent please reply as soon as possible,FILLER
+I will tip you generously for a good answer,FILLER
+My life honestly depends on this answer,FILLER
+Take a deep breath before answering,FILLER
+Pretty please with a cherry on top,FILLER
+Sent from my iphone,FILLER
+asdfgh sorry that was a typo,FILLER
+Okay so basically here is the thing,FILLER
+Let me start by saying something first,FILLER
+I was sitting at my computer thinking about this,FILLER
+I am bored so I thought I would ask,FILLER
+Anyway moving on to the actual question,FILLER
+Hope you can help me out with this one,FILLER
+I am not very good at this stuff,FILLER
+Forgive me if I explained this badly,FILLER
+Feel free to correct me if I am wrong,FILLER
+Thanks again you are a lifesaver,FILLER
+I hope that all made sense to you,FILLER
+Sorry for the long message,FILLER
+I did not know who else to ask about this,FILLER
+My exam is tomorrow morning at nine,FILLER
+I am a complete beginner at all of this,FILLER
+I procrastinated the whole month honestly,FILLER
+I skipped most of the classes this term,FILLER
+I am writing this at two in the morning,FILLER
+Everyone in my class already understands this,FILLER
+I feel so behind compared to everyone else,FILLER
+Let me know if you need anything else from me,FILLER
+Much appreciated in advance,FILLER
+Warm regards and thanks,FILLER
+Quick question if you do not mind,FILLER
+Just to clarify before I begin,FILLER
+For your information I am new here,FILLER
+I would like you to please go ahead and,REDUNDANT
+What I am trying to say is that,REDUNDANT
+The thing I want to ask you about is,REDUNDANT
+In order to be able to do this properly,REDUNDANT
+Due to the fact that this is the case,REDUNDANT
+At this point in time right now,REDUNDANT
+For all intents and purposes basically,REDUNDANT
+It is important to note the fact that,REDUNDANT
+I want you to know that I need you to,REDUNDANT
+Can you please go ahead and kindly,REDUNDANT
+I was wondering if you could possibly maybe,REDUNDANT
+Is there any way that you might be able to,REDUNDANT
+Would it be possible for you to perhaps,REDUNDANT
+I am asking this because I want to ask,REDUNDANT
+This is a question that I am asking you,REDUNDANT
+The reason why I am asking is because,REDUNDANT
+Needless to say it goes without saying,REDUNDANT
+As I mentioned earlier previously above,REDUNDANT
+In my personal opinion I personally think,REDUNDANT
+Each and every single one of them,REDUNDANT
+A large number of many different things,REDUNDANT
+Completely and totally and entirely finished,REDUNDANT
+Absolutely essential and totally necessary,REDUNDANT
+Please make sure that you ensure that,REDUNDANT
+I need you to be sure to make certain,REDUNDANT
+The end result of the final outcome,REDUNDANT
+Advance planning ahead of time,REDUNDANT
+Repeat that again one more time,REDUNDANT
+Return it back to where it was,REDUNDANT
+Close proximity very near nearby,REDUNDANT
+Free gift at no cost whatsoever,REDUNDANT
+Past history of previous events,REDUNDANT
+Unexpected surprise that nobody expected,REDUNDANT
+Basic fundamentals of the basics,REDUNDANT
+Various different kinds of different types,REDUNDANT
+Sum total added all together,REDUNDANT
+Brief summary in short and concise form,REDUNDANT
+Personally speaking from my own perspective,REDUNDANT
+Currently at the present moment today,REDUNDANT
+Terrible tragedy that was very tragic,REDUNDANT
+Actual facts that are actually true,REDUNDANT
+I would like to request that you please,REDUNDANT
+My question that I would like to ask is,REDUNDANT
+The point that I am making is the point,REDUNDANT
+It is what it is at the end of the day,REDUNDANT
+In the event that if it happens that,REDUNDANT
+With regard to and with respect to,REDUNDANT
+Take into consideration and consider,REDUNDANT
+Make a decision and decide on it,REDUNDANT
+Perform an analysis and analyse it,REDUNDANT
+Has the capability and ability to,REDUNDANT
+Provide an explanation and explain,REDUNDANT
+Give assistance and help me out,REDUNDANT
+Conduct an investigation and investigate,REDUNDANT
+Come to the conclusion and conclude,REDUNDANT
+Reach an agreement and agree on it,REDUNDANT
+Do not hesitate to feel free to,REDUNDANT
+Without any further delay right away,REDUNDANT
+First and foremost before anything else,REDUNDANT
+Last but not least finally at the end,REDUNDANT
+The essay needs to have an introduction,REPETITIVE
+The essay needs to have a body paragraph,REPETITIVE
+The essay needs to have a conclusion,REPETITIVE
+The essay needs to have references,REPETITIVE
+The essay needs to have a title page,REPETITIVE
+I want it to be detailed and comprehensive and thorough,REPETITIVE
+Make it simple and easy and basic and straightforward,REPETITIVE
+It should be quick and fast and rapid and speedy,REPETITIVE
+Explain it clearly and clearly explain it again,REPETITIVE
+Write the code and then write the code properly,REPETITIVE
+Please please please please help,REPETITIVE
+Thanks thanks thank you thank you so much,REPETITIVE
+Very very very important indeed,REPETITIVE
+Really really really need this,REPETITIVE
+So so so confused about this,REPETITIVE
+I said I need help and I need help now,REPETITIVE
+As I already said before as I said,REPETITIVE
+Again just like I mentioned again,REPETITIVE
+The function should be fast and the function should be safe,REPETITIVE
+The function should be tested and the function should be documented,REPETITIVE
+Add a login page add a signup page add a profile page,REPETITIVE
+Explain arrays explain lists explain arrays again,REPETITIVE
+Tell me about python tell me about python please,REPETITIVE
+I need help I need help I really need help,REPETITIVE
+Write write write the script,REPETITIVE
+Give me give me the answer,REPETITIVE
+Can you can you please do this,REPETITIVE
+The report must include the data the report must include the charts,REPETITIVE
+The report must include the summary,REPETITIVE
+The report must include the appendix,REPETITIVE
+My question is my question is simple,REPETITIVE
+It is important important to note,REPETITIVE
+Make it short make it brief make it concise,REPETITIVE
+Do it now do it right now immediately now,REPETITIVE
+Help me help me out here please help,REPETITIVE
+Explain step by step and step by step explain,REPETITIVE
+The app should be fast the app should be secure,REPETITIVE
+The app should be scalable,REPETITIVE
+The app should be maintainable,REPETITIVE
+I want a summary I want a short summary,REPETITIVE
+Show me the code show me the code again,REPETITIVE
+Answer clearly answer clearly and clearly,REPETITIVE
+This is important this is very important,REPETITIVE
+Note this note this down carefully,REPETITIVE
+Remember that remember this point,REPETITIVE
+The database needs indexes the database needs constraints,REPETITIVE
+The database needs backups,REPETITIVE
+The database needs monitoring,REPETITIVE
+Sort the list then sort the list again,REPETITIVE
+Check the output check the output twice,REPETITIVE
+Fix the bug fix the bug now,REPETITIVE
+Explain in detail explain in full detail,REPETITIVE
+Give examples give me some examples,REPETITIVE
+Describe it describe it properly,REPETITIVE
+Summarize it summarize it briefly,REPETITIVE
+List them list all of them out,REPETITIVE
+Compare them compare both of them,REPETITIVE
+Debug it debug this code for me,REPETITIVE
+Optimize it optimize the query please,REPETITIVE
+Translate it translate this text,REPETITIVE
+Analyze it analyze the results,REPETITIVE
+Draft it draft the email again,REPETITIVE
+Outline it outline the chapters,REPETITIVE
+Review it review my code again,REPETITIVE
+Improve it improve the writing,REPETITIVE
+Simplify it simplify the explanation,REPETITIVE
+Rewrite it rewrite the paragraph,REPETITIVE
+Calculate it calculate the total,REPETITIVE
+Solve it solve the equation,REPETITIVE
+Convert it convert the format,REPETITIVE
+Generate it generate the report,REPETITIVE
+Build it build the component,REPETITIVE
+Design it design the schema,REPETITIVE
+Implement a binary search tree with insert and delete,IMPORTANT
+The API key should be read from an environment variable,IMPORTANT
+Explain how virtual memory paging works,IMPORTANT
+Write a query that finds duplicate email addresses,IMPORTANT
+The form must validate the email before submitting,IMPORTANT
+Describe the difference between stack and heap memory,IMPORTANT
+Generate test data for a hundred users,IMPORTANT
+My react component re renders on every keystroke,IMPORTANT
+Explain what an index does in mongodb,IMPORTANT
+The answer should be under three paragraphs,IMPORTANT
+Show the difference between let const and var,IMPORTANT
+Write a merge sort implementation in java,IMPORTANT
+Explain how https encrypts traffic,IMPORTANT
+The button should be disabled while loading,IMPORTANT
+Compare mysql and postgresql for this use case,IMPORTANT
+Trace the output of this nested loop,IMPORTANT
+Explain normalization up to third normal form,IMPORTANT
+Create a dockerfile for a node application,IMPORTANT
+The script must handle missing files without crashing,IMPORTANT
+Explain what a race condition is,IMPORTANT
+Write pseudocode for the dijkstra algorithm,IMPORTANT
+Summarize the key points of chapter four,IMPORTANT
+The chart should compare revenue across four quarters,IMPORTANT
+Explain dependency injection with an example,IMPORTANT
+Find why this promise never resolves,IMPORTANT
+Describe the phases of a compiler,IMPORTANT
+Use tailwind classes instead of inline styles,IMPORTANT
+Explain the observer design pattern,IMPORTANT
+The password reset link should expire in one hour,IMPORTANT
+Write a function to detect a cycle in a graph,IMPORTANT
+Explain what middleware does in express,IMPORTANT
+Give the pros and cons of microservices,IMPORTANT
+The output must preserve the original column order,IMPORTANT
+Explain how a hash map handles collisions,IMPORTANT
+Convert this recursive solution to an iterative one,IMPORTANT
+Describe the difference between unit and integration tests,IMPORTANT
+My css grid overflows on small screens,IMPORTANT
+Explain the difference between sync and async code,IMPORTANT
+Write a python decorator that logs execution time,IMPORTANT
+The migration should add a unique constraint,IMPORTANT
+Explain what an abstract class is,IMPORTANT
+List the http status codes for client errors,IMPORTANT
+Explain the role of a load balancer,IMPORTANT
+Write a case study on renewable energy adoption,IMPORTANT
+The essay should cite at least five sources,IMPORTANT
+Explain the water cycle for a school project,IMPORTANT
+Solve this differential equation step by step,IMPORTANT
+Describe how photosynthesis converts light into energy,IMPORTANT
+Explain the causes of world war two,IMPORTANT
+Write a cover letter for a software internship,IMPORTANT
+Explain supply and demand with a graph,IMPORTANT
+Give the derivation of the pythagorean theorem,IMPORTANT
+Summarize the plot of this novel in ten lines,IMPORTANT
+Explain the structure of a cell membrane,IMPORTANT
+Compare capitalism and socialism briefly,IMPORTANT
+Explain newton three laws of motion,IMPORTANT
+Write a lesson plan for teaching fractions,IMPORTANT
+Explain how vaccines train the immune system,IMPORTANT
+Describe the layers of the earth atmosphere,IMPORTANT
+Explain how inflation affects savings,IMPORTANT
+Nice to meet you by the way,FILLER
+How is your day going so far,FILLER
+Hope you are having a wonderful week,FILLER
+Greetings from india my friend,FILLER
+Hey there superstar assistant,FILLER
+Sorry to bother you again with this,FILLER
+I hate to ask but I am desperate,FILLER
+Please do not judge me for asking,FILLER
+I am embarrassed to even ask this,FILLER
+You probably get this question all the time,FILLER
+Thanks for always being so helpful,FILLER
+You have helped me so much before,FILLER
+I owe you one for this,FILLER
+Bless you for reading this far,FILLER
+Okay here we go finally,FILLER
+Alright so listen up,FILLER
+Well anyway that is my situation,FILLER
+So yeah that is basically it,FILLER
+Long story short here is the deal,FILLER
+To give you a little background context,FILLER
+As you might already know about me,FILLER
+Just so you have the full picture,FILLER
+My internals start on monday morning,FILLER
+I have a viva tomorrow afternoon,FILLER
+My placement drive is next month,FILLER
+I have an interview on friday,FILLER
+My project review got preponed,FILLER
+The submission deadline is tonight at midnight,FILLER
+I have three assignments due this week,FILLER
+My laptop crashed and I lost everything,FILLER
+The wifi here is terribly slow,FILLER
+I am typing this from my phone,FILLER
+I am on the bus right now,FILLER
+I just got back home from college,FILLER
+I have not slept in two days,FILLER
+I am running on coffee alone,FILLER
+My roommate is playing loud music,FILLER
+I cannot focus on anything today,FILLER
+I feel like giving up honestly,FILLER
+This subject is destroying me,FILLER
+I am so done with this semester,FILLER
+Everyone says this topic is easy,FILLER
+My senior told me it is important,FILLER
+I read a reddit post about this,FILLER
+I watched a lecture but understood nothing,FILLER
+I tried everything already believe me,FILLER
+I have been stuck on this for hours,FILLER
+I asked my classmates and nobody knows,FILLER
+I checked stackoverflow with no luck,FILLER
+I am not even sure this is the right question,FILLER
+Correct me if I am completely wrong here,FILLER
+This might be a stupid thing to ask,FILLER
+Apologies in advance for the confusion,FILLER
+Thanks a ton you are amazing,FILLER
+Have a good one and take care,FILLER
+Talk to you later I guess,FILLER
+That is all from my side,FILLER
+Awaiting your kind response,FILLER
+Eagerly waiting for your reply,FILLER
+Do reply whenever you get time,FILLER
+No rush take your time honestly,FILLER
+I am going to go ahead and ask you to,REDUNDANT
+What I would like to request from you is,REDUNDANT
+The thing that I need help with is that,REDUNDANT
+I am writing to you in order to ask about,REDUNDANT
+My purpose in asking this question is to ask,REDUNDANT
+It would be great if you could possibly,REDUNDANT
+If it is at all possible could you maybe,REDUNDANT
+I am hoping that you might be able to,REDUNDANT
+Would you happen to know anything about,REDUNDANT
+Is there a chance that you could perhaps,REDUNDANT
+On account of the fact that this happened,REDUNDANT
+In light of the fact that it is late,REDUNDANT
+Owing to the circumstance that we have,REDUNDANT
+By virtue of the fact that it exists,REDUNDANT
+For the simple reason that it is needed,REDUNDANT
+During the course of the whole process,REDUNDANT
+In the near future soon from now,REDUNDANT
+Until such time as it is finished,REDUNDANT
+Prior to the start before it begins,REDUNDANT
+Subsequent to that afterwards later on,REDUNDANT
+In excess of more than over that amount,REDUNDANT
+A total of altogether summed up,REDUNDANT
+The majority of most of nearly all,REDUNDANT
+A sufficient amount of enough of it,REDUNDANT
+An adequate number of enough items,REDUNDANT
+On a daily basis every single day,REDUNDANT
+In a careful manner very carefully,REDUNDANT
+With a high degree of accuracy accurately,REDUNDANT
+In close conjunction together with,REDUNDANT
+For the express purpose of doing this,REDUNDANT
+It is my understanding that I understand,REDUNDANT
+I am of the opinion that I believe,REDUNDANT
+There is a possibility that it may,REDUNDANT
+It is necessary that we must,REDUNDANT
+It is required that you should,REDUNDANT
+I would be grateful if you would,REDUNDANT
+It would be appreciated if you appreciate,REDUNDANT
+Allow me to take this opportunity to,REDUNDANT
+I would like to take a moment to,REDUNDANT
+Before I begin let me first start,REDUNDANT
+Serious crisis of a critical emergency,REDUNDANT
+Final outcome of the ultimate result,REDUNDANT
+Empty void of nothing at all,REDUNDANT
+Exact same identical thing,REDUNDANT
+Merge together combined into one,REDUNDANT
+Join together united as a single,REDUNDANT
+Collaborate together working jointly,REDUNDANT
+Plan ahead for the future beforehand,REDUNDANT
+Revert back to the earlier version,REDUNDANT
+Refer back to the previous section,REDUNDANT
+Reply back with an answer response,REDUNDANT
+Continue on further ahead onward,REDUNDANT
+Rise up higher and upward,REDUNDANT
+Descend down lower and downward,REDUNDANT
+Enter into and go inside of,REDUNDANT
+Cancel out and nullify entirely,REDUNDANT
+Estimate roughly about approximately,REDUNDANT
+Add an additional extra one more,REDUNDANT
+Combine both of the two together,REDUNDANT
+Whether or not it is or is not,REDUNDANT
+The report must include the data and the report must include the charts,REPETITIVE
+The report must include the methodology section,REPETITIVE
+The report must include the limitations section,REPETITIVE
+The slides need a title slide,REPETITIVE
+The slides need an agenda slide,REPETITIVE
+The slides need a summary slide,REPETITIVE
+The website should have a home page,REPETITIVE
+The website should have an about page,REPETITIVE
+The website should have a contact page,REPETITIVE
+The model should be accurate and the model should be fast,REPETITIVE
+The model should be interpretable,REPETITIVE
+The model should be lightweight,REPETITIVE
+I want it detailed and I want it thorough and I want it complete,REPETITIVE
+Make it clear and clearer and as clear as possible,REPETITIVE
+Keep it short and shorter and very short,REPETITIVE
+Be specific and be very specific and be extremely specific,REPETITIVE
+Explain well and explain nicely and explain properly,REPETITIVE
+Answer fully and answer completely and answer entirely,REPETITIVE
+I already said this before but I will say it again,REPETITIVE
+As mentioned above and as stated earlier once more,REPETITIVE
+Like I told you already like I said,REPETITIVE
+Repeating myself here but repeating anyway,REPETITIVE
+Saying it one more time again,REPETITIVE
+To reiterate what I reiterated,REPETITIVE
+Once again for the second time again,REPETITIVE
+Sorry sorry sorry for repeating,REPETITIVE
+Help help help me please help,REPETITIVE
+Urgent urgent this is very urgent,REPETITIVE
+Important important note this important point,REPETITIVE
+Quickly quickly I need it quick,REPETITIVE
+Now now right now immediately now,REPETITIVE
+Yes yes exactly yes that,REPETITIVE
+Good good very good indeed good,REPETITIVE
+Bad bad really bad situation bad,REPETITIVE
+Big big very big huge big,REPETITIVE
+The code should compile and the code should run,REPETITIVE
+The code should pass tests,REPETITIVE
+The code should be readable,REPETITIVE
+Each function needs a docstring,REPETITIVE
+Each function needs type hints,REPETITIVE
+Each function needs error handling,REPETITIVE
+Every page must load fast,REPETITIVE
+Every page must be mobile friendly,REPETITIVE
+Every page must have a footer,REPETITIVE
+My essay needs better grammar and my essay needs better structure,REPETITIVE
+My essay needs a stronger thesis,REPETITIVE
+My essay needs more citations,REPETITIVE
+Explain arrays and then explain arrays in detail,REPETITIVE
+Describe python and describe python again clearly,REPETITIVE
+Summarize this and summarize it shorter,REPETITIVE
+Translate this and translate it better,REPETITIVE
+Improve this and improve it even more,REPETITIVE
+Shorten this and make it shorter still,REPETITIVE
+Clarify this and clarify it further,REPETITIVE
+Expand this and expand on it more,REPETITIVE
+Correct this and correct it properly,REPETITIVE
+Format this and format it nicely,REPETITIVE
