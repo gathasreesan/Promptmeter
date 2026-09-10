@@ -190,9 +190,21 @@ const PromptMeterOptimizer = {
         }
     ],
 
+    // Stated intent -> the imperative it stands for. These must run BEFORE the
+    // conversational strippers, which would otherwise remove the "I want to" wrapper on
+    // its own and leave the verb behind as a broken command -- "I want to know about X"
+    // becoming "Know about X" rather than "Explain X".
+    intentRewrites: [
+        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, 'Show '],
+        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, 'Explain '],
+        [/\b(?:things?|stuff)\s+(?:that\s+)?(?:i|we)\s+(?:should|need\s+to|have\s+to)\s+know\s+about\b/gi, 'key points of']
+    ],
+
     // Wordy phrase -> concise equivalent.
     concisePhrases: [
         [/\bin\s+order\s+to\b/gi, 'to'],
+        [/\b(?:that|which)\s+can\s+be\s+used\s+to\b/gi, 'to'],
         [/\bdue\s+to\s+the\s+fact\s+that\b/gi, 'because'],
         [/\bas\s+a\s+matter\s+of\s+fact\b/gi, 'actually'],
         [/\bfor\s+all\s+intents\s+and\s+purposes\b/gi, 'basically'],
@@ -514,6 +526,10 @@ const PromptMeterOptimizer = {
             .replace(/!{2,}/g, '!')
             .replace(/\?{2,}/g, '?')
             .replace(/\.{4,}/g, '...');
+
+        // Stage 2b: turn a stated intent into the command it stands for, before the
+        // strippers below can remove its wrapper and strand the verb.
+        optimized = this.applyRules(optimized, this.intentRewrites);
 
         // Stage 3: pleasantry and junk stripping. Two passes catch wrappers that only
         // become visible once an outer one has been removed.

@@ -70,7 +70,7 @@ The analytics dashboard is built with **React** and **Chart.js**, bundled using 
 
 ### Step 1b: Run the Optimizer Test Suite (Optional)
 
-The optimizer has a dependency-free regression suite (131 checks) that verifies protected spans come back
+The optimizer has a dependency-free regression suite (138 checks) that verifies protected spans come back
 byte-for-byte, instruction words survive, and filler is stripped. From the project root:
 
 ```bash

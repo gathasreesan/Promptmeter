@@ -201,6 +201,15 @@ const PromptMeterCondense = {
         "MEBE\\s+(?:new\\s+here|posting\\s+(?:this|here)\\s+for\\s+the\\s+first\\s+time|asking\\s+(?:this\\s+)?(?:again|one\\s+more\\s+time))"
     ],
 
+    // Trailing purpose: "...for my exam", "...before my interview". Unlike the cores
+     // above these are not clauses and carry no lead anchor, so they are compiled
+    // separately. The topic guard does the interesting work here: it keeps "write a
+    // study plan for my exam" (nothing but the occasion names a subject) while clearing
+    // "the key points of operating systems for my exam".
+    SITUATIONAL_TAIL_CORES: [
+        "\\s+(?:for|before|ahead\\s+of|in\\s+time\\s+for|because\\s+of)\\s+(?:my|our|the|this|next)\\s+(?:upcoming\\s+|big\\s+)?EVENT\\b(?:\\s+(?:tomorrow|today|tonight|next\\s+\\w+|this\\s+\\w+|on\\s+\\w+))?"
+    ],
+
     /**
      * Compiles SITUATIONAL_CORES into anchored regexes. Called once at load time; the
      * cores stay readable because the repeated fragments are substituted here rather
@@ -236,17 +245,22 @@ const PromptMeterCondense = {
         // one token rather than as ME followed by BE.
         const meBe = `(?:i|we)(?:\\s*'m|\\s*'re|\\s+(?:am|are|is|was|were|been|m|re))`;
 
-        return this.SITUATIONAL_CORES.map(core => {
-            const body = core
-                .replace(/EVENT/g, event)
-                .replace(/\bMEBE\b/g, meBe)
-                .replace(/\bME\b/g, "(?:i|we)")
-                .replace(/\bBE\b/g, "(?:am|'m|m|are|'re|is|was|were|been)");
-            // The clause's own trailing punctuation is deliberately left in place: it
-            // is the separator between the clauses either side of it, and stripSituational
-            // collapses whatever doubles up.
-            return new RegExp(`${lead}(?:${body})${tail}`, 'gi');
-        });
+        const expand = (core) => core
+            .replace(/EVENT/g, event)
+            .replace(/\bMEBE\b/g, meBe)
+            .replace(/\bME\b/g, "(?:i|we)")
+            .replace(/\bBE\b/g, "(?:am|'m|m|are|'re|is|was|were|been)");
+
+        // The clause's own trailing punctuation is deliberately left in place: it is the
+        // separator between the clauses either side of it, and stripSituational collapses
+        // whatever doubles up.
+        const clauses = this.SITUATIONAL_CORES.map(core =>
+            new RegExp(`${lead}(?:${expand(core)})${tail}`, 'gi'));
+
+        const tails = this.SITUATIONAL_TAIL_CORES.map(core =>
+            new RegExp(`(?:${expand(core)})(?=$|[.!?,;\\s])`, 'gi'));
+
+        return clauses.concat(tails);
     },
 
     /**
