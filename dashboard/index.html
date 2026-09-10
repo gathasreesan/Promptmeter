@@ -20,18 +20,9 @@
             overflow-x: hidden;
         }
     </style>
-    <script>
-        // Runs before first paint: reads the mirrored preference and stamps the theme
-        // so the page never flashes light before React mounts.
-        (function () {
-            try {
-                var mode = localStorage.getItem('promptmeter_theme');
-                if (mode === 'light' || mode === 'dark') {
-                    document.documentElement.setAttribute('data-theme', mode);
-                }
-            } catch (e) { /* private mode: fall back to prefers-color-scheme */ }
-        })();
-    </script>
+    <!-- Runs before first paint so the page never flashes light before React mounts.
+         External because MV3 extension pages run under script-src 'self'. -->
+    <script src="../utils/theme-boot.js"></script>
 </head>
 <body>
     <div id="root"></div>
