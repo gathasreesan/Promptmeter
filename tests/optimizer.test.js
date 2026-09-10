@@ -401,6 +401,33 @@ verbatim('a preamble holding protected content is never dropped',
     'I have an exam tomorrow on `Array.prototype.reduce`, explain it',
     ['`Array.prototype.reduce`']);
 
+// --- Stated intent becomes a command, not a stranded verb ------------------
+
+exact('"I want to know about X" is not left as "Know about X"',
+    'I want to know about the difference between supervised and unsupervised learning',
+    'Explain the difference between supervised and unsupervised learning');
+
+exact('the wh-word after a stated intent survives',
+    'I would like to know how neural networks work',
+    'Explain how neural networks work');
+
+stripped('wordy relative clause', 'write a program that can be used to sort a list',
+    ['can be used']);
+preserved('...without losing the purpose', 'write a program that can be used to sort a list',
+    ['to sort a list']);
+
+// --- Trailing purpose ------------------------------------------------------
+
+stripped('trailing occasion is dropped',
+    'what are the things that I should know about operating systems for my exam',
+    ['for my exam']);
+preserved('...but the subject is kept',
+    'what are the things that I should know about operating systems for my exam',
+    ['operating systems']);
+
+exact('a trailing occasion that is the only subject stays',
+    'write a study plan for my exam', 'Write a study plan for my exam');
+
 // Stripping must be idempotent and must never empty the prompt
 const situationalCorpus = [
     'hey I have an exam tomorrow teach me ML',
