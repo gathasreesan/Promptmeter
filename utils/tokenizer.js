@@ -29,7 +29,10 @@ const PromptMeterTokenizer = {
     }
 };
 
-// Export for ES Module / browser environment compatibility
+// Export for global (content script) and bundler environments
+if (typeof window !== 'undefined') {
+    window.PromptMeterTokenizer = PromptMeterTokenizer;
+}
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { PromptMeterTokenizer };
 }

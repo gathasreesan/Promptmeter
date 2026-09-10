@@ -64,6 +64,21 @@ The analytics dashboard is built with **React** and **Chart.js**, bundled using 
    npm run build
    ```
 
+> **Note:** `node_modules/` is intentionally not committed. `npm install` rebuilds it exactly from `package-lock.json`.
+
+---
+
+### Step 1b: Run the Optimizer Test Suite (Optional)
+
+The optimizer has a dependency-free regression suite (131 checks) that verifies protected spans come back
+byte-for-byte, instruction words survive, and filler is stripped. From the project root:
+
+```bash
+node tests/optimizer.test.js
+```
+
+Run it after any edit to `utils/optimizer.js`, `utils/protect.js`, or `utils/condense.js`.
+
 ---
 
 ### Step 2: Load Extension into Chrome
@@ -176,20 +191,26 @@ Promptmeter/
 ├── popup.html               # Extension action popup layout
 ├── popup.js                 # Fetches summary stats for popup & handles "Open Dashboard" click
 ├── style.css                # Styling for the extension popup window
-├── icons/                   # Extension icons (16x16, 48x48, 128x128)
-├── utils/                   # Core modular utility engines
-│   ├── tiktoken.min.js      # Bundled BPE tokenizer for exact OpenAI token counting
-│   ├── tokenizer.js         # Token counting wrapper (TikToken with heuristic fallback)
+├── .gitignore               # Excludes node_modules/ and OS cruft from version control
+├── utils/                   # Core modular utility engines (load order set by manifest.json)
+│   ├── theme.js             # Light/dark theme resolution shared by popup, content & dashboard
+│   ├── protect.js           # Marks spans that must survive verbatim (code, URLs, paths, quotes)
+│   ├── condense.js          # Sentence pruning + situational-preamble removal (exams, moods, backstory)
+│   ├── tokenizer.js         # Heuristic token counting
 │   ├── calculator.js        # Environmental math: Electricity (Wh), Carbon (g CO₂), Water (mL)
 │   ├── optimizer.js         # Rule-based NLP optimizer & scoring engine (0-100 score)
 │   ├── recommendations.js   # Audits history to diagnose behavioral pitfalls & tips
 │   ├── gamification.js      # Streak tracking, eco-badges, and weekly saving challenges
 │   └── storage.js           # Chrome Local Storage wrapper with FIFO 500-item cap
+├── tests/
+│   └── optimizer.test.js    # Dependency-free optimizer regression suite (node tests/optimizer.test.js)
 ├── dashboard/               # Full-page React Analytics Dashboard
 │   ├── index.html           # HTML container loading React app
 │   ├── package.json         # Dashboard dependencies (React 18, Chart.js, esbuild)
-│   ├── dist/
-│   │   └── bundle.js        # Compiled production JavaScript bundle
+│   ├── package-lock.json    # Pinned dependency tree — `npm install` reproduces node_modules/
+│   ├── dist/                # Build output, committed so the extension loads without a build step
+│   │   ├── bundle.js        # Compiled production JavaScript bundle
+│   │   └── bundle.css       # Compiled dashboard stylesheet
 │   └── src/
 │       ├── index.js         # React DOM mounting entry point
 │       ├── index.css        # Dashboard global styles and glassmorphism design tokens
@@ -209,7 +230,15 @@ Promptmeter/
   - Removes non-instructional preambles (`I am bored so I want to...`, `I was wondering if...`).
   - Simplifies wordy phrases (`in order to` → `to`, `due to the fact that` → `because`).
   - Removes duplicate adjacent words (`write write` → `write`).
+- **Situational preamble removal (`condense.js`):** strips the circumstances around a request
+  — exams and deadlines, time pressure, mood, excuses, who assigned the work, where the user saw it,
+  academic year — so `hey I have an exam tomorrow teach me ML` becomes `Teach me ML`.
+  Two guards keep it safe: a request must survive the removal, and the subject must survive with it,
+  so `I have an exam tomorrow` alone and `...exam in AI, help me to study` are both left intact.
+  Clauses that shape the answer (`I am a beginner`) are kept deliberately.
 - **UI:** Overlays a clean card showing tokens saved, carbon saved, and an instant **Accept** button.
+  The card is positioned against the live composer rectangle (measured via `ResizeObserver`), so it sits
+  above the prompt box and shrinks/scrolls as the box grows instead of covering what you are typing.
 
 ### 2. Multi-Modal & Attachment Tracking
 - **Images:** Identifies attached thumbnails and adds $+170\text{ tokens}$ per image.

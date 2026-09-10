@@ -18,6 +18,64 @@
   --radius-card: 18px;
   --radius-btn: 12px;
   --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
+  --toggle-off: #CFD8DC;
+  --toggle-knob: #FFFFFF;
+  --disabled-bg: #ECEFF1;
+  --disabled-border: #CFD8DC;
+  --disabled-dot: #90A4AE;
+  --on-accent: #FFFFFF;
+}
+
+/* Dark theme. Declared twice: under prefers-color-scheme for "auto" (guarded so an
+   explicit light choice still wins) and under [data-theme="dark"] for an explicit one. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0F1511;
+    --bg-secondary: #17201A;
+    --bg-card: #1A231C;
+    --border-color: #2A3A2D;
+    --color-primary: #66BB6A;
+    --color-secondary: #81C784;
+    --text-primary: #E8EDE8;
+    --text-secondary: #A9B5AC;
+    --text-muted: #7E8C82;
+    --bg-hover: rgba(102, 187, 106, 0.12);
+    --bg-selected: #1E2E20;
+    --btn-primary: #66BB6A;
+    --btn-primary-hover: #7CCB80;
+    --color-carbon: #FF9800;
+    --shadow-premium: 0 6px 18px rgba(0, 0, 0, 0.45);
+    --toggle-off: #3A4A3D;
+    --toggle-knob: #E8EDE8;
+    --disabled-bg: #222D24;
+    --disabled-border: #2A3A2D;
+    --disabled-dot: #5C6960;
+    --on-accent: #0F1511;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #0F1511;
+  --bg-secondary: #17201A;
+  --bg-card: #1A231C;
+  --border-color: #2A3A2D;
+  --color-primary: #66BB6A;
+  --color-secondary: #81C784;
+  --text-primary: #E8EDE8;
+  --text-secondary: #A9B5AC;
+  --text-muted: #7E8C82;
+  --bg-hover: rgba(102, 187, 106, 0.12);
+  --bg-selected: #1E2E20;
+  --btn-primary: #66BB6A;
+  --btn-primary-hover: #7CCB80;
+  --color-carbon: #FF9800;
+  --shadow-premium: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --toggle-off: #3A4A3D;
+  --toggle-knob: #E8EDE8;
+  --disabled-bg: #222D24;
+  --disabled-border: #2A3A2D;
+  --disabled-dot: #5C6960;
+  --on-accent: #0F1511;
 }
 
 body {
@@ -73,9 +131,9 @@ body {
 }
 
 .badge.disabled {
-    background: #ECEFF1;
+    background: var(--disabled-bg);
     color: var(--text-muted);
-    border-color: #CFD8DC;
+    border-color: var(--disabled-border);
 }
 
 /* Modern Toggle Switch */
@@ -100,7 +158,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #CFD8DC;
+    background-color: var(--toggle-off);
     transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -111,7 +169,7 @@ body {
     width: 14px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
+    background-color: var(--toggle-knob);
     box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -142,7 +200,7 @@ input:checked + .slider:before {
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    background: #EEF5EC;
+    background: var(--bg-secondary);
     border-radius: 8px;
     font-size: 10px;
     font-weight: 600;
@@ -167,7 +225,7 @@ input:checked + .slider:before {
 }
 
 .status-banner.disabled .status-dot {
-    background: #90A4AE;
+    background: var(--disabled-dot);
 }
 
 .stats-preview {
@@ -215,7 +273,7 @@ input:checked + .slider:before {
 
 .dashboard-btn {
     background: var(--btn-primary);
-    color: #FFFFFF;
+    color: var(--on-accent);
     border: none;
     border-radius: var(--radius-btn);
     padding: 11px;
@@ -232,4 +290,14 @@ input:checked + .slider:before {
 
 .dashboard-btn:active {
     transform: scale(0.97);
+}
+/* The badge keeps its own disabled treatment */
+.badge.disabled {
+  background: var(--disabled-bg);
+  color: var(--text-muted);
+  border-color: var(--disabled-border);
+}
+
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

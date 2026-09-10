@@ -5,6 +5,16 @@
     <meta charset="UTF-8">
     <title>PromptMeter</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        (function () {
+            try {
+                var mode = localStorage.getItem('promptmeter_theme');
+                if (mode === 'light' || mode === 'dark') {
+                    document.documentElement.setAttribute('data-theme', mode);
+                }
+            } catch (e) { /* fall back to prefers-color-scheme */ }
+        })();
+    </script>
 </head>
 
 <body>
@@ -42,6 +52,7 @@
 
     <!-- Load storage layer to fetch statistics locally -->
     <script src="utils/storage.js"></script>
+    <script src="utils/theme.js"></script>
     
     <script src="popup.js"></script>
 

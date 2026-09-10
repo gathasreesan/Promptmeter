@@ -21,6 +21,9 @@
         "content.css"
       ],
       "js": [
+        "utils/theme.js",
+        "utils/protect.js",
+        "utils/condense.js",
         "utils/tokenizer.js",
         "utils/calculator.js",
         "utils/storage.js",

@@ -1,6 +1,11 @@
 // popup.js
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Follow the theme chosen on the dashboard, and update live if it changes
+    if (typeof PromptMeterTheme !== 'undefined') {
+        PromptMeterTheme.start();
+    }
+
     const toggle = document.getElementById("toggle-promptmeter");
     const statusBadge = document.getElementById("popup-status-badge");
     const statusBanner = document.getElementById("status-banner");

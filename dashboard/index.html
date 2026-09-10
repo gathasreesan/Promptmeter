@@ -11,15 +11,27 @@
     <!-- Use local bundled output styling -->
     <link rel="stylesheet" href="dist/bundle.css">
     <style>
+        /* Only layout here. Colours come from the token blocks in bundle.css so the
+           page cannot disagree with the active theme. */
         body {
             margin: 0;
             padding: 0;
-            background-color: #F7F9F4; /* Primary Background */
-            color: #1B1F1C;            /* Primary Text */
             font-family: 'Inter', -apple-system, sans-serif;
             overflow-x: hidden;
         }
     </style>
+    <script>
+        // Runs before first paint: reads the mirrored preference and stamps the theme
+        // so the page never flashes light before React mounts.
+        (function () {
+            try {
+                var mode = localStorage.getItem('promptmeter_theme');
+                if (mode === 'light' || mode === 'dark') {
+                    document.documentElement.setAttribute('data-theme', mode);
+                }
+            } catch (e) { /* private mode: fall back to prefers-color-scheme */ }
+        })();
+    </script>
 </head>
 <body>
     <div id="root"></div>
