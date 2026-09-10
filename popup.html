@@ -5,16 +5,9 @@
     <meta charset="UTF-8">
     <title>PromptMeter</title>
     <link rel="stylesheet" href="style.css">
-    <script>
-        (function () {
-            try {
-                var mode = localStorage.getItem('promptmeter_theme');
-                if (mode === 'light' || mode === 'dark') {
-                    document.documentElement.setAttribute('data-theme', mode);
-                }
-            } catch (e) { /* fall back to prefers-color-scheme */ }
-        })();
-    </script>
+    <!-- Stamps the saved theme before first paint. External because MV3 extension pages
+         run under script-src 'self', which blocks inline scripts. -->
+    <script src="utils/theme-boot.js"></script>
 </head>
 
 <body>
