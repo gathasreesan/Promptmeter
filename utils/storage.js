@@ -1,28 +1,50 @@
 /**
- * PromptMeter Storage Wrapper Service
- * 
- * Centralizes read/write calls to Chrome Local Storage, handles data capping (FIFO),
- * and calculates aggregate usage statistics for user analytics.
+ * PromptMeter Storage Service
+ *
+ * The single read/write path to Chrome local storage. Handles FIFO capping of the
+ * history and aggregate usage statistics.
+ *
+ * Every method degrades gracefully when chrome.storage is unavailable (for example the
+ * dashboard opened as a plain page), reporting an empty history rather than throwing.
  */
 const PromptMeterStorage = {
-    // Configurable maximum history size to keep extension lightweight
+    // Caps stored history so the extension stays lightweight
     maxHistorySize: 500,
 
-    /**
-     * Retrieve the entire history of logged turns.
-     * @param {Function} callback - Callback function passed the history array.
-     */
-    getHistory: function (callback) {
-        chrome.storage.local.get({ history: [] }, (result) => {
-            if (typeof callback === 'function') {
-                callback(result.history || []);
-            }
-        });
+    /** True when running inside an extension context with storage access. */
+    isAvailable: function () {
+        return typeof chrome !== 'undefined' && !!chrome.storage && !!chrome.storage.local;
     },
 
     /**
-     * Save a single conversation turn data block to history.
-     * Enforces the storage cap size (evicts oldest turns if size exceeds maxHistorySize).
+     * Retrieve the entire history of logged turns.
+     * @param {Function} callback - Passed the history array (empty if storage is unavailable).
+     */
+    getHistory: function (callback) {
+        const done = (history) => {
+            if (typeof callback === 'function') callback(history);
+        };
+
+        if (!this.isAvailable()) return done([]);
+        chrome.storage.local.get({ history: [] }, (result) => done(result.history || []));
+    },
+
+    /**
+     * Overwrite the stored history.
+     * @param {Array} history - The full history array to persist.
+     * @param {Function} callback - Optional, passed the history that was written.
+     */
+    setHistory: function (history, callback) {
+        const done = () => {
+            if (typeof callback === 'function') callback(history);
+        };
+
+        if (!this.isAvailable()) return done();
+        chrome.storage.local.set({ history: history }, done);
+    },
+
+    /**
+     * Append one conversation turn, evicting the oldest once the cap is reached.
      * @param {Object} turnData - The turn object { prompt, response, ... }
      * @param {Function} callback - Optional callback on completion.
      */
@@ -32,94 +54,87 @@ const PromptMeterStorage = {
         this.getHistory((history) => {
             history.push(turnData);
 
-            // Enforce size limit (FIFO eviction)
             if (history.length > this.maxHistorySize) {
-                history.shift(); // Remove the oldest turn
-                console.log(`🧹 PromptMeter [Storage]: Evicted oldest record (history size exceeded ${this.maxHistorySize}).`);
+                history.shift();
+                console.log(`🧹 PromptMeter [Storage]: Evicted oldest record (cap ${this.maxHistorySize}).`);
             }
 
-            chrome.storage.local.set({ history: history }, () => {
-                if (typeof callback === 'function') {
-                    callback();
-                }
+            this.setHistory(history, () => {
+                if (typeof callback === 'function') callback();
             });
         });
     },
 
     /**
-     * Completely wipe historical turn logs.
-     * @param {Function} callback - Optional callback on completion.
+     * Wipe all historical turn logs.
+     * @param {Function} callback - Optional, passed the (now empty) history.
      */
     clearHistory: function (callback) {
-        chrome.storage.local.set({ history: [] }, () => {
+        this.setHistory([], (history) => {
             console.log("🗑️ PromptMeter [Storage]: Historical records cleared.");
-            if (typeof callback === 'function') {
-                callback();
-            }
+            if (typeof callback === 'function') callback(history);
         });
     },
 
     /**
-     * Delete a single conversation turn from history by its timestamp.
+     * Delete a single conversation turn by its timestamp.
      * @param {string} timestamp - ISO timestamp of the turn to delete.
-     * @param {Function} callback - Optional callback on completion returning updated history array.
+     * @param {Function} callback - Optional, passed the updated history array.
      */
     deleteTurn: function (timestamp, callback) {
         if (!timestamp) return;
 
         this.getHistory((history) => {
-            const updatedHistory = history.filter(turn => turn.timestamp !== timestamp);
-
-            chrome.storage.local.set({ history: updatedHistory }, () => {
+            this.setHistory(history.filter(turn => turn.timestamp !== timestamp), (updated) => {
                 console.log(`🗑️ PromptMeter [Storage]: Turn record deleted (${timestamp}).`);
-                if (typeof callback === 'function') {
-                    callback(updatedHistory);
-                }
+                if (typeof callback === 'function') callback(updated);
             });
         });
     },
 
     /**
-     * Calculates sum and average analytics across all conversation records.
-     * Useful for powering the dashboard charts and counters.
-     * @param {Function} callback - Callback function passed the aggregated stats object.
+     * Sums and averages a history array. Pure, so the dashboard can aggregate the records
+     * already held in component state without a second round trip to storage.
+     * @param {Array} history - Array of captured turns.
+     * @returns {Object} Aggregated usage statistics.
+     */
+    aggregate: function (history = []) {
+        const sum = (field) => history.reduce((total, turn) => total + (turn[field] || 0), 0);
+        const round = (value) => parseFloat(value.toFixed(4));
+
+        // An unscored turn counts as a perfect 100 so old records don't drag the average down
+        const efficiencyTotal = history.reduce(
+            (total, turn) => total + (turn.efficiencyScore !== undefined ? turn.efficiencyScore : 100),
+            0
+        );
+
+        return {
+            totalQueries: history.length,
+            totalTokens: sum('totalTokens'),
+            totalElectricity: round(sum('electricity')),
+            totalCarbon: round(sum('carbon')),
+            totalWater: round(sum('water')),
+            totalTokensSaved: sum('tokensSaved'),
+            totalCarbonSaved: sum('carbonSaved'),
+            avgEfficiency: history.length > 0 ? Math.round(efficiencyTotal / history.length) : 0
+        };
+    },
+
+    /**
+     * Fetches history and returns its aggregate statistics.
+     * @param {Function} callback - Passed the aggregated stats object.
      */
     getStats: function (callback) {
         this.getHistory((history) => {
-            const stats = {
-                totalQueries: history.length,
-                totalTokens: 0,
-                totalElectricity: 0,
-                totalCarbon: 0,
-                totalWater: 0,
-                avgEfficiency: 0
-            };
-
-            if (history.length === 0) {
-                if (typeof callback === 'function') callback(stats);
-                return;
-            }
-
-            let cumulativeEfficiency = 0;
-
-            history.forEach(turn => {
-                stats.totalTokens += turn.totalTokens || 0;
-                stats.totalElectricity += turn.electricity || 0;
-                stats.totalCarbon += turn.carbon || 0;
-                stats.totalWater += turn.water || 0;
-                cumulativeEfficiency += (turn.efficiencyScore !== undefined) ? turn.efficiencyScore : 100;
-            });
-
-            stats.avgEfficiency = Math.round(cumulativeEfficiency / history.length);
-
-            // Clean up float rounding errors
-            stats.totalElectricity = parseFloat(stats.totalElectricity.toFixed(4));
-            stats.totalCarbon = parseFloat(stats.totalCarbon.toFixed(4));
-            stats.totalWater = parseFloat(stats.totalWater.toFixed(4));
-
-            if (typeof callback === 'function') {
-                callback(stats);
-            }
+            if (typeof callback === 'function') callback(this.aggregate(history));
         });
     }
 };
+
+// Export for global (content script / popup) and bundler environments
+if (typeof window !== 'undefined') {
+    window.PromptMeterStorage = PromptMeterStorage;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { PromptMeterStorage };
+}

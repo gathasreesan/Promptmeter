@@ -1,0 +1,13 @@
+# Dependencies — reproducible from dashboard/package-lock.json via `npm install`
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,6 +1,10 @@
 /* content.css */
 
-:root {
+/* Tokens are scoped to the card, never to the host page's :root. ChatGPT defines its
+   own --bg-card / --border-color style variables, and leaking ours onto :root would
+   restyle their UI. Custom properties inherit, so every child of the card still sees
+   them. */
+.promptmeter-opt-card {
   --bg-card: #FFFFFF;
   --bg-surface: #EEF5EC;
   --border-color: #DCE8DD;
@@ -16,15 +20,76 @@
   --btn-secondary-border: #DCE8DD;
   --btn-secondary-hover: #EEF5EC;
   --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
+  --btn-secondary: #FFFFFF;
+  --on-accent: #FFFFFF;
+  --diff-removed-bg: rgba(211, 47, 47, 0.05);
+  --diff-removed-text: #B91C1C;
+  --diff-added-bg: rgba(46, 125, 50, 0.05);
+  --diff-added-text: #15803D;
+}
+
+/* Dark theme, matched to the dashboard so the coach card never looks foreign
+   against a dark ChatGPT window. */
+@media (prefers-color-scheme: dark) {
+  .promptmeter-opt-card:not([data-theme="light"]) {
+    --bg-card: #1A231C;
+    --bg-surface: #17201A;
+    --border-color: #2A3A2D;
+    --color-primary: #66BB6A;
+    --color-secondary: #81C784;
+    --color-error: #EF5350;
+    --text-primary: #E8EDE8;
+    --text-secondary: #A9B5AC;
+    --text-muted: #7E8C82;
+    --btn-primary-hover: #7CCB80;
+    --btn-secondary: #1A231C;
+    --btn-secondary-border: #2A3A2D;
+    --btn-secondary-hover: #222D24;
+    --on-accent: #0F1511;
+    --shadow-premium: 0 8px 24px rgba(0, 0, 0, 0.55);
+    --diff-removed-bg: rgba(239, 83, 80, 0.12);
+    --diff-removed-text: #FCA5A5;
+    --diff-added-bg: rgba(102, 187, 106, 0.12);
+    --diff-added-text: #86EFAC;
+  }
+}
+
+.promptmeter-opt-card[data-theme="dark"] {
+  --bg-card: #1A231C;
+  --bg-surface: #17201A;
+  --border-color: #2A3A2D;
+  --color-primary: #66BB6A;
+  --color-secondary: #81C784;
+  --color-error: #EF5350;
+  --text-primary: #E8EDE8;
+  --text-secondary: #A9B5AC;
+  --text-muted: #7E8C82;
+  --btn-primary-hover: #7CCB80;
+  --btn-secondary: #1A231C;
+  --btn-secondary-border: #2A3A2D;
+  --btn-secondary-hover: #222D24;
+  --on-accent: #0F1511;
+  --shadow-premium: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --diff-removed-bg: rgba(239, 83, 80, 0.12);
+  --diff-removed-text: #FCA5A5;
+  --diff-added-bg: rgba(102, 187, 106, 0.12);
+  --diff-added-text: #86EFAC;
 }
 
 .promptmeter-opt-card {
     position: fixed;
-    bottom: 120px; /* Float right above the standard ChatGPT text input wrapper */
+    /* Fallback only. content.js measures the live composer and overrides bottom, left,
+       width and max-height, because the composer grows as the user types and a fixed
+       offset ends up sitting on top of the prompt box. */
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     width: 90%;
     max-width: 580px;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: var(--bg-card); /* Card Background */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -47,6 +112,16 @@
     pointer-events: auto;
 }
 
+/* Anchored to the measured composer: JS supplies left and width, so the centring
+   half-translate must not be applied on top of them. */
+.promptmeter-opt-card.promptmeter-anchored {
+    transform: translateY(20px);
+}
+
+.promptmeter-opt-card.promptmeter-anchored.visible {
+    transform: translateY(0);
+}
+
 .promptmeter-opt-header {
     display: flex;
     justify-content: space-between;
@@ -54,6 +129,7 @@
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
     margin-bottom: 12px;
+    flex: 0 0 auto;
 }
 
 .promptmeter-opt-title {
@@ -83,11 +159,17 @@
     letter-spacing: 0.05em;
 }
 
+/* The diff is the only part that may scroll. When the composer is tall there is little
+   room left above it, and the header and buttons must stay reachable. */
 .promptmeter-opt-diff {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 14px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .promptmeter-diff-box {
@@ -96,28 +178,28 @@
     padding: 10px 14px;
     border-radius: var(--radius-btn); /* Button/Input Radius */
     word-break: break-word;
-    max-height: 120px;
-    overflow-y: auto;
     border: 1px solid var(--border-color);
+    flex: 0 0 auto;
 }
 
 .promptmeter-diff-original {
-    background: rgba(211, 47, 47, 0.05); /* Translucent red */
+    background: var(--diff-removed-bg);
     border-left: 3px solid var(--color-error);
-    color: #b91c1c;
+    color: var(--diff-removed-text);
     text-decoration: line-through;
 }
 
 .promptmeter-diff-optimized {
-    background: rgba(46, 125, 50, 0.05); /* Translucent green */
+    background: var(--diff-added-bg);
     border-left: 3px solid var(--color-primary);
-    color: #15803d;
+    color: var(--diff-added-text);
 }
 
 .promptmeter-opt-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    flex: 0 0 auto;
 }
 
 .promptmeter-opt-btn {
@@ -136,7 +218,7 @@
 
 .promptmeter-btn-accept {
     background: var(--color-primary);
-    color: #FFFFFF;
+    color: var(--on-accent);
     border: none;
 }
 

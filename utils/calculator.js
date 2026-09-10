@@ -1,37 +1,21 @@
 /**
  * PromptMeter Environmental Calculator
- * 
- * Estimates the environmental footprint (electricity, carbon, and water) 
+ *
+ * Estimates the environmental footprint (electricity, carbon, and water)
  * associated with LLM inference based on token usage.
- * 
+ *
  * Constants are based on published research (Luccioni et al., 2023; Li et al., 2023).
  */
 const PromptMeterCalculator = {
-    // Configurable constants
     config: {
-        // Electricity consumed per token in Watt-hours (Wh)
-        // Default: 0.001 Wh per token (equivalent to 1 Wh per 1000 tokens)
+        // Electricity per token in Watt-hours (1 Wh per 1000 tokens)
         electricityPerToken: 0.001,
 
-        // Carbon intensity of the electricity grid in grams of CO2 per Wh (g CO2 / Wh)
-        // Default: 0.36 g CO2 / Wh (US grid average, equivalent to 360 g CO2 / kWh)
+        // Grid carbon intensity in g CO2 per Wh (US average, 360 g CO2 / kWh)
         carbonIntensity: 0.36,
 
-        // Water consumption in milliliters per Wh of electricity consumed (mL / Wh)
-        // Includes data center cooling water + thermal electricity generation water usage
-        // Default: 1.5 mL / Wh (equivalent to 1.5 Liters per kWh)
+        // Water per Wh in mL, covering data centre cooling and thermal generation (1.5 L / kWh)
         waterPerWh: 1.5
-    },
-
-    /**
-     * Update calculation constants dynamically.
-     * @param {Object} customConfig - Key-value pairs to override default config.
-     */
-    updateConfig: function (customConfig) {
-        if (customConfig) {
-            this.config = { ...this.config, ...customConfig };
-            console.log("🌿 PromptMeter [Calculator]: Config updated.", this.config);
-        }
     },
 
     /**
@@ -41,26 +25,40 @@ const PromptMeterCalculator = {
      */
     calculate: function (totalTokens) {
         if (!totalTokens || totalTokens < 0) {
-            return {
-                electricity: 0,
-                carbon: 0,
-                water: 0
-            };
+            return { electricity: 0, carbon: 0, water: 0 };
         }
 
-        // 1. Electricity consumption (Wh)
         const electricity = totalTokens * this.config.electricityPerToken;
-
-        // 2. Carbon emissions (grams of CO2)
-        const carbon = electricity * this.config.carbonIntensity;
-
-        // 3. Water usage (milliliters)
-        const water = electricity * this.config.waterPerWh;
+        const round = (value) => parseFloat(value.toFixed(4));
 
         return {
-            electricity: parseFloat(electricity.toFixed(4)),
-            carbon: parseFloat(carbon.toFixed(4)),
-            water: parseFloat(water.toFixed(4))
+            electricity: round(electricity),
+            carbon: round(electricity * this.config.carbonIntensity),
+            water: round(electricity * this.config.waterPerWh)
+        };
+    },
+
+    /**
+     * Footprint avoided by removing tokens from a prompt. Unlike calculate(), the values
+     * are left unrounded: savings are typically a fraction of a milligram and are summed
+     * across many turns before ever being displayed.
+     * @param {number} tokensSaved - Tokens removed by the optimizer.
+     * @returns {Object} Avoided footprint { electricity, carbon, water }.
+     */
+    savings: function (tokensSaved) {
+        const electricity = Math.max(0, tokensSaved) * this.config.electricityPerToken;
+        return {
+            electricity: electricity,
+            carbon: electricity * this.config.carbonIntensity,
+            water: electricity * this.config.waterPerWh
         };
     }
 };
+
+// Export for global (content script) and bundler environments
+if (typeof window !== 'undefined') {
+    window.PromptMeterCalculator = PromptMeterCalculator;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { PromptMeterCalculator };
+}
