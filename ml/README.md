@@ -60,82 +60,63 @@ instead of 3,443, which is both a smaller download and a slightly better model.
 
 ## Results
 
-Trained on **512 labeled phrases**, stratified 75/25 train/test split.
-Hyperparameters are grid-searched on every run — 60 points over n-gram range, sublinear
-TF, bigram floor and `C` — and scored by cross-validated **KEEP/DROP** accuracy, not
-four-way accuracy. That choice is deliberate and it changes which model wins: the
+Trained on **621 labeled phrases** — 512 hand-written originals plus 109 curated
+additions — stratified 75/25. Hyperparameters are grid-searched on every run (60 points
+over n-gram range, sublinear TF, bigram floor and `C`) and scored by cross-validated
+**KEEP/DROP** accuracy, not four-way accuracy. That choice changes which model wins: the
 optimizer never acts on the four labels, so a grid point that trades a FILLER/REDUNDANT
 confusion for a correct KEEP/DROP call is better for this application and worse on the
 four-way number.
 
 Selected: `TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2)` +
-`LogisticRegression(C=8.0, balanced)`
+`LogisticRegression(C=4.0, balanced)` · 1,281 features · 130 KB shipped
 
-### Four-class classification (held-out test set, n=128)
+### Four-class classification (held-out test set, n=156)
 
-| Class | Precision | Recall | F1 | Support |
-| :--- | ---: | ---: | ---: | ---: |
-| FILLER | 0.66 | 0.72 | 0.69 | 32 |
-| IMPORTANT | 0.81 | 0.88 | 0.85 | 34 |
-| REDUNDANT | 0.59 | 0.63 | 0.61 | 30 |
-| REPETITIVE | 0.79 | 0.59 | 0.68 | 32 |
-| **Macro avg** | **0.713** | **0.707** | **0.706** | 128 |
+| Class | F1 |
+| :--- | ---: |
+| FILLER | 0.83 |
+| IMPORTANT | 0.83 |
+| REDUNDANT | 0.82 |
+| REPETITIVE | 0.77 |
 
-**Accuracy 0.711** · 5-fold CV accuracy **0.799 (± 0.037)**
+**Accuracy 0.814** · 5-fold CV accuracy **0.802 (± 0.025)**
 
-The CV figure is now computed over the **whole pipeline**, vectorizer included. It
-previously fit the vectorizer on every row before cross-validating the classifier over
-that matrix, which leaked the test fold's vocabulary and IDF weights into training — and
-is why the old CV number (0.779) read *higher* than it should have relative to the
-held-out score.
+The CV figure is computed over the **whole pipeline**, vectorizer included. It previously
+fit the vectorizer on every row before cross-validating the classifier over that matrix,
+which leaked the test fold's vocabulary and IDF weights into training.
 
 ### KEEP vs DROP — the decision the optimizer actually consumes
 
-The optimizer never uses the four labels directly. It asks one question of each
-sentence: *may this go?* `FILLER`, `REDUNDANT` and `REPETITIVE` all mean yes.
+`FILLER`, `REDUNDANT` and `REPETITIVE` all mean *yes, this may go*.
 
 | Metric | Score |
 | :--- | ---: |
-| Accuracy | **0.914** |
-| Precision (macro) | 0.883 |
-| Recall (macro) | 0.904 |
-| F1 (macro) | 0.893 |
+| Accuracy | **0.910** |
+| Precision (macro) | 0.880 |
+| Recall (macro) | 0.892 |
+| F1 (macro) | 0.886 |
 
-This is much higher than the four-way figure because most four-way errors are between
-two *removable* classes — calling filler "redundant" changes no decision.
-
-### Confusion matrix
-
-```
-            FILLER  IMPORT  REDUND  REPETI
-FILLER          23       2       6       1
-IMPORTANT        1      30       1       2
-REDUNDANT        8       1      19       2
-REPETITIVE       3       4       6      19
-```
-
-Only **1 of 34** IMPORTANT phrases was misread as FILLER — the error that would actually
-hurt a user. FILLER↔REDUNDANT is the main confusion and is harmless here.
+Higher than the four-way figure because most four-way errors are between two *removable*
+classes — calling filler "redundant" changes no decision.
 
 ### Where the thresholds come from
 
-`ML_KEEP_VETO` and `ML_DROP_PROPOSE` in `condense.js` are set from measured precision,
-not taste. Taking 5-fold cross-validated probabilities over the corpus and asking, at
+`ML_KEEP_VETO` and `ML_DROP_PROPOSE` in `condense.js` are set from measured precision and
+**re-derived on every refit**. Taking 5-fold cross-validated probabilities and asking, at
 each cut-off, how often the rule that fires is actually right:
 
 | PROPOSE (`removable ≥ t`) | fires | precision | | VETO (`keep ≥ t`) | fires | precision |
 | ---: | ---: | ---: | :-- | ---: | ---: | ---: |
-| 0.85 | 299 | 0.973 | | 0.70 | 79 | 0.911 |
-| 0.88 | 281 | 0.975 | | 0.75 | 71 | 0.916 |
-| 0.90 | 259 | 0.981 | | 0.80 | 58 | **0.931** |
-| 0.92 | 231 | **0.991** | | 0.85 | 45 | 0.978 |
+| 0.85 | 314 | 0.978 | | 0.70 | 68 | 0.941 |
+| 0.88 | 274 | 0.985 | | 0.75 | 52 | **0.962** |
+| 0.90 | 229 | **0.991** | | 0.80 | 45 | 0.956 |
+| 0.92 | 172 | 0.994 | | 0.85 | 35 | 0.943 |
 
-PROPOSE sits at **0.92**, because it deletes the user's own words and is held to ~99%
-precision. VETO sits at **0.80**, where precision improves meaningfully over 0.75 while
-still firing often; being wrong there only costs a few tokens.
-
-**Re-derive these after retraining.** They describe a particular fitted model, not a
-property of the approach.
+Both moved when the corpus grew. **PROPOSE is 0.90** (was 0.92): it deletes the user's own
+words, so it is still held to ~99% precision, but the better-fitted model reaches that at
+0.90 and fires 57 more times for it. **VETO is 0.75** (was 0.80) — better on both axes at
+once, higher precision *and* more firings.
 
 ### A negative result worth recording
 

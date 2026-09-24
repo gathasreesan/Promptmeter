@@ -40,26 +40,28 @@ const PromptMeterCondense = {
     // A sentence the rules classify as core -- it asks something, constrains the output,
     // or holds protected content -- is never offered to the model at all. No confidence
     // level lets the classifier delete the user's actual request.
-    // Both thresholds are set from measured precision rather than taste. Running
-    // 5-fold cross-validated probabilities over the training corpus and asking, at each
-    // cut-off, how often the rule that fires is actually right:
+    // Both thresholds are set from measured precision rather than taste, and re-derived
+    // whenever the model is refitted. Running 5-fold cross-validated probabilities over
+    // the corpus and asking, at each cut-off, how often the rule that fires is right:
     //
     //   PROPOSE (removable >= t)        VETO (keep >= t)
     //     t     fires  precision          t     fires  precision
-    //    0.85    299     0.973           0.70     79     0.911
-    //    0.88    281     0.975           0.75     71     0.916
-    //    0.90    259     0.981           0.80     58     0.931
-    //    0.92    231     0.991           0.85     45     0.978
+    //    0.85    314     0.978           0.70     68     0.941
+    //    0.88    274     0.985           0.75     52     0.962
+    //    0.90    229     0.991           0.80     45     0.956
+    //    0.92    172     0.994           0.85     35     0.943
     //
-    // PROPOSE sits at 0.92: it deletes the user's text, so it is held to ~99%
-    // precision, and the 28 extra removals that 0.90 would buy cost three more wrong
-    // deletions. VETO sits at 0.80, where precision climbs meaningfully over 0.75 while
-    // still firing often; being wrong there only costs a few tokens.
+    // Both moved when the corpus grew to 621 rows and the search picked C=4.0, which is
+    // why the file says to re-derive them. PROPOSE drops from 0.92 to 0.90: it deletes
+    // the user's own text, so it is still held to ~99% precision, but the better-fitted
+    // model now reaches that at 0.90 and fires 57 more times for it. VETO drops from
+    // 0.80 to 0.75, which is better on both axes at once -- higher precision (0.962
+    // against 0.956) AND more firings (52 against 45).
     //
-    // Re-derive these after retraining -- they describe a particular fitted model, not
-    // a property of the approach.
-    ML_KEEP_VETO: 0.80,
-    ML_DROP_PROPOSE: 0.92,
+    // Re-derive these after retraining. They describe a particular fitted model, not a
+    // property of the approach.
+    ML_KEEP_VETO: 0.75,
+    ML_DROP_PROPOSE: 0.90,
 
     /** The classifier, or null when no model is loaded. */
     ml: function () {

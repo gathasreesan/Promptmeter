@@ -70,13 +70,13 @@ The analytics dashboard is built with **React** and **Chart.js**, bundled using 
 
 ### Step 1b: Run the Test Suites (Optional)
 
-Four dependency-free suites, 696 checks in total. From the project root:
+Four dependency-free suites, 714 checks in total. From the project root:
 
 ```bash
 node tests/optimizer.test.js    # 285 - protected spans, meaning preservation, filler removal
 node tests/grammar.test.js      # 109 - grammar corrections, and what must NOT be corrected
 node tests/spelling.test.js     # 192 - typo correction, and what must NOT be corrected
-node tests/ml-parity.test.js    # 110 - JavaScript reproduces scikit-learn exactly
+node tests/ml-parity.test.js    # 128 - JavaScript reproduces scikit-learn exactly
 ```
 
 Run the first after any edit to `utils/optimizer.js`, `utils/protect.js`, or
@@ -387,22 +387,22 @@ Roughly half of `tests/grammar.test.js` tests what must **not** change.
 ### 1d. Machine Learning Component
 
 A lightweight classifier that closes the blind spot in a pure blacklist: a sentence nobody
-wrote a rule for. Trained on **512 labeled phrases**, with hyperparameters grid-searched on
+wrote a rule for. Trained on **621 labeled phrases**, with hyperparameters grid-searched on
 every run (60 points) and scored by cross-validated **KEEP/DROP** accuracy — the only call
 the optimizer actually makes.
 
 | Metric | Four-class | KEEP vs DROP |
 | :--- | ---: | ---: |
-| Accuracy | 0.711 | **0.914** |
-| Precision (macro) | 0.713 | 0.883 |
-| Recall (macro) | 0.707 | 0.904 |
-| F1-score (macro) | 0.706 | 0.893 |
+| Accuracy | 0.814 | **0.910** |
+| Precision (macro) | 0.821 | 0.880 |
+| Recall (macro) | 0.812 | 0.892 |
+| F1-score (macro) | 0.813 | 0.886 |
 
-5-fold CV accuracy **0.799 (± 0.037)**, computed over the whole pipeline including the
+5-fold CV accuracy **0.802 (± 0.025)**, computed over the whole pipeline including the
 vectorizer. (It previously fit the vectorizer on every row before cross-validating the
 classifier, leaking the test fold's vocabulary and IDF into training.)
 
-The model exports to **113 KB** of vocabulary, IDF weights and coefficients, so inference is
+The model exports to **130 KB** of vocabulary, IDF weights and coefficients, so inference is
 one sparse dot product in JavaScript: no server, no WASM, and prompt text never leaves the
 browser. The transform settings travel with the model in a `config` block that the JavaScript
 reads, so the two implementations cannot drift apart — and `tests/ml-parity.test.js` proves
@@ -412,7 +412,7 @@ rule-based behaviour, which the suite verifies.
 The classifier is a **second opinion, never the decision maker**. A sentence that asks,
 constrains, reports a problem, or holds protected content is never offered to it. The
 thresholds are asymmetric and set from measured precision: proposing a removal needs
-`0.92` (~99% precision, because it deletes the user's words), vetoing one needs `0.80`
+`0.90` (~99% precision, because it deletes the user's words), vetoing one needs `0.75`
 (being wrong costs a few tokens). See `ml/README.md`, including a documented **negative
 result** — expanding the corpus with generated phrases tripled the headline accuracy while
 making the real decision slightly worse.

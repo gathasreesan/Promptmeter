@@ -10,316 +10,370 @@
     {
       "text": "Write a python script that reads a csv file and returns a dictionary",
       "scores": [
-        0.02466,
-        0.886622,
-        0.043553,
-        0.045165
+        0.044192,
+        0.823657,
+        0.069388,
+        0.062763
       ]
     },
     {
       "text": "I need a study plan covering pointers arrays and linked lists",
       "scores": [
-        0.069261,
-        0.707511,
-        0.080196,
-        0.143032
+        0.098321,
+        0.578594,
+        0.117143,
+        0.205941
       ]
     },
     {
       "text": "My server crashes when two users log in at once",
       "scores": [
-        0.100059,
-        0.795607,
-        0.062159,
-        0.042174
+        0.151756,
+        0.711602,
+        0.086229,
+        0.050412
       ]
     },
     {
       "text": "Design a schema for a library management system",
       "scores": [
-        0.058792,
-        0.876452,
-        0.028192,
-        0.036564
+        0.097469,
+        0.787597,
+        0.053431,
+        0.061503
       ]
     },
     {
       "text": "My regex matches too much text, fix it",
       "scores": [
-        0.094252,
-        0.678927,
-        0.049071,
-        0.17775
+        0.148229,
+        0.563004,
+        0.071287,
+        0.217481
       ]
     },
     {
       "text": "I hope I am not bothering you with this",
       "scores": [
-        0.988818,
-        0.002407,
-        0.006902,
-        0.001873
+        0.971299,
+        0.007255,
+        0.015673,
+        0.005773
       ]
     },
     {
       "text": "I am feeling completely lost and overwhelmed",
       "scores": [
-        0.858865,
-        0.019236,
-        0.077888,
-        0.044011
+        0.802991,
+        0.027375,
+        0.11602,
+        0.053614
       ]
     },
     {
       "text": "Anyway moving on to the actual question",
       "scores": [
-        0.714807,
-        0.064001,
-        0.172138,
-        0.049054
+        0.577962,
+        0.107037,
+        0.250655,
+        0.064346
       ]
     },
     {
       "text": "Much appreciated in advance",
       "scores": [
-        0.766918,
-        0.101135,
-        0.089823,
-        0.042124
+        0.610198,
+        0.18363,
+        0.147784,
+        0.058389
       ]
     },
     {
       "text": "Would it be possible for you to perhaps",
       "scores": [
-        0.039156,
-        0.017681,
-        0.896858,
-        0.046306
+        0.049812,
+        0.037337,
+        0.845697,
+        0.067153
       ]
     },
     {
       "text": "Close proximity very near nearby",
       "scores": [
-        0.039029,
-        0.042518,
-        0.814723,
-        0.10373
+        0.051451,
+        0.048483,
+        0.78064,
+        0.119426
       ]
     },
     {
       "text": "With regard to and with respect to",
       "scores": [
-        0.048315,
-        0.038578,
-        0.895741,
-        0.017366
+        0.062778,
+        0.056903,
+        0.854546,
+        0.025772
       ]
     },
     {
       "text": "The essay needs to have references",
       "scores": [
-        0.022531,
-        0.050206,
-        0.022818,
-        0.904445
+        0.026594,
+        0.052363,
+        0.029408,
+        0.891635
       ]
     },
     {
       "text": "Add a login page add a signup page add a profile page",
       "scores": [
-        0.054133,
-        0.13447,
-        0.05828,
-        0.753117
+        0.085071,
+        0.170447,
+        0.057642,
+        0.68684
       ]
     },
     {
       "text": "The app should be scalable",
       "scores": [
-        0.016467,
-        0.061537,
-        0.021206,
-        0.900791
+        0.02938,
+        0.093176,
+        0.037455,
+        0.839988
       ]
     },
     {
       "text": "Summarize it summarize it briefly",
       "scores": [
-        0.020381,
-        0.049629,
-        0.04127,
-        0.88872
+        0.037367,
+        0.08758,
+        0.062057,
+        0.812995
       ]
     },
     {
       "text": "Build it build the component",
       "scores": [
-        0.01806,
-        0.102673,
-        0.036729,
-        0.842538
+        0.038166,
+        0.141106,
+        0.065231,
+        0.755497
       ]
     },
     {
       "text": "Trace the output of this nested loop",
       "scores": [
-        0.040727,
-        0.838071,
-        0.048229,
-        0.072973
+        0.05942,
+        0.759985,
+        0.081892,
+        0.098703
       ]
     },
     {
       "text": "The output must preserve the original column order",
       "scores": [
-        0.0221,
-        0.835545,
-        0.035385,
-        0.106971
+        0.027849,
+        0.824775,
+        0.05736,
+        0.090016
       ]
     },
     {
       "text": "Write a cover letter for a software internship",
       "scores": [
-        0.03697,
-        0.935595,
-        0.011828,
-        0.015607
+        0.063096,
+        0.880531,
+        0.025909,
+        0.030464
       ]
     },
     {
       "text": "I hate to ask but I am desperate",
       "scores": [
-        0.880813,
-        0.007889,
-        0.094232,
-        0.017066
+        0.804891,
+        0.021855,
+        0.146706,
+        0.026547
       ]
     },
     {
       "text": "I have a viva tomorrow afternoon",
       "scores": [
-        0.932749,
-        0.018128,
-        0.012735,
-        0.036388
+        0.886761,
+        0.035609,
+        0.024426,
+        0.053204
       ]
     },
     {
       "text": "I am so done with this semester",
       "scores": [
-        0.96269,
-        0.009247,
-        0.013703,
-        0.014359
+        0.937483,
+        0.016294,
+        0.023358,
+        0.022865
       ]
     },
     {
       "text": "Awaiting your kind response",
       "scores": [
-        0.836919,
-        0.05676,
-        0.055695,
-        0.050626
+        0.757069,
+        0.080096,
+        0.078297,
+        0.084538
       ]
     },
     {
       "text": "By virtue of the fact that it exists",
       "scores": [
-        0.010886,
-        0.024221,
-        0.941181,
-        0.023711
+        0.022519,
+        0.036991,
+        0.900346,
+        0.040144
       ]
     },
     {
       "text": "It is my understanding that I understand",
       "scores": [
-        0.087258,
-        0.009148,
-        0.867046,
-        0.036548
+        0.15822,
+        0.019957,
+        0.770067,
+        0.051756
       ]
     },
     {
       "text": "Plan ahead for the future beforehand",
       "scores": [
-        0.058368,
-        0.097548,
-        0.807723,
-        0.036361
+        0.050782,
+        0.100275,
+        0.79747,
+        0.051473
       ]
     },
     {
       "text": "The slides need an agenda slide",
       "scores": [
-        0.025072,
-        0.05173,
-        0.06152,
-        0.861679
+        0.037971,
+        0.072328,
+        0.085685,
+        0.804016
       ]
     },
     {
       "text": "Repeating myself here but repeating anyway",
       "scores": [
-        0.116774,
-        0.045619,
-        0.038202,
-        0.799405
+        0.17278,
+        0.090779,
+        0.062632,
+        0.673809
       ]
     },
     {
       "text": "Each function needs a docstring",
       "scores": [
-        0.032173,
-        0.061002,
-        0.029669,
-        0.877156
+        0.055218,
+        0.088503,
+        0.053304,
+        0.802974
       ]
     },
     {
       "text": "Correct this and correct it properly",
       "scores": [
-        0.029948,
-        0.017419,
-        0.03154,
-        0.921093
+        0.050089,
+        0.032521,
+        0.047363,
+        0.870027
+      ]
+    },
+    {
+      "text": "Please please explain binary search",
+      "scores": [
+        0.053985,
+        0.79515,
+        0.019827,
+        0.131039
+      ]
+    },
+    {
+      "text": "okay got it, see you later",
+      "scores": [
+        0.757447,
+        0.038288,
+        0.084714,
+        0.119551
+      ]
+    },
+    {
+      "text": "hope the rest of your week goes smoothly",
+      "scores": [
+        0.71195,
+        0.11901,
+        0.108874,
+        0.060166
+      ]
+    },
+    {
+      "text": "an unexpected surprise that nobody expected",
+      "scores": [
+        0.045294,
+        0.05293,
+        0.85918,
+        0.042597
+      ]
+    },
+    {
+      "text": "at the current present time",
+      "scores": [
+        0.069027,
+        0.084587,
+        0.793006,
+        0.053379
+      ]
+    },
+    {
+      "text": "I want a quick quick quick answer",
+      "scores": [
+        0.135105,
+        0.082811,
+        0.048075,
+        0.734009
       ]
     },
     {
       "text": "thanks so much in advance for your help",
       "scores": [
-        0.939156,
-        0.018553,
-        0.009519,
-        0.032772
+        0.817638,
+        0.047548,
+        0.030897,
+        0.103916
       ]
     },
     {
       "text": "write a python script that reads a csv file",
       "scores": [
-        0.028998,
-        0.88257,
-        0.037581,
-        0.050851
+        0.049177,
+        0.822548,
+        0.061237,
+        0.067037
       ]
     },
     {
       "text": "i am really stressed about my exam tomorrow",
       "scores": [
-        0.922044,
-        0.010149,
-        0.030124,
-        0.037684
+        0.903415,
+        0.031472,
+        0.031584,
+        0.033528
       ]
     },
     {
       "text": "the essay needs to have an introduction",
       "scores": [
-        0.027312,
-        0.045297,
-        0.046654,
-        0.880737
+        0.04208,
+        0.071304,
+        0.071009,
+        0.815608
       ]
     }
   ]
