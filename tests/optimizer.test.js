@@ -967,6 +967,37 @@ untouched('a mid-sentence conditional is not a wrapper',
     'Tell me if you could do this without a loop');
 
 // ---------------------------------------------------------------------------
+// 14. The report describes the run, not a re-derivation of it
+// ---------------------------------------------------------------------------
+
+// optimizeWithReport used to re-derive grammar findings from the RAW prompt while the
+// pipeline itself runs grammar on MASKED text. The two disagree inside a protected span:
+// a fenced block containing "i has a bug; dont worry" was correctly left alone, and the
+// card still listed two corrections for it -- fixes that accepting the rewrite would not
+// apply, because the words are inside code.
+const INSIDE_CODE = [
+    'fix this:',
+    '```js',
+    'if (x) { i has a bug; dont worry }',
+    '```',
+    'thanks'
+].join('\n');
+const codeReport = PromptMeterOptimizer.optimizeWithReport(INSIDE_CODE);
+
+record('[report] code inside a fence is untouched',
+    codeReport.text.includes('i has a bug; dont worry'),
+    `got ${JSON.stringify(codeReport.text)}`);
+record('[report] no findings are reported from inside a protected span',
+    codeReport.grammar.length === 0,
+    `reported ${JSON.stringify(codeReport.grammar.map(g => g.label))}`);
+
+// Prose findings must still be reported.
+const proseReport = PromptMeterOptimizer.optimizeWithReport('i has a question and it should has 500 words');
+record('[report] prose findings are still reported',
+    proseReport.grammar.length >= 2,
+    `got ${JSON.stringify(proseReport.grammar.map(g => g.label))}`);
+
+// ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failures.length} failed\n`);
 if (failures.length > 0) {

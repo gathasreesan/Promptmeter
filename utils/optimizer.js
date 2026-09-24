@@ -1037,9 +1037,13 @@ const PromptMeterOptimizer = {
         const collected = [];
         const text = this.optimizePrompt(prompt, collected);
 
+        // Only what the run actually did. Re-deriving findings from the RAW prompt also
+        // reported grammar from inside protected spans -- a fenced block containing
+        // "i has a bug; dont worry" listed two corrections the pipeline had correctly
+        // declined to make, so the card offered fixes that accepting would not apply.
         const grammar = [];
         const seen = new Set();
-        collected.concat(this.grammarIssues(prompt || '')).forEach(issue => {
+        collected.forEach(issue => {
             if (!this.REPORTABLE_GRAMMAR.has(issue.type)) return;
             if (seen.has(issue.label)) return;
             seen.add(issue.label);
