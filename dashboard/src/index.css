@@ -15,8 +15,6 @@
   --color-secondary: #4CAF50;
   --color-mint: #81C784;
   --color-sage: #A5D6A7;
-  --gradient-accent: linear-gradient(135deg, #2E7D32, #66BB6A);
-  --gradient-panel: linear-gradient(135deg, #EEF5EC, #FFFFFF);
 
   /* Typographic Hierarchy */
   --text-primary: #14181A;
@@ -70,7 +68,6 @@
   --shadow-premium: 0 1px 2px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06);
   --radius-card: 12px;
   --radius-btn: 8px;
-  --radius-input: 12px;
   --radius-pill: 6px;
 }
 
@@ -97,12 +94,14 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track {
   background: var(--bg-sidebar);
 }
+/* Chrome, not content. The thumb was painted in the brand green, which made every
+   scrollable region read as a progress bar. */
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+  background: var(--border-color);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-secondary);
+  background: var(--text-disabled);
 }
 
 /* ---------------------------------------------------------------------------
@@ -179,7 +178,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .panel-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -201,7 +200,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .panel-accent {
-  background: var(--gradient-panel);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
 }
 
@@ -217,7 +216,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .kpi-label {
   margin-bottom: 6px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-secondary);
@@ -226,7 +225,7 @@ h1, h2, h3, h4, h5, h6 {
 .kpi-value {
     font-variant-numeric: tabular-nums;
   font-family: var(--font-heading);
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -234,7 +233,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .kpi-unit {
   margin-left: 4px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -298,7 +297,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px 14px;
   background: transparent;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 11px;
@@ -317,7 +316,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 8px 16px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-card);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 13px;
@@ -346,7 +345,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px 10px;
   background: var(--danger-wash);
   border: 1px solid var(--danger-border);
-  border-radius: 8px;
+  border-radius: var(--radius-btn);
   color: var(--color-error);
   font-size: 12px;
   cursor: pointer;
@@ -362,13 +361,13 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   height: 6px;
   background: var(--bg-secondary);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 .progress-fill {
   height: 100%;
   background: var(--color-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   transition: width 0.4s ease;
 }
 
@@ -383,7 +382,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
   color: var(--pill-color, var(--text-secondary));
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -394,7 +393,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
   color: var(--pill-color, var(--text-secondary));
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -403,7 +402,7 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-block;
   padding: 4px 10px;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   font-size: 11px;
   font-weight: 700;
   color: var(--pill-color, var(--text-secondary));
@@ -418,7 +417,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .stat-row span:first-child { color: var(--text-secondary); font-weight: 500; }
 .stat-row span:last-child {
-    font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; }
+    font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; }
 
 /* ---------------------------------------------------------------------------
    Queries table
@@ -489,7 +488,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .comparison-box {
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--bg-secondary);
   padding: 14px 16px;
 }
@@ -516,7 +515,7 @@ h1, h2, h3, h4, h5, h6 {
 .comparison-headline em {
   margin-left: 8px;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-btn);
   background: var(--wash-success-strong);
   color: var(--color-primary);
   font-size: 11px;
@@ -537,7 +536,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .comparison-pane {
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   background: var(--bg-card);
   padding: 10px 12px;
 }
@@ -549,7 +548,7 @@ h1, h2, h3, h4, h5, h6 {
   white-space: pre-wrap;
 }
 .comparison-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -570,7 +569,7 @@ h1, h2, h3, h4, h5, h6 {
 .comparison-metric {
   flex: 1 1 90px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-btn);
   background: var(--bg-card);
   padding: 8px 10px;
   text-align: center;
@@ -586,7 +585,7 @@ h1, h2, h3, h4, h5, h6 {
 .comparison-metric-label {
   display: block;
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 .comparison-metric.is-saved .comparison-metric-value { color: var(--color-primary); }
@@ -641,14 +640,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 .rating-gauge-value {
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1;
   color: var(--rating-color);
 }
 .rating-gauge-label {
   margin-top: 2px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -660,7 +659,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--rating-color);
   border-radius: var(--radius-pill);
   color: var(--rating-color);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -695,17 +694,17 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-selected);
   border: 1px solid var(--color-sage);
   border-radius: 50%;
-  font-size: 22px;
+  font-size: 20px;
 }
 .badge-tile.locked .badge-icon {
   background: var(--bg-secondary);
   border-color: var(--border-color);
 }
 
-.badge-lock { position: absolute; top: 4px; right: 4px; font-size: 9px; }
+.badge-lock { position: absolute; top: 4px; right: 4px; font-size: 11px; }
 .badge-name { font-size: 11px; font-weight: 800; line-height: 1.2; color: var(--color-primary); }
 .badge-tile.locked .badge-name { color: var(--text-secondary); }
-.badge-desc { margin-top: 4px; font-size: 9px; line-height: 1.2; color: var(--text-muted); }
+.badge-desc { margin-top: 4px; font-size: 11px; line-height: 1.2; color: var(--text-muted); }
 
 
 /* ---------------------------------------------------------------------------
@@ -731,8 +730,6 @@ h1, h2, h3, h4, h5, h6 {
     --color-secondary: #81C784;
     --color-mint: #4CAF50;
     --color-sage: #388E3C;
-    --gradient-accent: linear-gradient(135deg, #388E3C, #66BB6A);
-    --gradient-panel: linear-gradient(135deg, #17201A, #1A231C);
 
     --text-primary: #E6EAE8;
     --text-secondary: #A2ADB4;
@@ -791,8 +788,6 @@ h1, h2, h3, h4, h5, h6 {
   --color-secondary: #81C784;
   --color-mint: #4CAF50;
   --color-sage: #388E3C;
-  --gradient-accent: linear-gradient(135deg, #388E3C, #66BB6A);
-  --gradient-panel: linear-gradient(135deg, #17201A, #1A231C);
 
   --text-primary: #E6EAE8;
   --text-secondary: #A2ADB4;
@@ -864,10 +859,10 @@ body {
   padding: 6px 4px;
   background: transparent;
   border: none;
-  border-radius: 9px;
+  border-radius: var(--radius-btn);
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -886,7 +881,7 @@ body {
 
 .theme-switch-label {
   margin-bottom: 6px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
