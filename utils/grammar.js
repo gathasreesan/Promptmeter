@@ -254,6 +254,11 @@ const PromptMeterGrammar = {
     FRAME_FIXES: [
         [/\bexplain\s+(?:me|us)\s+(?:about\s+)?/gi, 'explain ', "'explain me about X' should be 'explain X'"],
         [/\bexplain\s+about\b/gi, 'explain', "'explain about' should be 'explain'"],
+        // "explain to me how X works" -- the indirect object is the model's only possible
+        // audience, so naming it carries nothing. Anchored to a following word so
+        // "explain it to me" and "explain to me and my team" are untouched.
+        [/\bexplain\s+to\s+me\s+(?=(?:how|what|why|when|where|which|the|a|an|this|that|in|simply)\b)/gi,
+            'explain ', "'explain to me X' should be 'explain X'"],
         [/\b(discuss|describe|mention|emphasi[sz]e)\s+(?:about|on)\b/gi, '$1', "'$1 about' should be just '$1'"],
         [/\b(compris(?:es|e|ed))\s+of\b/gi, '$1', "'comprise of' should be 'comprise'"],
         [/\b(return|reply|revert)\s+back\b/gi, '$1', "'$1 back' is redundant"],

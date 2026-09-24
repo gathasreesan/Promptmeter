@@ -998,6 +998,49 @@ record('[report] prose findings are still reported',
     `got ${JSON.stringify(proseReport.grammar.map(g => g.label))}`);
 
 // ---------------------------------------------------------------------------
+// 15. Request wrappers, and the false imperatives they leave behind
+// ---------------------------------------------------------------------------
+
+// Stripping a wrapper can strand the verb underneath it as a command aimed at the
+// model: "I am trying to learn about ML" became "Learn about machine learning", and
+// "can you help me understand X" became "Understand X" -- both telling the model to go
+// and study something rather than to explain it. These rewrite before the strippers run.
+for (const [prompt, wanted] of [
+    ['I am trying to learn about machine learning and how it works', 'explain machine learning'],
+    ['Can you help me understand what the difference is between REST and GraphQL', 'explain the difference between'],
+    ['help me understand recursion', 'explain recursion'],
+    ['could you help me figure out why this fails', 'explain why this fails'],
+]) {
+    const out = PromptMeterOptimizer.optimizePrompt(prompt).toLowerCase();
+    record(`[wrapper] ${JSON.stringify(prompt.slice(0, 40))}`,
+        out.startsWith(wanted), `got ${JSON.stringify(out)}`);
+    record(`[wrapper] no false imperative: ${JSON.stringify(prompt.slice(0, 30))}`,
+        !/^(learn|understand|figure)/i.test(out), `got ${JSON.stringify(out)}`);
+}
+
+// Wordy request phrasing measured surviving on ordinary prompts.
+for (const [wordy, shorter] of [
+    ['give me a list of ideas', 'list'],
+    ['provide me with a summary', 'provide'],
+    ['tell me everything there is to know about Rome', 'everything about'],
+    ['explain it in great detail', 'in detail'],
+    ['explain to me how blockchain works', 'explain how'],
+    ['what I want you to do is summarize this', 'summarize'],
+    ['it would be great if you could review this code', 'review'],
+]) {
+    const out = PromptMeterOptimizer.optimizePrompt(wordy).toLowerCase();
+    record(`[concise] ${JSON.stringify(wordy.slice(0, 38))}`,
+        out.includes(shorter), `got ${JSON.stringify(out)}`);
+}
+
+// The indirect object survives where it is not the model.
+preserved('explain it to me keeps its object', 'Explain it to me slowly', ['to me']);
+preserved('a real recipient survives', 'Send the report to me and my team', ['to me and my team']);
+
+// Clean prompts are still untouched.
+untouched('a direct request is not rewritten', 'Explain how binary search works with an example');
+
+// ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failures.length} failed\n`);
 if (failures.length > 0) {

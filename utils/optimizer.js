@@ -420,6 +420,18 @@ const PromptMeterOptimizer = {
     // its own and leave the verb behind as a broken command -- "I want to know about X"
     // becoming "Know about X" rather than "Explain X".
     intentRewrites: [
+        // "I am trying to learn about X" states the USER's goal. The wrapper stripper
+        // removes "I am trying to" and leaves "learn about X" standing as an imperative,
+        // which tells the model to go and learn something. Rewriting it first turns it
+        // into the request it actually is.
+        [/(?<=^|[.!?;,]|\n)\s*(?:i'?m|i\s+am|we'?re|we\s+are)\s+trying\s+to\s+(?:learn|understand|figure\s+out|work\s+out)\s+(?:about\s+|how\s+)?/gi, 'Explain '],
+        // "help me understand X" has the same failure: the pleasantry stripper removes
+        // "can you help me" and leaves "understand X", an instruction to the model to go
+        // and understand something rather than to explain it.
+        [/(?<=^|[.!?;,]|\n)\s*(?:(?:can|could|will|would)\s+you\s+)?(?:please\s+)?help\s+me\s+(?:to\s+)?(?:understand|learn|figure\s+out)\s+(?:about\s+)?/gi, 'Explain '],
+        // Stated-intent wrappers that name the deliverable after them.
+        [/(?<=^|[.!?;,]|\n)\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, ''],
+        [/(?<=^|[.!?;,]|\n)\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, ''],
         [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, 'Explain '],
         [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, 'Show '],
         [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, 'Explain '],
@@ -518,7 +530,20 @@ const PromptMeterOptimizer = {
         [/\bit\s+should\s+be\s+noted\s+that\b/gi, ''],
         [/\bit\s+is\s+worth\s+noting\s+that\b/gi, ''],
         [/\bneedless\s+to\s+say\b/gi, ''],
-        [/\bas\s+far\s+as\s+(\w+)\s+is\s+concerned\b/gi, 'for $1']
+        [/\bas\s+far\s+as\s+(\w+)\s+is\s+concerned\b/gi, 'for $1'],
+        // Wordy request phrasing measured surviving on ordinary prompts.
+        [/\bwhat\s+the\s+difference\s+is\s+between\b/gi, 'the difference between'],
+        [/\bgive\s+me\s+a\s+list\s+of\b/gi, 'list'],
+        [/\bprovide\s+me\s+with\b/gi, 'provide'],
+        [/\bgive\s+me\s+some\b/gi, 'give'],
+        [/\beverything\s+there\s+is\s+to\s+know\s+about\b/gi, 'everything about'],
+        [/\ball\s+there\s+is\s+to\s+know\s+about\b/gi, 'everything about'],
+        [/\bin\s+great\s+detail\b/gi, 'in detail'],
+        [/\bin\s+simple\s+terms\b/gi, 'simply'],
+        [/\bstep\s+by\s+step\s+guide\s+on\s+how\s+to\b/gi, 'guide to'],
+        [/\bsome\s+suggestions\s+for\b/gi, 'suggestions for'],
+        [/\btake\s+a\s+look\s+at\b/gi, 'review'],
+        [/\blet\s+me\s+know\s+what\s+you\s+think\s+about\b/gi, 'assess'],
     ],
 
     // Greetings, pleasantries and request wrappers stripped outright. Ordered most-specific
