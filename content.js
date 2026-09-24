@@ -364,14 +364,12 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
 
     card.innerHTML = `
         <div class="promptmeter-opt-header">
-            <div class="promptmeter-opt-title">
-                🌿 PromptMeter Sustainability Coach
-            </div>
+            <div class="promptmeter-opt-title">PromptMeter</div>
             <div class="promptmeter-opt-metrics">
-                <span class="promptmeter-metric-pill">-${tokensSaved} Tokens</span>
-                <span class="promptmeter-metric-pill">-${carbonSaved.toFixed(3)}g CO₂</span>
+                <span class="promptmeter-metric">−${tokensSaved} tokens</span>
+                <span class="promptmeter-metric">${carbonSaved.toFixed(3)} g CO₂</span>
                 ${issueLabels.length > 0
-                    ? `<span class="promptmeter-metric-pill promptmeter-metric-grammar">${issueLabels.length} grammar</span>`
+                    ? `<span class="promptmeter-metric promptmeter-metric-grammar">${issueLabels.length} fixed</span>`
                     : ''}
             </div>
         </div>
@@ -380,16 +378,16 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
         </div>
         <div class="promptmeter-opt-scope" hidden>
-            <div class="promptmeter-scope-title">Too much for one answer</div>
+            <div class="promptmeter-scope-title">Worth splitting up</div>
             <ul class="promptmeter-scope-list"></ul>
         </div>
         <div class="promptmeter-opt-grammar" hidden>
-            <div class="promptmeter-grammar-title">Grammar corrected</div>
+            <div class="promptmeter-grammar-title">Also corrected</div>
             <ul class="promptmeter-grammar-list"></ul>
         </div>
         <div class="promptmeter-opt-actions">
             <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
-            <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Accept Optimization</button>
+            <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
         </div>
     `;
 

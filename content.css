@@ -8,18 +8,18 @@
   --bg-card: #FFFFFF;
   --bg-surface: #EEF5EC;
   --border-color: #DCE8DD;
-  --radius-card: 18px;
-  --radius-btn: 12px;
-  --color-primary: #2E7D32;
+  --radius-card: 10px;
+  --radius-btn: 6px;
+  --color-primary: #2F6B33;
   --color-secondary: #4CAF50;
   --color-error: #D32F2F;
   --text-primary: #1B1F1C;
   --text-secondary: #55605A;
   --text-muted: #7A857E;
-  --btn-primary-hover: #256B2A;
+  --btn-primary-hover: #255425;
   --btn-secondary-border: #DCE8DD;
   --btn-secondary-hover: #EEF5EC;
-  --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
+  --shadow-premium: 0 4px 14px rgba(16, 24, 18, 0.10);
   --btn-secondary: #FFFFFF;
   --on-accent: #FFFFFF;
   --diff-removed-bg: rgba(211, 47, 47, 0.05);
@@ -46,7 +46,7 @@
     --btn-secondary-border: #2A3A2D;
     --btn-secondary-hover: #222D24;
     --on-accent: #0F1511;
-    --shadow-premium: 0 8px 24px rgba(0, 0, 0, 0.55);
+    --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
     --diff-removed-bg: rgba(239, 83, 80, 0.12);
     --diff-removed-text: #FCA5A5;
     --diff-added-bg: rgba(102, 187, 106, 0.12);
@@ -69,7 +69,7 @@
   --btn-secondary-border: #2A3A2D;
   --btn-secondary-hover: #222D24;
   --on-accent: #0F1511;
-  --shadow-premium: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
   --diff-removed-bg: rgba(239, 83, 80, 0.12);
   --diff-removed-text: #FCA5A5;
   --diff-added-bg: rgba(102, 187, 106, 0.12);
@@ -132,14 +132,14 @@
     flex: 0 0 auto;
 }
 
+/* The product name, set as plain text. It was a green 800-weight display face with a
+   leaf glyph and a "Sustainability Coach" tagline, which is a lot of branding for a
+   panel that interrupts someone mid-sentence. */
 .promptmeter-opt-title {
     font-size: 13px;
-    font-weight: 800;
-    color: var(--color-primary); /* Primary Accent */
-    font-family: 'Sora', sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
 }
 
 .promptmeter-opt-metrics {
@@ -147,16 +147,17 @@
     gap: 8px;
 }
 
-.promptmeter-metric-pill {
-    background: var(--bg-surface);
-    color: var(--color-primary); /* Primary Green */
-    padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    font-weight: 700;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+/* Secondary information, so it reads as a quiet caption rather than three badges
+   competing with the title. Separated by a middot instead of borders. */
+.promptmeter-metric {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.promptmeter-metric + .promptmeter-metric::before {
+    content: "·";
+    margin: 0 6px;
+    color: var(--border-color);
 }
 
 /* The diff is the only part that may scroll. When the composer is tall there is little
@@ -182,23 +183,25 @@
     flex: 0 0 auto;
 }
 
+/* The original is struck through only where it helps; running a line through the whole
+   block made a short prompt hard to read and looked like an error state rather than a
+   before/after. Colour and position already say which one is which. */
 .promptmeter-diff-original {
     background: var(--diff-removed-bg);
-    border-left: 3px solid var(--color-error);
+    border-left: 2px solid var(--color-error);
     color: var(--diff-removed-text);
-    text-decoration: line-through;
 }
 
 .promptmeter-diff-optimized {
     background: var(--diff-added-bg);
-    border-left: 3px solid var(--color-primary);
+    border-left: 2px solid var(--color-primary);
     color: var(--diff-added-text);
 }
 
 /* Grammar findings. The pill in the header carries the count; this panel names the
    errors, so accepting the rewrite is an informed choice rather than a leap of faith. */
 .promptmeter-metric-grammar {
-    color: var(--color-error);
+    color: var(--text-secondary);
 }
 
 /* The host page's stylesheet is aggressive and can set a display value on any element
@@ -217,11 +220,9 @@
 }
 
 .promptmeter-grammar-title {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-error);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
@@ -250,16 +251,14 @@
     padding: 10px 14px;
     border-radius: var(--radius-btn);
     border: 1px solid var(--border-color);
-    border-left: 3px solid var(--color-error);
+    border-left: 2px solid var(--color-error);
     background: var(--bg-surface);
     flex: 0 0 auto;
 }
 
 .promptmeter-scope-title {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    font-weight: 600;
     margin-bottom: 6px;
 }
 
@@ -278,10 +277,10 @@
 }
 
 .promptmeter-opt-btn {
-    padding: 8px 16px;
+    padding: 7px 14px;
     border-radius: var(--radius-btn); /* Button Radius */
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease;
     box-sizing: border-box;

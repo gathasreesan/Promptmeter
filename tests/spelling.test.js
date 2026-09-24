@@ -249,6 +249,46 @@ corrects('teh', 'the');
 corrects('monda', 'monday');
 
 // ---------------------------------------------------------------------------
+// 10. Consonant typos belong to the exact-pair table, not the corrector
+// ---------------------------------------------------------------------------
+
+// A distance-1 fallback that ignored skeletons was tried so that "wan" could reach
+// "want". It doubled the corruption rate on held-out English (3.5% to 7.4%), because
+// dropping an internal consonant is precisely what the skeleton rule forbids: "brook"
+// became "book", "chord" became "cord", "carve" became "care". It was removed, and these
+// stay untouched by the corrector.
+for (const word of ['brook', 'chord', 'carve', 'cease', 'chase', 'cheat', 'booth',
+    'coast', 'crown', 'drown', 'feast', 'flood', 'flour', 'forum', 'fried', 'chose']) {
+    keeps(word, 'an internal consonant may not be dropped');
+}
+
+// The coverage lives in optimizer.js as exact pairs instead, which carry no such risk.
+for (const [typo, fixed] of [['wan', 'want'], ['starst', 'start'], ['wnat', 'want'],
+    ['hel', 'help'], ['teh', 'the'], ['adn', 'and'], ['taht', 'that'], ['recieve', 'receive']]) {
+    // The carrier keeps the word mid-clause: "please and it now" has its "and" stripped
+    // as a leading connective, which tests the stripper rather than the pair table.
+    const out = PromptMeterOptimizer.optimizePrompt(`compare the file ${typo} the folder`).toLowerCase();
+    record(`[pair] ${JSON.stringify(typo)} -> ${JSON.stringify(fixed)}`,
+        out.includes(fixed), `got ${JSON.stringify(out)}`);
+}
+
+// No exact-pair key may be a real word. "form" -> "from" slipped in once and would have
+// rewritten "fill in the form".
+const realKeys = Object.keys(PromptMeterOptimizer.spellingTypos)
+    .filter(key => PromptMeterSpelling.known(key));
+record('[pair] no typo key is a real word', realKeys.length === 0,
+    `these are real words: ${JSON.stringify(realKeys)}`);
+record('[pair] a real word survives', 
+    PromptMeterOptimizer.optimizePrompt('fill in the form and submit').includes('form'),
+    'the word "form" was rewritten');
+
+// The prompt that prompted all of this.
+record('[end-to-end] "i wan to starst online classess"',
+    PromptMeterOptimizer.optimizePrompt('i wan to starst online classess')
+        .toLowerCase().includes('start online classes'),
+    `got ${JSON.stringify(PromptMeterOptimizer.optimizePrompt('i wan to starst online classess'))}`);
+
+// ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length > 0) {

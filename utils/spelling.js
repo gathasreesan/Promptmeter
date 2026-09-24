@@ -42,6 +42,16 @@
  * recall -- "spellong" for "spelling" is one, and is no longer caught -- and buys the
  * guarantee that an unlisted technical term survives the corrector untouched.
  *
+ * A DISTANCE-1 FALLBACK WAS TRIED AND REMOVED
+ *
+ * Matching any dictionary word one edit away, regardless of skeleton, catches typos that
+ * add or drop a CONSONANT -- "wan" for "want", "starst" for "start". It also doubled the
+ * corruption rate on held-out English, from 3.5% to 7.4%, because dropping an internal
+ * consonant is exactly what the skeleton rule exists to forbid: "brook" became "book",
+ * "chord" became "cord", "carve" became "care". Three corrections were not worth
+ * seventeen new ways to change a word somebody meant, so consonant-dropping typos are
+ * carried as exact pairs in optimizer.js instead.
+ *
  * TWO MORE GUARDS, BOTH FOUND THE SAME WAY
  *
  * The first letter must survive. Sweeping common English turned up "every" becoming
@@ -168,6 +178,56 @@ const PM_WORDS = [
     'whole entire total partial several various multiple single double triple',
     'above below front back top bottom middle center centre inside outside',
     'every everyone everything everywhere anyone anything someone something nothing',
+    // Common short words, listed in bulk. Short words are where this module is weakest:
+    // one edit is a quarter of a four-letter word, and the only thing standing between
+    // "lot" and "lost" or "mode" and "model" is that the dictionary already knows them.
+    'care cart cord core hole hood hook hoop horn hose item join joke jump keen kick king',
+    'knee knot lack lady lake lamp lane lawn lean leap lend lift limb lime lion loan lodge',
+    'lord loss lot lots loud love luck lump lung mail male mall mask mass mate meal meat',
+    'melt mend mere mess mild mile milk mill mint miss mist mod mode mood moon mud near',
+    'neat neck nest news nice none noon norm nose noun oath obey odds okay oral pace pack',
+    'paid pain pair pale palm pane park pars past peak pear peel peer pick pile pill pine',
+    'pink pipe pity play plug plus poem poet pole pond pool poor pope pork pose post pour',
+    'pray prey pure quit race rack rage raid rail rare rely rent rice rich ride ring rise',
+    'risk road roar robe rode role roll roof rope rose rule rush sack safe sage said sail',
+    'sake sale salt scan scar seal seat seed seek seen self sense shed ship shoe shop shot',
+    'shut sick sigh silk sing sink site skin skip slab slam slap sled slip slot snap sock',
+    'soft soil sold sole solid song sore soul soup sour span spin spot spun stem stir stow',
+    'suit sunk swim tail tale talk tall tank tape taxi teal tear teen tend tent term thus',
+    'tide tidy tier tile till tiny tire toll tomb tone tool torn tour town trap tray trim',
+    'trip tube tune twin urge vain vary vast verb vest view vote wage wait wake wall ward',
+    'warn wash wave wear west wife wild wine wing wipe wire wise wish wolf wool wore worm',
+    'worn wrap yard yell zero zone',
+    'bench birch blade blame blank blast bleak blend bliss bloom blunt board boast bonus',
+    'booth bound brace brain brand brass brave bread breed brick bride brisk broad brook',
+    'broom brush bunch burst cabin cargo carve cease chain chalk charm chase cheap cheat',
+    'cheek cheer chess chest chief chill china choir chord chose chunk churn civic claim',
+    'clash clean clerk cliff climb cling cloak clock cloth cloud clown coach coast cocoa',
+    'colon comic coral couch cough court crack craft crane crash crawl cream creek creep',
+    'crest crime crisp cross crowd crown crude cruel crumb crush crust curve daily dairy',
+    'dance dated dealt death debut decay decor delay delta dense depot depth derby devil',
+    'diary dirty ditch diver dizzy dough dozen drain drama drank dread dream dress dried',
+    'drift drill drink drove drown drunk dusty dwell dwelt eager eagle earth elbow elder',
+    'elect elite enemy enjoy entry equip erase exist extra fable faced faint fairy faith',
+    'fancy fatal fault favor feast fence ferry fever fiber fiery fifth fifty finch flame',
+    'flash fleet flesh flick fling flock flood flour flown fluid flush forge forth forty',
+    'forum fraud fried frost frown fruit fully funny',
+    'heard loose goose grace grade grain grant grasp grave great green greet grief group',
+    'guard guess guest guide guilt habit happy harsh heart heavy horse hotel house human',
+    'image index inner input issue judge juice knife knock known label large laser later',
+    'laugh layer learn lease least leave legal lemon level light limit local logic loser',
+    // Ordinary vocabulary that earlier drafts simply did not list. Every one of these
+    // was being rewritten into a different real word -- "chat" to "cat", "font" to
+    // "front", "match" to "math", "axis" to "axios" -- because the dictionary is the
+    // only thing that marks a word as already correct.
+    'accordion alert archive audio avatar average axis banner blog button cancel carousel',
+    'cell channel chart chat checkbox click column comment confirm decline desktop device',
+    'dialog disable download draft dropdown edit enable ever feedback font footer forecast',
+    'gallery grid growth icon inbox label laptop layout legend match max median menu metric',
+    'min mobile modal notification offline online panel player plot podcast poll popup',
+    'preference profile radio range rank rating ratio reply row score screen scroll',
+    'settings share sidebar signup slider stream sum survey switch tab tablet theme toggle',
+    'toolbar tooltip trend unit upload username webpage',
     // Common short words. Short words are the weak spot -- one edit is a quarter of a
     // four-letter word -- and the dictionary is the only thing that protects them,
     // since a word it lists is never altered.
@@ -380,16 +440,22 @@ const PromptMeterSpelling = {
         // "the" is the classic case.
         if (word.length === candidate.length) return this.isTransposition(word, candidate);
 
-        // For a length change the LAST letter must survive too, for the same reason as the
-        // first. Dropping a trailing letter is not a slip people make, but it is a tidy way
-        // to turn one real word into another: sweeping words that end in a silent -e turned
-        // up "huge" becoming "hug", "site" becoming "sit", "cute" becoming "cut" and "stare"
-        // becoming "star". One comparison rules out that family, and it also removes an
-        // earlier gap where "rat" reached "rate".
+        // A longer typo may not lose its trailing letter. Sweeping words that end in a
+        // silent -e turned up "huge" becoming "hug", "site" becoming "sit", "cute"
+        // becoming "cut" and "stare" becoming "star" -- every one of them the typo being
+        // the LONGER word and the correction quietly trimming its end.
         //
-        // Truncation is the deliberate exception and is handled outside this check, since
-        // dropping the end is exactly what it is for.
-        if (word[word.length - 1] !== candidate[candidate.length - 1]) return false;
+        // The test is directional, because the opposite case is a real typo: "wan" for
+        // "want" and "hel" for "help" are words someone stopped typing, and blocking them
+        // too cost more recall than the guard was worth. A shorter typo may therefore gain
+        // a trailing letter; a longer one may not shed it.
+        //
+        // Truncation is handled outside this check entirely, since dropping the end is
+        // exactly what it is for.
+        if (word.length > candidate.length &&
+            word[word.length - 1] !== candidate[candidate.length - 1]) {
+            return false;
+        }
 
         return word.length < candidate.length
             ? this.isSubsequence(word, candidate)
@@ -433,36 +499,37 @@ const PromptMeterSpelling = {
         // one case that legitimately drops the END of a word, and isPlausibleEdit refuses
         // that shape for everything else.
         const truncated = this.truncations(word);
-        const candidates = (this.skeletonIndex.get(this.skeleton(word)) || [])
-            .filter(candidate => this.isPlausibleEdit(word, candidate))
-            .concat(truncated);
+        // Deduplicated: the skeleton index and the near-miss bucket overlap, and the
+        // same word arriving twice used to register as a tie with itself, which threw
+        // away corrections that had only ever had one candidate.
+        const candidates = new Set(
+            (this.skeletonIndex.get(this.skeleton(word)) || [])
+                .filter(candidate => this.isPlausibleEdit(word, candidate))
+        );
+        truncated.forEach(candidate => candidates.add(candidate));
 
+        // Closest fit wins; equal fits are separated by frequency, which is what the
+        // dictionary's ordering is for. An earlier version abandoned the correction
+        // whenever a second candidate tied on distance, which sounds cautious and is not:
+        // it discarded "starst" (start, starts) and "hel" (help, heal) where one reading
+        // is plainly commoner than the other, while adding no safety -- the guards that
+        // actually keep this module honest are the edit shape and the dictionary itself,
+        // and they have already run by this point.
         let best = null;
         let bestDistance = Infinity;
-        let tied = false;
 
-        for (const candidate of candidates) {
+        candidates.forEach(candidate => {
             const gap = this.distance(word, candidate);
-            if (gap > this.budget(word, candidate)) continue;
+            if (gap > this.budget(word, candidate)) return;
 
-            if (gap < bestDistance) {
+            if (gap < bestDistance ||
+                (gap === bestDistance && this.rank.get(candidate) < this.rank.get(best))) {
                 best = candidate;
                 bestDistance = gap;
-                tied = false;
-            } else if (gap === bestDistance) {
-                // Equal fit: the commoner word wins, which is what makes "shrt" resolve
-                // to "short" rather than "shirt". Rank order is the tie-break, and the
-                // dictionary is ordered by frequency for exactly this.
-                if (this.rank.get(candidate) < this.rank.get(best)) {
-                    best = candidate;
-                } else {
-                    tied = true;
-                }
             }
-        }
+        });
 
-        // A tie the ranking could not separate means there is no clear intent to recover.
-        return (best && !tied) ? best : null;
+        return best;
     },
 
     // Calendar names, the one place truncation is safe to complete.
@@ -572,6 +639,7 @@ PM_WORDS.forEach((word, index) => {
         PromptMeterSpelling.skeletonIndex.set(key, []);
     }
     PromptMeterSpelling.skeletonIndex.get(key).push(word);
+
 });
 
 // Export for global (content script) and bundler environments
