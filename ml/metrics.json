@@ -1,73 +1,73 @@
 {
-  "trainedAt": "2026-09-23T18:00:39+00:00",
-  "model": "TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2) + LogisticRegression(C=8.0, balanced)",
+  "trainedAt": "2026-09-24T12:57:40+00:00",
+  "model": "TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2) + LogisticRegression(C=4.0, balanced)",
   "searchedGridPoints": 60,
   "samples": {
-    "total": 512,
-    "train": 384,
-    "test": 128,
+    "total": 621,
+    "train": 465,
+    "test": 156,
     "perClass": {
-      "FILLER": 128,
-      "IMPORTANT": 134,
-      "REDUNDANT": 120,
-      "REPETITIVE": 130
+      "FILLER": 158,
+      "IMPORTANT": 164,
+      "REDUNDANT": 144,
+      "REPETITIVE": 155
     }
   },
-  "accuracy": 0.7109,
+  "accuracy": 0.8141,
   "macro": {
-    "precision": 0.7133,
-    "recall": 0.707,
-    "f1": 0.7058
+    "precision": 0.8214,
+    "recall": 0.8118,
+    "f1": 0.8131
   },
   "weighted": {
-    "precision": 0.7167,
-    "recall": 0.7109,
-    "f1": 0.7094
+    "precision": 0.8194,
+    "recall": 0.8141,
+    "f1": 0.8134
   },
   "perClass": {
     "FILLER": {
-      "precision": 0.6571,
-      "recall": 0.7188,
-      "f1": 0.6866,
-      "support": 32
+      "precision": 0.766,
+      "recall": 0.9,
+      "f1": 0.8276,
+      "support": 40
     },
     "IMPORTANT": {
-      "precision": 0.8108,
-      "recall": 0.8824,
-      "f1": 0.8451,
-      "support": 34
+      "precision": 0.814,
+      "recall": 0.8537,
+      "f1": 0.8333,
+      "support": 41
     },
     "REDUNDANT": {
-      "precision": 0.5938,
-      "recall": 0.6333,
-      "f1": 0.6129,
-      "support": 30
+      "precision": 0.9,
+      "recall": 0.75,
+      "f1": 0.8182,
+      "support": 36
     },
     "REPETITIVE": {
-      "precision": 0.7917,
-      "recall": 0.5938,
-      "f1": 0.6786,
-      "support": 32
+      "precision": 0.8056,
+      "recall": 0.7436,
+      "f1": 0.7733,
+      "support": 39
     }
   },
   "binary": {
     "note": "IMPORTANT = KEEP, the other three = DROP; the call the optimizer makes",
-    "accuracy": 0.9141,
-    "precision": 0.8834,
-    "recall": 0.9039,
-    "f1": 0.8928
+    "accuracy": 0.9103,
+    "precision": 0.8804,
+    "recall": 0.892,
+    "f1": 0.886
   },
   "crossSource": null,
   "crossValidation": {
     "folds": 5,
-    "meanAccuracy": 0.7988,
-    "stdAccuracy": 0.0371,
+    "meanAccuracy": 0.802,
+    "stdAccuracy": 0.0252,
     "scores": [
-      0.767,
-      0.8641,
-      0.8137,
-      0.7843,
-      0.7647
+      0.76,
+      0.7903,
+      0.8226,
+      0.8065,
+      0.8306
     ]
   }
 }

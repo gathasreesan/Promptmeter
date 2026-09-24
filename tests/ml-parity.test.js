@@ -32,8 +32,8 @@ const TOLERANCE = 2e-3;
 // What actually matters is that the approximation never changes a decision. These are
 // the thresholds condense.js compares against; a probability may drift a little, but it
 // must not drift across one of these.
-const ML_KEEP_VETO = 0.80;
-const ML_DROP_PROPOSE = 0.92;
+const ML_KEEP_VETO = 0.75;
+const ML_DROP_PROPOSE = 0.90;
 
 let passed = 0;
 const failures = [];
