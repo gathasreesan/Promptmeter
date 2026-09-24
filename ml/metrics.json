@@ -1,6 +1,7 @@
 {
-  "trainedAt": "2026-09-10T10:35:36+00:00",
-  "model": "TfidfVectorizer(1,2) + LogisticRegression(C=4.0, balanced)",
+  "trainedAt": "2026-09-23T18:00:39+00:00",
+  "model": "TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2) + LogisticRegression(C=8.0, balanced)",
+  "searchedGridPoints": 60,
   "samples": {
     "total": 512,
     "train": 384,
@@ -14,57 +15,58 @@
   },
   "accuracy": 0.7109,
   "macro": {
-    "precision": 0.7101,
-    "recall": 0.7075,
-    "f1": 0.7068
+    "precision": 0.7133,
+    "recall": 0.707,
+    "f1": 0.7058
   },
   "weighted": {
-    "precision": 0.7124,
+    "precision": 0.7167,
     "recall": 0.7109,
-    "f1": 0.7097
+    "f1": 0.7094
   },
   "perClass": {
     "FILLER": {
-      "precision": 0.6389,
+      "precision": 0.6571,
       "recall": 0.7188,
-      "f1": 0.6765,
+      "f1": 0.6866,
       "support": 32
     },
     "IMPORTANT": {
-      "precision": 0.8056,
-      "recall": 0.8529,
-      "f1": 0.8286,
+      "precision": 0.8108,
+      "recall": 0.8824,
+      "f1": 0.8451,
       "support": 34
     },
     "REDUNDANT": {
-      "precision": 0.6552,
+      "precision": 0.5938,
       "recall": 0.6333,
-      "f1": 0.6441,
+      "f1": 0.6129,
       "support": 30
     },
     "REPETITIVE": {
-      "precision": 0.7407,
-      "recall": 0.625,
-      "f1": 0.678,
+      "precision": 0.7917,
+      "recall": 0.5938,
+      "f1": 0.6786,
       "support": 32
     }
   },
   "binary": {
     "note": "IMPORTANT = KEEP, the other three = DROP; the call the optimizer makes",
-    "accuracy": 0.9062,
-    "precision": 0.8756,
-    "recall": 0.8892,
-    "f1": 0.882
+    "accuracy": 0.9141,
+    "precision": 0.8834,
+    "recall": 0.9039,
+    "f1": 0.8928
   },
+  "crossSource": null,
   "crossValidation": {
     "folds": 5,
-    "meanAccuracy": 0.7792,
-    "stdAccuracy": 0.0263,
+    "meanAccuracy": 0.7988,
+    "stdAccuracy": 0.0371,
     "scores": [
       0.767,
-      0.8155,
-      0.8039,
-      0.7451,
+      0.8641,
+      0.8137,
+      0.7843,
       0.7647
     ]
   }

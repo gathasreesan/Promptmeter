@@ -20,6 +20,18 @@ const PM_CONDENSE = (typeof PromptMeterCondense !== 'undefined')
     ? PromptMeterCondense
     : (typeof require !== 'undefined' ? require('./condense.js').PromptMeterCondense : null);
 
+// Open-ended typo correction, for the misspellings no fixed table can list.
+const PM_SPELL = (typeof PromptMeterSpelling !== 'undefined')
+    ? PromptMeterSpelling
+    : (typeof require !== 'undefined' ? require('./spelling.js').PromptMeterSpelling : null);
+
+// Grammar detection and repair. Agreement, tense, confusables, pronoun case and
+// article errors all live there, so this file keeps only the vocabulary substitutions
+// (typos, slang, acronyms) that are specific to prompt text.
+const PM_GRAMMAR = (typeof PromptMeterGrammar !== 'undefined')
+    ? PromptMeterGrammar
+    : (typeof require !== 'undefined' ? require('./grammar.js').PromptMeterGrammar : null);
+
 const PromptMeterOptimizer = {
     // Politeness typos. Kept apart from spellingTypos because the scoring pass already
     // penalises these under the "politeness" rule and must not charge for them twice.
@@ -52,35 +64,190 @@ const PromptMeterOptimizer = {
         "helpfull": "helpful", "usefull": "useful", "successfull": "successful",
         "beatifull": "beautiful", "alot": "a lot", "goverment": "government",
         "knowlege": "knowledge", "similiar": "similar",
-        "javascriptt": "javascript", "javscript": "javascript"
+        "javascriptt": "javascript", "javscript": "javascript",
+        // Commonly misspelled English words, as exact pairs.
+        // Listed rather than left to spelling.js because these are nearly all
+        // SUBSTITUTIONS ("seperate", "definately", "independant"), the one edit shape
+        // that module refuses on purpose -- swapping a letter is what turns an
+        // unlisted technical word into a different real word. An exact pair carries
+        // no such risk, so the coverage belongs here instead of by loosening that guard.
+        "accomodate": "accommodate", "acheive": "achieve", "acheived": "achieved",
+        "adress": "address", "aparent": "apparent", "appearence": "appearance",
+        "aquire": "acquire", "arent": "aren't", "arguement": "argument",
+        "assesment": "assessment", "basicly": "basically", "begginer": "beginner",
+        "begining": "beginning", "beleive": "believe", "buisness": "business",
+        "calender": "calendar", "catagory": "category", "changable": "changeable",
+        "choosen": "chosen", "colleage": "colleague", "collegue": "colleague",
+        "comitted": "committed", "commited": "committed", "comparision": "comparison",
+        "compatability": "compatibility", "completly": "completely",
+        "concatinate": "concatenate", "concious": "conscious", "consistant": "consistent",
+        "contro": "control", "correspondance": "correspondence", "critisism": "criticism",
+        "curiousity": "curiosity", "decison": "decision", "dependant": "dependent",
+        "depricated": "deprecated", "desicion": "decision", "developement": "development",
+        "dificult": "difficult", "dilema": "dilemma", "disapear": "disappear",
+        "dissapoint": "disappoint", "dissapointed": "disappointed", "dupicate": "duplicate",
+        "effeciency": "efficiency", "efficently": "efficiently", "embarass": "embarrass",
+        "embarrasment": "embarrassment", "enviornment": "environment", "equiped": "equipped",
+        "excelent": "excellent", "existance": "existence", "experiance": "experience",
+        "explaination": "explanation", "exsist": "exist", "facinating": "fascinating",
+        "familar": "familiar", "finaly": "finally", "flexable": "flexible",
+        "foriegn": "foreign", "fourty": "forty", "fullfil": "fulfil", "garantee": "guarantee",
+        "gaurd": "guard", "happend": "happened", "harrass": "harass", "heirarchy": "hierarchy",
+        "hieght": "height", "hight": "height", "identofy": "identify",
+        "imediately": "immediately", "implimentation": "implementation",
+        "importent": "important", "incomplet": "incomplete", "inconsistant": "inconsistent",
+        "independant": "independent", "indicies": "indices", "influencial": "influential",
+        "initalize": "initialize", "instaled": "installed", "inteligent": "intelligent",
+        "intergrate": "integrate", "intresting": "interesting", "judgement": "judgment",
+        "knowlegde": "knowledge", "lenght": "length", "lenghth": "length", "liason": "liaison",
+        "liesure": "leisure", "lisence": "license", "maintenence": "maintenance",
+        "managable": "manageable", "managment": "management", "mesage": "message",
+        "milage": "mileage", "millenium": "millennium", "minumum": "minimum",
+        "mischevious": "mischievous", "momento": "memento", "neccesary": "necessary",
+        "noticable": "noticeable", "ocassion": "occasion", "occassion": "occasion",
+        "occurance": "occurrence", "occurence": "occurrence", "paralel": "parallel",
+        "paramaters": "parameters", "particulary": "particularly", "perminant": "permanent",
+        "persistant": "persistent", "personel": "personnel", "persue": "pursue",
+        "posession": "possession", "posible": "possible", "potatoe": "potato",
+        "preferance": "preference", "prefered": "preferred", "primarly": "primarily",
+        "priviledge": "privilege", "probabaly": "probably", "proccess": "process",
+        "proffesional": "professional", "pronounciation": "pronunciation",
+        "propoganda": "propaganda", "proprety": "property", "psuedo": "pseudo",
+        "publically": "publicly", "quater": "quarter", "questionaire": "questionnaire",
+        "readible": "readable", "realy": "really", "recieved": "received",
+        "recomend": "recommend", "recomendation": "recommendation", "recquire": "require",
+        "recursivly": "recursively", "rediculous": "ridiculous", "refered": "referred",
+        "reguarding": "regarding", "relevent": "relevant", "religous": "religious",
+        "remeber": "remember", "repitition": "repetition", "reponse": "response",
+        "responce": "response", "restaraunt": "restaurant", "resturant": "restaurant",
+        "retreive": "retrieve", "rythm": "rhythm", "secratary": "secretary", "seige": "siege",
+        "sence": "sense", "seperately": "separately", "sieze": "seize",
+        "similiarly": "similarly", "sincerly": "sincerely", "speach": "speech",
+        "strengh": "strength", "succesful": "successful", "succesfully": "successfully",
+        "sucess": "success", "sucessful": "successful", "sucessfully": "successfully",
+        "sugestion": "suggestion", "supercede": "supersede", "suprise": "surprise",
+        "syntx": "syntax", "temperture": "temperature", "tendancy": "tendency",
+        "therefor": "therefore", "thier": "their", "threshhold": "threshold",
+        "tounge": "tongue", "trafic": "traffic", "truely": "truly", "twelth": "twelfth",
+        "unfortunatly": "unfortunately", "untill": "until", "useable": "usable",
+        "vaccum": "vacuum", "varaible": "variable", "varible": "variable", "varient": "variant",
+        "vegtable": "vegetable", "vehical": "vehicle", "visable": "visible",
+        "voluntier": "volunteer", "wether": "whether", "wich": "which", "widht": "width",
+        "wierd": "weird", "writting": "writing", "yeild": "yield"
     },
 
     // Technical acronyms, matched case-sensitively so "AI" and "Js" are left alone.
+    //
+    // These CASE-NORMALISE and never expand. That distinction is the whole point of the
+    // table now: it previously turned "dsa" into "Data Structures & Algorithms",
+    // "js" into "JavaScript" and "db" into "database", which made the prompt five, two
+    // and one tokens LONGER respectively. A tool whose purpose is to cut tokens must not
+    // inflate them, and these are universally understood abbreviations that no model
+    // needs expanded -- "explain dsa to me" is already as short as that request gets.
+    //
+    // An entry may therefore never be longer than its key.
     techAcronymMap: {
         "ai": "AI", "ml": "ML", "nlp": "NLP", "ui": "UI", "ux": "UX",
         "api": "API", "apis": "APIs", "sql": "SQL", "json": "JSON",
-        "html": "HTML", "css": "CSS", "js": "JavaScript", "py": "Python",
-        "dsa": "Data Structures & Algorithms", "db": "database"
+        "html": "HTML", "css": "CSS", "js": "JS", "dsa": "DSA", "db": "DB",
+        "xml": "XML", "csv": "CSV", "pdf": "PDF", "url": "URL", "http": "HTTP",
+        "https": "HTTPS", "rest": "REST", "crud": "CRUD", "orm": "ORM",
+        "jwt": "JWT", "cli": "CLI", "gui": "GUI", "ide": "IDE", "os": "OS",
+        "cpu": "CPU", "gpu": "GPU", "ram": "RAM", "sdk": "SDK", "npm": "npm",
+        "css3": "CSS3", "html5": "HTML5", "oop": "OOP", "tdd": "TDD",
+        "ci": "CI", "cd": "CD", "dns": "DNS", "ssl": "SSL", "tls": "TLS"
     },
 
-    // Informal chat slang. Single-char expansions ("u", "r") are deliberately absent:
-    // they corrupt technical words. They are still penalised by the chatSlang score rule.
+    // Informal chat slang and SMS abbreviations, long enough to be unambiguous.
+    //
+    // Expanding these is not cosmetic. The situational-preamble rules in condense.js are
+    // written against real English -- "my exam is tomorrow", "my professor gave us" -- so
+    // a prompt typed as "tmrw is mi exm" matches none of them and the whole preamble
+    // survives. The abbreviation has to become the word before any later stage can see
+    // what it is.
+    //
+    // Everything here is three characters or more, or carries a slash, so it cannot
+    // collide with a variable name. The one- and two-letter forms live in
+    // contextualSlangMap below, which applies them far more carefully.
     chatSlangMap: {
         "w/o": "without", "w/": "with", "b/c": "because", "bc": "because",
         "asap": "as soon as possible", "gimme": "give me", "wanna": "want to",
         "gotta": "got to", "kinda": "kind of", "dunno": "don't know",
-        "approx": "approximately"
+        "approx": "approximately",
+        // Time
+        "tmrw": "tomorrow", "tmr": "tomorrow", "tmw": "tomorrow", "tomo": "tomorrow",
+        "tomm": "tomorrow", "2moro": "tomorrow", "2morrow": "tomorrow",
+        "yest": "yesterday", "2day": "today", "2nite": "tonight",
+        // Academic vocabulary, which is most of what this extension sees
+        "exm": "exam", "exms": "exams", "xam": "exam", "xams": "exams",
+        "assgn": "assignment", "asgn": "assignment", "hmwrk": "homework",
+        "prof": "professor", "lec": "lecture", "lect": "lecture",
+        "ques": "question", "qn": "question", "qns": "questions", "ans": "answer",
+        // Connectives and fillers
+        "coz": "because", "cuz": "because", "bcoz": "because", "bcz": "because",
+        "bcuz": "because", "becoz": "because",
+        "wat": "what", "wht": "what", "wen": "when", "whr": "where",
+        "abt": "about", "ppl": "people", "smth": "something", "sth": "something",
+        "tho": "though", "thru": "through", "nvm": "never mind",
+        "b4": "before", "gr8": "great", "msg": "message", "msgs": "messages",
+        "thnx": "thanks", "tnx": "thanks", "thanx": "thanks",
+        "idk": "I do not know", "imo": "in my opinion", "btw": "by the way"
     },
 
-    // Missing contraction apostrophes.
-    contractionMap: {
-        "im": "I'm", "dont": "don't", "cant": "can't", "wont": "won't",
-        "ive": "I've", "youre": "you're", "theyre": "they're", "isnt": "isn't",
-        "arent": "aren't", "doesnt": "doesn't", "didnt": "didn't",
-        "havent": "haven't", "hasnt": "hasn't", "couldnt": "couldn't",
-        "wouldnt": "wouldn't", "shouldnt": "shouldn't",
-        "whats": "what's", "theres": "there's"
-    },
+    // Very short abbreviations. These are the ones that genuinely corrupt technical text
+    // -- "u" in a physics question, "r" in R code, "mi" as a variable -- so each carries
+    // its own context requirement instead of being replaced on sight.
+    //
+    // A blanket "no maths characters nearby" test is not enough, and it is worth saying
+    // why: it passes "solve for u where u = v + a*t", because the character beside the
+    // first "u" is a space, and it passes "rename u to velocity" and "explain the y axis
+    // label", which contain no maths characters at all. Position in the sentence is the
+    // only reliable signal, so:
+    //
+    //   before   the word must follow one of these (a modal, or a verb that takes "you")
+    //   after    or be followed by one of these (a verb "you" can be the subject of)
+    //   deny     and never match when this pattern sits beside it
+    //
+    // "y" is deliberately absent. "y is the vertical axis" and "y is this slow" are the
+    // same shape, and the first is far more likely in the prompts this extension sees.
+    // It stays penalised by the chatSlang score rule, just never rewritten.
+    contextualSlangRules: [
+        {
+            word: 'u', replacement: 'you',
+            before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and)$/i,
+            after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?)\b/i
+        },
+        {
+            // "u r wrong", "r u there" -- only ever next to a second-person pronoun.
+            word: 'r', replacement: 'are',
+            before: /\b(?:u|you|we|they|there)$/i,
+            after: /^(?:u|you|we|they|there)\b/i
+        },
+        {
+            word: 'ur', replacement: 'your',
+            after: /^(?:[a-z]{2,})\b/i
+        },
+        { word: 'urs', replacement: 'yours' },
+        {
+            // "mi" stands for both "me" and "my", and the two are told apart by what
+            // sits around it. This rule takes the object reading and must come first:
+            // after a verb that takes an indirect object ("send mi the code", "teach mi
+            // ML") it is "me", and before a determiner it is "me" too, because no
+            // possessive can be followed by one -- "my the code" is not English.
+            word: 'mi', replacement: 'me',
+            before: /\b(?:send|give|tell|show|teach|explain|help|write|mail|pass|bring|get|find|make|offer|lend|email|remind|ask)$/i,
+            after: /^(?:the|a|an|this|that|these|those|your|his|her|its|their|some|any)\b/i,
+            deny: /^\s*(?:=|==|\+|-|\*|\/|\)|\]|,\s*\d)/
+        },
+        {
+            // The possessive reading, which is what is left. It still needs a noun after
+            // it, and that is also what separates "mi exam" from "mi = 0" and from the
+            // unit in "20 mi".
+            word: 'mi', replacement: 'my',
+            after: /^(?:[a-z]{2,})\b/i,
+            deny: /^\s*(?:=|==|\+|-|\*|\/|\)|\]|,\s*\d)/
+        }
+    ],
 
     /**
      * Compiles a lookup map into a single word-bounded alternation regex.
@@ -118,6 +285,41 @@ const PromptMeterOptimizer = {
             }
             return replacement;
         });
+    },
+
+    /**
+     * Expands the very short chat abbreviations, each under its own context rule.
+     *
+     * Matching is case-sensitive against the lowercase forms, so the R language, a
+     * coordinate Y and an initial U are never candidates in the first place. A candidate
+     * then has to earn the rewrite by sitting where the pronoun reading is the only
+     * sensible one -- see contextualSlangRules for why position, rather than a scan for
+     * nearby maths characters, is what decides.
+     *
+     * @param {string} text - Input text.
+     * @returns {string} Text with contextual abbreviations expanded.
+     */
+    expandContextualSlang: function (text) {
+        return this.contextualSlangRules.reduce((str, rule) => {
+            const pattern = new RegExp(`\\b${rule.word}\\b`, 'g');
+
+            return str.replace(pattern, (match, offset) => {
+                const before = str.slice(Math.max(0, offset - 40), offset).trimEnd();
+                const after = str.slice(offset + match.length).trimStart();
+
+                if (rule.deny && rule.deny.test(str.slice(offset + match.length))) return match;
+
+                // A rule with neither test applies wherever it matches; a rule with both
+                // needs only one to hold, because "can u" and "u explain" are each
+                // sufficient on their own.
+                const hasTest = Boolean(rule.before || rule.after);
+                if (!hasTest) return rule.replacement;
+
+                const matchesBefore = rule.before ? rule.before.test(before) : false;
+                const matchesAfter = rule.after ? rule.after.test(after) : false;
+                return (matchesBefore || matchesAfter) ? rule.replacement : match;
+            });
+        }, text);
     },
 
     // Regex rules for scoring deductions. `per` points are charged per match, capped at `cap`;
@@ -216,7 +418,84 @@ const PromptMeterOptimizer = {
         [/\bperform\s+an\s+analysis\s+on\b/gi, 'analyze'],
         [/\btake\s+into\s+consideration\b/gi, 'consider'],
         [/\bwith\s+regard\s+to\b/gi, 'regarding'],
-        [/\bwith\s+respect\s+to\b/gi, 'regarding']
+        [/\bwith\s+respect\s+to\b/gi, 'regarding'],
+        // One-for-many substitutions. Each replaces a multi-word construction with a
+        // single word of the same meaning, which is the only rephrasing safe to do
+        // automatically: the words change, the request does not. A sweep of twenty-four
+        // common wordy phrases previously matched exactly one of them.
+        [/\bgive\s+me\s+a\s+(?:brief\s+|short\s+|quick\s+)?overview\s+of\b/gi, 'summarize'],
+        [/\bgive\s+me\s+a\s+(?:brief\s+|short\s+|quick\s+)?summary\s+of\b/gi, 'summarize'],
+        [/\bmake\s+a\s+comparison\s+(?:between|of)\b/gi, 'compare'],
+        [/\bcarry\s+out\s+an\s+analysis\s+of\b/gi, 'analyze'],
+        [/\bconduct\s+an\s+analysis\s+of\b/gi, 'analyze'],
+        [/\bprovide\s+a\s+description\s+of\b/gi, 'describe'],
+        [/\bgive\s+a\s+description\s+of\b/gi, 'describe'],
+        [/\bis\s+capable\s+of\s+(\w+)ing\b/gi, '$1s'],
+        [/\bhas\s+the\s+ability\s+to\b/gi, 'can'],
+        [/\bhave\s+the\s+ability\s+to\b/gi, 'can'],
+        [/\bis\s+able\s+to\b/gi, 'can'],
+        [/\bare\s+able\s+to\b/gi, 'can'],
+        [/\bon\s+a\s+daily\s+basis\b/gi, 'daily'],
+        [/\bon\s+a\s+weekly\s+basis\b/gi, 'weekly'],
+        [/\bon\s+a\s+monthly\s+basis\b/gi, 'monthly'],
+        [/\bon\s+a\s+regular\s+basis\b/gi, 'regularly'],
+        [/\bin\s+the\s+near\s+future\b/gi, 'soon'],
+        [/\bat\s+the\s+present\s+time\b/gi, 'now'],
+        [/\bat\s+this\s+time\b/gi, 'now'],
+        [/\ba\s+number\s+of\b/gi, 'several'],
+        [/\bthe\s+majority\s+of\b/gi, 'most'],
+        [/\bin\s+spite\s+of\s+the\s+fact\s+that\b/gi, 'although'],
+        [/\bdespite\s+the\s+fact\s+that\b/gi, 'although'],
+        [/\bregardless\s+of\s+the\s+fact\s+that\b/gi, 'although'],
+        [/\bit\s+is\s+possible\s+that\b/gi, 'possibly'],
+        [/\bthere\s+is\s+a\s+possibility\s+that\b/gi, 'possibly'],
+        [/\bin\s+a\s+timely\s+manner\b/gi, 'promptly'],
+        [/\bwith\s+the\s+exception\s+of\b/gi, 'except'],
+        [/\bin\s+close\s+proximity\s+to\b/gi, 'near'],
+        [/\bduring\s+the\s+course\s+of\b/gi, 'during'],
+        [/\bin\s+the\s+course\s+of\b/gi, 'during'],
+        [/\bfor\s+the\s+reason\s+that\b/gi, 'because'],
+        [/\bowing\s+to\s+the\s+fact\s+that\b/gi, 'because'],
+        [/\bin\s+view\s+of\s+the\s+fact\s+that\b/gi, 'because'],
+        [/\bcome\s+to\s+a\s+conclusion\b/gi, 'conclude'],
+        [/\breach\s+a\s+conclusion\b/gi, 'conclude'],
+        [/\bgive\s+consideration\s+to\b/gi, 'consider'],
+        [/\bput\s+emphasis\s+on\b/gi, 'emphasize'],
+        [/\bplace\s+emphasis\s+on\b/gi, 'emphasize'],
+        [/\bbe\s+in\s+agreement\s+with\b/gi, 'agree with'],
+        [/\bat\s+all\s+times\b/gi, 'always'],
+        [/\bin\s+all\s+cases\b/gi, 'always'],
+        [/\bin\s+no\s+case\b/gi, 'never'],
+        [/\bin\s+many\s+cases\b/gi, 'often'],
+        [/\bin\s+some\s+cases\b/gi, 'sometimes'],
+        [/\ba\s+large\s+proportion\s+of\b/gi, 'many'],
+        [/\bthe\s+vast\s+majority\s+of\b/gi, 'most'],
+        [/\bis\s+of\s+the\s+opinion\s+that\b/gi, 'believes'],
+        [/\bmake\s+an\s+attempt\s+to\b/gi, 'try to'],
+        [/\bmake\s+use\s+of\b/gi, 'use'],
+        [/\btake\s+advantage\s+of\b/gi, 'use'],
+        [/\bin\s+relation\s+to\b/gi, 'about'],
+        [/\bwith\s+reference\s+to\b/gi, 'about'],
+        [/\bin\s+connection\s+with\b/gi, 'about'],
+        [/\bon\s+the\s+subject\s+of\b/gi, 'about'],
+        [/\bin\s+terms\s+of\b/gi, 'for'],
+        [/\bby\s+means\s+of\b/gi, 'by'],
+        [/\bin\s+excess\s+of\b/gi, 'over'],
+        [/\bprior\s+to\s+the\s+start\s+of\b/gi, 'before'],
+        [/\bsubsequent\s+to\b/gi, 'after'],
+        [/\buntil\s+such\s+time\s+as\b/gi, 'until'],
+        [/\bin\s+the\s+absence\s+of\b/gi, 'without'],
+        [/\bis\s+dependent\s+(?:up)?on\b/gi, 'depends on'],
+        [/\bare\s+dependent\s+(?:up)?on\b/gi, 'depend on'],
+        [/\bgive\s+an\s+indication\s+of\b/gi, 'indicate'],
+        [/\bprovide\s+assistance\s+(?:to|with)\b/gi, 'help'],
+        [/\bprovide\s+information\s+(?:about|on)\b/gi, 'explain'],
+        [/\bserves\s+to\s+(\w+)\b/gi, '$1s'],
+        [/\bhas\s+a\s+tendency\s+to\b/gi, 'tends to'],
+        [/\bit\s+should\s+be\s+noted\s+that\b/gi, ''],
+        [/\bit\s+is\s+worth\s+noting\s+that\b/gi, ''],
+        [/\bneedless\s+to\s+say\b/gi, ''],
+        [/\bas\s+far\s+as\s+(\w+)\s+is\s+concerned\b/gi, 'for $1']
     ],
 
     // Greetings, pleasantries and request wrappers stripped outright. Ordered most-specific
@@ -255,6 +534,20 @@ const PromptMeterOptimizer = {
         /\b(?:is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|do\s+you\s+think\s+you\s+(?:can|could)|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
         // Meta announcements about the question itself
         /\b(?:i\s+have\s+a\s+(?:quick\s+)?question(?:\s+about)?|quick\s+question(?:\s+about)?|one\s+(?:more|last)\s+thing|just\s+to\s+clarify|for\s+your\s+information|fyi|please\s+note\s+that)\b[,:!.\s]*/gi,
+        // Tentative request wrappers. "I was thinking maybe you could possibly help me"
+        // is six words of hedging in front of "help me". The modal and its hedges go
+        // together, because removing only the opener leaves "maybe you could possibly".
+        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
+        // Discourse markers. In a prompt these mark hesitation rather than meaning, and
+        // none of them changes what is being asked. "just", "really" and "so" are
+        // deliberately absent: each carries meaning often enough to matter ("just the
+        // headers", "so that it compiles").
+        // A coordinator may sit in front of the marker ("so basically ...", "and
+        // honestly ..."). It is consumed with it: leaving it behind only moves the
+        // problem, and stripping the marker alone would stop the clause matching the
+        // clause-start anchor on the next pass.
+        /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)\b[,\s]*/gi,
+        /\b(?:i\s+guess|i\s+suppose|or\s+so|more\s+or\s+less|if\s+possible|if\s+you\s+can)\b[,!.\s]*/gi,
         // Doubled intensifiers ("very very")
         /\b(very|really|so|super|extremely|totally)\s+\1\b/gi,
         // Emoji runs. Two or more in a row is decoration; a single emoji may be the
@@ -267,7 +560,17 @@ const PromptMeterOptimizer = {
     adjectiveStacks: [
         [/\b(detailed|comprehensive|thorough|in-depth|extensive|exhaustive|complete|full)(?:(?:,|\s+and|,\s+and)\s+(?:detailed|comprehensive|thorough|in-depth|extensive|exhaustive|complete|full))+\b/gi, '$1'],
         [/\b(simple|easy|basic|straightforward|clear)(?:(?:,|\s+and|,\s+and)\s+(?:simple|easy|basic|straightforward|clear))+\b/gi, '$1'],
-        [/\b(quick|fast|rapid|speedy)(?:(?:,|\s+and|,\s+and)\s+(?:quick|fast|rapid|speedy))+\b/gi, '$1']
+        [/\b(quick|fast|rapid|speedy)(?:(?:,|\s+and|,\s+and)\s+(?:quick|fast|rapid|speedy))+\b/gi, '$1'],
+        // The same stacking without a conjunction: "complete production-ready code",
+        // "full end-to-end implementation". The rules above need a comma or an "and"
+        // between the adjectives and so step straight over these.
+        //
+        // The LAST adjective survives here, where the conjoined rules above keep the
+        // first. That is not an inconsistency: English orders adjectives general to
+        // specific, so in "complete production-ready code" the informative word is the
+        // one next to the noun, while "detailed, comprehensive and thorough" is three
+        // ways of saying the same thing and the first is as good as any.
+        [/\b(?:complete|full|entire|whole|comprehensive|detailed|thorough|exhaustive|in-depth|extensive)\s+(production-ready|end-to-end|fully-functional|comprehensive|detailed|thorough|exhaustive|in-depth|extensive|complete|full)\b/gi, '$1']
     ],
 
     // Repairs run after stripping. Removing a phrase from the middle of a sentence can
@@ -282,6 +585,11 @@ const PromptMeterOptimizer = {
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed
         [/^\s*(?:and|but|so|because|since|where|when|which|that|although|however)\b\s*/i, ''],
+        // A hedge left in front of the instruction after its wrapper was stripped:
+        // "I was wondering if you could maybe explain X" loses the wrapper and leaves
+        // "maybe explain X", which reads as uncertainty the model will answer around.
+        // Only at a clause start, where the word cannot be modifying anything.
+        [/(?<=^|[.!?;]\s*|\n)\s*(?:maybe|perhaps|possibly|hopefully)\s+(?=[a-z])/gi, ''],
         // Duplicated preposition after a merge
         [/\b(about|for|of|in|on|with|to|from|by)\s+\1\b/gi, '$1']
     ],
@@ -345,7 +653,21 @@ const PromptMeterOptimizer = {
         /^\s*(?:import|export)\s+[\w*{}\s,'"]+from/m,
         /^\s*(?:const|let|var|function|class|def|async|return|if|for|while|switch)\s+[\w$]/m,
         /^\s*(?:public|private|protected|static|void|int|string|boolean|double|float)\s+[\w$]/m,
-        /^\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s+[A-Z*\s]/im,
+        // SQL needs its actual shape, not just a leading keyword. The previous pattern
+        // here was /^\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s+[A-Z*\s]/im,
+        // which matched "Create an education platform", "Update the README", "Delete the
+        // old files" and "Insert a caching layer" -- ordinary English openers, all of them
+        // common ways to start a prompt. Every one was classified as code, and
+        // optimizePrompt returns the input untouched for code, so those prompts were
+        // silently never optimized at all.
+        //
+        // Each clause below pairs the verb with the keyword that actually follows it in
+        // SQL, so prose beginning with the same verb no longer qualifies.
+        /\bSELECT\b[\s\S]{0,200}?\bFROM\b/i,
+        /\bINSERT\s+INTO\s+[\w"`[]/i,
+        /\bUPDATE\s+[\w."`[\]]+\s+SET\b/i,
+        /\bDELETE\s+FROM\s+[\w"`[]/i,
+        /\b(?:CREATE|DROP|ALTER)\s+(?:TEMP(?:ORARY)?\s+)?(?:TABLE|DATABASE|SCHEMA|INDEX|VIEW|TRIGGER|PROCEDURE|SEQUENCE)\b/i,
         /^\s*(?:<[!a-zA-Z]|<\/?[a-zA-Z]+>)/m,
         /^\s*\{\s*"[\w-]+"\s*:/m,
         /Traceback\s+\(most\s+recent\s+call\s+last\):/i,
@@ -364,42 +686,79 @@ const PromptMeterOptimizer = {
     },
 
     /**
-     * Fixes spelling, typos, chat slang, contractions, article agreement, and tech acronyms.
+     * Fixes vocabulary -- typos, stretched spellings, chat slang and tech acronyms --
+     * then hands the text to the grammar engine for agreement, tense, confusables,
+     * pronoun case, articles and contractions.
+     *
+     * The split is deliberate. The tables in this file are about PROMPT vocabulary
+     * ("plz", "js", "grmmar") and are specific to the extension; grammar.js is about
+     * ENGLISH and is useful on its own. Running vocabulary first matters: the grammar
+     * rules are written against real words, so "u" and "pyton" have to become "you" and
+     * "Python" before agreement can see them.
+     *
      * @param {string} text - Input text.
-     * @returns {string} Grammatically corrected text.
+     * @param {Array} issues - Optional collector; grammar findings are appended to it.
+     * @returns {string} Corrected text.
      */
-    correctGrammarAndSpelling: function (text) {
+    correctGrammarAndSpelling: function (text, issues) {
         if (!text) return "";
         let str = text;
 
-        // 1. Dictionary typos (spelling + politeness variants)
-        str = this.replaceAll(str, this.compiled.typos, this.compiled.typoMap, false);
+        // 1. Dictionary typos (spelling + politeness variants). Each substitution is
+        //    named rather than summarised, so the card reads the same whether a word was
+        //    fixed from this table or worked out by the spelling corrector below.
+        this.compiled.typos.lastIndex = 0;
+        str = str.replace(this.compiled.typos, match => {
+            const replacement = this.compiled.typoMap[match.toLowerCase()];
+            if (replacement === undefined) return match;
+            if (issues && replacement.toLowerCase() !== match.toLowerCase()) {
+                issues.push({
+                    type: 'spelling',
+                    label: `"${match}" corrected to "${replacement}"`
+                });
+            }
+            return replacement;
+        });
 
         // 2. Repeated character typos ("grmmmar" -> "grammar", "pleaaase" -> "please")
-        str = str.replace(/([a-z])\1{2,}/gi, (match, char) => (
+        str = str.replace(/([a-z]){2,}/gi, (match, char) => (
             /[eomsnlpftr]/i.test(char) ? char + char : char
         ));
 
-        // 3. Chat slang expansion
+        // 3. Chat slang and SMS abbreviation expansion. The contextual pass is separate
+        //    because its one- and two-letter keys need the guards in that method.
         str = this.replaceAll(str, this.compiled.slang, this.chatSlangMap, false);
+        str = this.expandContextualSlang(str);
 
-        // 4. Missing contraction apostrophes, preserving original capitalization
-        str = this.replaceAll(str, this.compiled.contractions, this.contractionMap, true);
+        // 3b. Open-ended typo correction. Runs after the tables above so a known
+        //     abbreviation is expanded by name rather than guessed at, and before the
+        //     acronym map so "ml" is still lowercase and below the corrector's minimum
+        //     length. Everything the other tables know about is passed through as
+        //     already-correct, so the corrector never second-guesses them.
+        if (PM_SPELL) {
+            const spelled = PM_SPELL.correct(str, { extraKnown: this.compiled.knownWords });
+            str = spelled.text;
+            if (issues && spelled.corrections.length > 0) {
+                spelled.corrections.forEach(correction => issues.push({
+                    type: 'spelling',
+                    label: `"${correction.from}" corrected to "${correction.to}"`
+                }));
+            }
+        }
 
-        // 5. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JavaScript")
+        // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JavaScript")
         str = this.replaceAll(str, this.compiled.acronyms, this.techAcronymMap, false);
 
-        // 6. Article agreement (a/an)
-        str = str.replace(/\b([Aa])\s+([aeiou]\w+)/g, (match, a, word) => (
-            /^(user|european|one|unicode|universal|utility)/i.test(word) ? `${a} ${word}` : `${a}n ${word}`
-        ));
-        str = str.replace(/\b([Aa])n\s+([bcdfghjklmnpqrstvwxyz]\w+)/g, (match, a, word) => (
-            /^(hour|honest|honor)/i.test(word) ? `${a}n ${word}` : `${a} ${word}`
-        ));
+        // 5. Grammar proper. Punctuation is left to the optimizer's own tidy pass, which
+        //    runs after the strippers and knows which sentences survived.
+        if (PM_GRAMMAR) {
+            const report = PM_GRAMMAR.correct(str, { punctuation: false });
+            str = report.text;
+            if (issues) issues.push.apply(issues, report.issues);
+        }
 
-        // 7. Formatting: standalone "i", missing space after punctuation, doubled punctuation
+        // 6. Formatting left over from removals: spacing and doubled separators.
         return str
-            .replace(/\b i \b/g, ' I ')
             .replace(/(\w)([,!?:;])(\w)/g, '$1$2 $3')
             .replace(/,{2,}/g, ',')
             .replace(/;{2,}/g, ';');
@@ -443,7 +802,7 @@ const PromptMeterOptimizer = {
      * @returns {Object} Analysis report { score, flags }
      */
     analyzePrompt: function (prompt, history = []) {
-        if (!prompt || prompt.trim() === "") {
+        if (typeof prompt !== 'string' || prompt.trim() === "") {
             return { score: 100, flags: [] };
         }
 
@@ -467,6 +826,26 @@ const PromptMeterOptimizer = {
             flags.push(`${rule.label} (-${deduction} pts)`);
         }
 
+        // Grammar. Scored separately from the padding rules above because it is a
+        // different kind of cost: filler wastes tokens, whereas an agreement or tense
+        // error makes the model guess at what was meant and re-ask or answer the wrong
+        // question. Only substantive errors count -- capitalization and punctuation are
+        // corrected silently and are not worth points.
+        const grammarIssues = this.grammarIssues(scorable);
+        if (grammarIssues.length > 0) {
+            const deduction = Math.min(15, grammarIssues.length * 3);
+            score -= deduction;
+            flags.push(`Grammatical errors detected: ${grammarIssues.length} (-${deduction} pts)`);
+        }
+
+        // Scope. Unlike every rule above this does not mean the prompt is badly written;
+        // it means the prompt is too large to be answered once. A 100/100 score on a
+        // request for forty subsystems would be telling the user something false.
+        for (const finding of this.scopeIssues(cleanPrompt)) {
+            score -= finding.penalty;
+            flags.push(`Over-scoped request: ${finding.label} (-${finding.penalty} pts)`);
+        }
+
         // History-based analysis: duplicate prompts & rapid regenerations
         const lastTurn = history[history.length - 1];
         if (lastTurn && lastTurn.prompt && lastTurn.prompt.trim() === cleanPrompt) {
@@ -478,6 +857,171 @@ const PromptMeterOptimizer = {
         }
 
         return { score: Math.max(0, Math.min(100, score)), flags: flags };
+    },
+
+    // --- Scope analysis --------------------------------------------------------------
+    //
+    // Everything else in this file looks for WASTED words. This looks for a prompt with
+    // no wasted words at all that will still burn tokens, because it asks for more than
+    // one answer can carry:
+    //
+    //     Create an AI-powered education platform that manages students, teachers,
+    //     courses, attendance, ... and administrative controls. Explain every feature,
+    //     database table, API endpoint, ... in detail and provide complete
+    //     production-ready code for the frontend, backend, database, ...
+    //
+    // That prompt is 195 tokens, contains no greeting, no politeness, no hedging and no
+    // typos, and the rules above score it 100/100 while changing nothing. They are right
+    // that there is little to strip: the 39 features ARE the request. Compression cannot
+    // help much either -- the three items appearing in two lists ("database", "APIs",
+    // "authentication") name a FEATURE in one list and a CODE LAYER in the other, so
+    // deduplicating them would delete the database layer from the code request.
+    //
+    // The waste is real but it is not in the wording. A request for forty subsystems plus
+    // complete production code returns a shallow or truncated answer, and the user spends
+    // several more turns recovering what one focused prompt would have produced. The
+    // honest intervention is to say so, not to shave words off an irreducible request.
+
+    // A comma-separated run longer than this is an enumeration no single answer covers.
+    MAX_LIST_ITEMS: 12,
+
+    // Separate deliverables ("explain X ... provide Y ... implement Z") beyond this many
+    // are really separate prompts.
+    MAX_DELIVERABLES: 3,
+
+    DELIVERABLE_VERBS: /\b(?:create|build|implement|design|develop|write|generate|provide|produce|explain|describe|summari[sz]e|analy[sz]e|compare|review|refactor|optimi[sz]e|deploy|configure|document|test)\b/gi,
+
+    // Demands for exhaustiveness. Harmless alone; multiplied against a long enumeration
+    // is what turns a prompt into one no answer can satisfy.
+    EXHAUSTIVE: /\b(?:every|all|each|complete|full|entire|comprehensive|exhaustive|production-ready|end-to-end|in\s+detail|detailed)\b/gi,
+
+    /**
+     * Longest run of comma-separated items in the text.
+     * @param {string} text
+     * @returns {number} Item count of the longest enumeration.
+     */
+    longestList: function (text) {
+        let longest = 0;
+        for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+            const items = sentence.split(',').length;
+            if (items > longest) longest = items;
+        }
+        return longest;
+    },
+
+    /**
+     * Reports ways a prompt asks for more than one response can deliver.
+     *
+     * These are advice, not edits. Nothing here rewrites the prompt, because there is
+     * nothing safe to remove -- the fix is to send less at once, and only the user can
+     * decide what to drop.
+     *
+     * @param {string} text - Prompt text.
+     * @returns {Array} Findings, [{ type, label, penalty }].
+     */
+    scopeIssues: function (text) {
+        if (!text || typeof text !== 'string') return [];
+
+        const scorable = PM_PROTECT
+            ? PM_PROTECT.strip(PM_PROTECT.mask(text).masked)
+            : text;
+        if (scorable.length === 0) return [];
+
+        const findings = [];
+
+        const listItems = this.longestList(scorable);
+        if (listItems > this.MAX_LIST_ITEMS) {
+            findings.push({
+                type: 'scope',
+                penalty: Math.min(20, Math.round((listItems - this.MAX_LIST_ITEMS) / 2)),
+                label: `${listItems} items requested in one list -- an answer covering all of ` +
+                    'them will be shallow, and the follow-up turns cost more than splitting ' +
+                    'the request would'
+            });
+        }
+
+        const deliverables = (scorable.match(this.DELIVERABLE_VERBS) || []).length;
+        if (deliverables > this.MAX_DELIVERABLES) {
+            findings.push({
+                type: 'scope',
+                penalty: Math.min(10, (deliverables - this.MAX_DELIVERABLES) * 2),
+                label: `${deliverables} separate deliverables in one prompt -- each one asked ` +
+                    'on its own gets a usable answer'
+            });
+        }
+
+        // Exhaustiveness only matters against a long list. "Explain every step" is a
+        // perfectly reasonable prompt; "explain every one of forty subsystems in detail"
+        // is not.
+        const exhaustive = (scorable.match(this.EXHAUSTIVE) || []).length;
+        if (exhaustive >= 3 && listItems > this.MAX_LIST_ITEMS) {
+            findings.push({
+                type: 'scope',
+                penalty: 5,
+                label: `"complete", "every" and "in detail" appear ${exhaustive} times over a ` +
+                    'list this long, asking for more than one response can hold'
+            });
+        }
+
+        return findings;
+    },
+
+    // Grammar findings that are worth reporting to the user. Capitalization, punctuation
+    // and spacing are repaired silently: they are formatting, not errors of grammar, and
+    // listing them would bury the ones that change meaning.
+    REPORTABLE_GRAMMAR: new Set([
+        'agreement', 'verb-form', 'tense', 'noun-form', 'pronoun-case',
+        'word-choice', 'article', 'contraction', 'phrasing', 'spelling'
+    ]),
+
+    /**
+     * The substantive grammatical errors in a piece of text, without rewriting it.
+     * @param {string} text - Prompt text.
+     * @returns {Array} Issues, [{ type, label }].
+     */
+    grammarIssues: function (text) {
+        if (!PM_GRAMMAR || !text) return [];
+        return PM_GRAMMAR.check(text)
+            .filter(issue => this.REPORTABLE_GRAMMAR.has(issue.type));
+    },
+
+    /**
+     * Optimizes a prompt and reports what was changed.
+     *
+     * optimizePrompt() returns just the text, because that is all the editor needs to
+     * swap in. This is the same pass with its findings attached, for the UI that wants
+     * to tell the user WHY their prompt changed -- which grammatical errors were found
+     * and what each one was.
+     *
+     * @param {string} prompt - The original prompt text.
+     * @returns {Object} { text, grammar, savedWords } where grammar is [{ type, label }].
+     */
+    optimizeWithReport: function (prompt) {
+        // Collected from the real run rather than re-derived: the spelling corrector
+        // works inside the pipeline, on masked text, and its findings exist nowhere
+        // else. Deduplicated because the same word can be corrected in more than one
+        // place, and the card is a summary rather than a log of every edit.
+        const collected = [];
+        const text = this.optimizePrompt(prompt, collected);
+
+        const grammar = [];
+        const seen = new Set();
+        collected.concat(this.grammarIssues(prompt || '')).forEach(issue => {
+            if (!this.REPORTABLE_GRAMMAR.has(issue.type)) return;
+            if (seen.has(issue.label)) return;
+            seen.add(issue.label);
+            grammar.push(issue);
+        });
+
+        const countWords = str => (str || '').trim().split(/\s+/).filter(Boolean).length;
+        return {
+            text: text,
+            grammar: grammar,
+            // Advice rather than edits: these describe a prompt that is too big to answer
+            // in one turn, which no rewrite of the wording can fix.
+            scope: this.scopeIssues(prompt || ''),
+            savedWords: Math.max(0, countWords(prompt) - countWords(text))
+        };
     },
 
     /**
@@ -501,8 +1045,12 @@ const PromptMeterOptimizer = {
      * @param {string} prompt - The original prompt text.
      * @returns {string} The optimized prompt text.
      */
-    optimizePrompt: function (prompt) {
-        if (!prompt || prompt.trim() === "") return "";
+    optimizePrompt: function (prompt, issues) {
+        // Guard the type, not just emptiness. Every caller in the extension reads from
+        // the DOM and so hands over a string, but this module is also driven directly
+        // from the tests and the dashboard, where a stray number or object would throw
+        // on .trim() rather than being declined.
+        if (typeof prompt !== 'string' || prompt.trim() === "") return "";
 
         // Stage 0: mask everything that must survive verbatim -- code, URLs, paths,
         // quoted material, identifiers, error output. Every later stage operates on
@@ -520,7 +1068,7 @@ const PromptMeterOptimizer = {
         if (this.isCodeSnippet(prose)) return prompt;
 
         // Stage 1: grammar, spelling & acronym pre-processing
-        optimized = this.correctGrammarAndSpelling(optimized);
+        optimized = this.correctGrammarAndSpelling(optimized, issues);
 
         // Stage 2: copy-paste garbage & symbol spam
         optimized = optimized
@@ -635,6 +1183,27 @@ const PromptMeterOptimizer = {
             optimized = optimized.charAt(0).toUpperCase() + optimized.slice(1);
         }
 
+        // Stage 9b: a multi-line span is a block, and a block belongs on its own line.
+        //
+        // Several strippers end in \s*, which happily consumes the newline that separated
+        // the prose from a pasted snippet: "review this code plz\nfunction f() {" loses
+        // "plz" and the line break with it, leaving the code welded to the end of a
+        // sentence. The span itself is restored byte for byte either way -- indentation
+        // included -- but for a language where a line break is syntax, joining it to the
+        // prose changes the program. Only spans that are already multi-line are affected,
+        // so an inline path or identifier keeps sitting mid-sentence.
+        if (PM_PROTECT) {
+            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index) => {
+                const span = protectedText.spans[Number(index)];
+                return (span && span.indexOf('\n') !== -1) ? `\n${placeholder}\n` : placeholder;
+            });
+            optimized = optimized
+                .replace(/[ \t]+\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/^\n+/, '')
+                .replace(/\n+$/, '');
+        }
+
         // Stage 10: restore every protected span exactly as the user wrote it
         return PM_PROTECT ? PM_PROTECT.unmask(optimized, protectedText.spans) : optimized;
     }
@@ -648,7 +1217,22 @@ PromptMeterOptimizer.compiled = (function () {
         typoMap: typoMap,
         typos: o.buildAlternation(typoMap, 'gi'),
         slang: o.buildAlternation(o.chatSlangMap, 'gi'),
-        contractions: o.buildAlternation(o.contractionMap, 'gi'),
+        // Vocabulary the other tables own. The spelling corrector treats these as
+        // correct, so it cannot rewrite an acronym or a term one of the maps handles:
+        // "dsa" would otherwise be two edits from "does".
+        knownWords: (function () {
+            const known = new Set();
+            Object.keys(o.techAcronymMap).forEach(term => known.add(term));
+            Object.values(o.techAcronymMap).forEach(term => known.add(String(term).toLowerCase()));
+            Object.values(typoMap).forEach(term => known.add(String(term).toLowerCase()));
+            Object.keys(o.chatSlangMap).forEach(term => known.add(term));
+            if (typeof PM_GRAMMAR !== 'undefined' && PM_GRAMMAR && PM_GRAMMAR.PROPER_NOUNS) {
+                Object.keys(PM_GRAMMAR.PROPER_NOUNS).forEach(term => known.add(term));
+            }
+            return known;
+        })(),
+        // contextualSlangRules compiles its own pattern per rule, in
+        // expandContextualSlang, because each one carries separate context tests.
         acronyms: o.buildAlternation(o.techAcronymMap, 'g')
     };
 })();

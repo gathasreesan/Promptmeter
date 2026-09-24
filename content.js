@@ -342,7 +342,7 @@ window.addEventListener("resize", schedulePositionUpdate);
 window.addEventListener("scroll", schedulePositionUpdate, true);
 
 // 3. Create and show the optimization overlay
-function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved) {
+function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues) {
     let card = document.getElementById("promptmeter-opt-card");
     if (!card) {
         card = document.createElement("div");
@@ -352,6 +352,16 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         applyCardTheme();
     }
 
+    const issues = grammarIssues || [];
+    // De-duplicated, because one rule can fire on several spans of the same prompt and
+    // the card is a summary rather than a list of every edit.
+    const issueLabels = [];
+    issues.forEach(issue => {
+        if (issueLabels.indexOf(issue.label) === -1) issueLabels.push(issue.label);
+    });
+    const shownIssues = issueLabels.slice(0, 4);
+    const hiddenCount = issueLabels.length - shownIssues.length;
+
     card.innerHTML = `
         <div class="promptmeter-opt-header">
             <div class="promptmeter-opt-title">
@@ -360,17 +370,66 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-opt-metrics">
                 <span class="promptmeter-metric-pill">-${tokensSaved} Tokens</span>
                 <span class="promptmeter-metric-pill">-${carbonSaved.toFixed(3)}g CO₂</span>
+                ${issueLabels.length > 0
+                    ? `<span class="promptmeter-metric-pill promptmeter-metric-grammar">${issueLabels.length} grammar</span>`
+                    : ''}
             </div>
         </div>
         <div class="promptmeter-opt-diff">
-            <div class="promptmeter-diff-box promptmeter-diff-original">${originalText}</div>
-            <div class="promptmeter-diff-box promptmeter-diff-optimized">${optimizedText}</div>
+            <div class="promptmeter-diff-box promptmeter-diff-original"></div>
+            <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
+        </div>
+        <div class="promptmeter-opt-scope" hidden>
+            <div class="promptmeter-scope-title">Too much for one answer</div>
+            <ul class="promptmeter-scope-list"></ul>
+        </div>
+        <div class="promptmeter-opt-grammar" hidden>
+            <div class="promptmeter-grammar-title">Grammar corrected</div>
+            <ul class="promptmeter-grammar-list"></ul>
         </div>
         <div class="promptmeter-opt-actions">
             <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
             <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Accept Optimization</button>
         </div>
     `;
+
+    // The prompt goes in as text, not markup. It is the user's own writing, so a stray
+    // "<" would otherwise be parsed as a tag and silently swallow the rest of the
+    // preview -- and anything pasted in from elsewhere would be parsed as markup too.
+    card.querySelector('.promptmeter-diff-original').textContent = originalText;
+    card.querySelector('.promptmeter-diff-optimized').textContent = optimizedText;
+
+    // Scope advice. Deliberately separate from the grammar panel: those are edits already
+    // applied to the preview, whereas this is a judgement the user has to act on, because
+    // only they can decide which parts of an over-large request to drop.
+    const scope = scopeIssues || [];
+    if (scope.length > 0) {
+        const panel = card.querySelector('.promptmeter-opt-scope');
+        const list = card.querySelector('.promptmeter-scope-list');
+        scope.slice(0, 3).forEach(finding => {
+            const item = document.createElement('li');
+            item.textContent = finding.label;
+            list.appendChild(item);
+        });
+        panel.hidden = false;
+    }
+
+    if (shownIssues.length > 0) {
+        const panel = card.querySelector('.promptmeter-opt-grammar');
+        const list = card.querySelector('.promptmeter-grammar-list');
+        shownIssues.forEach(label => {
+            const item = document.createElement('li');
+            item.textContent = label;
+            list.appendChild(item);
+        });
+        if (hiddenCount > 0) {
+            const more = document.createElement('li');
+            more.className = 'promptmeter-grammar-more';
+            more.textContent = `and ${hiddenCount} more`;
+            list.appendChild(more);
+        }
+        panel.hidden = false;
+    }
 
     document.getElementById("promptmeter-btn-accept").onclick = () => applyOptimization(optimizedText);
     document.getElementById("promptmeter-btn-ignore").onclick = () => {
@@ -400,8 +459,13 @@ function analyzeAndOfferOptimization(text) {
     // This runs inside a debounce timer, where a throw is swallowed by the event loop
     // and the card simply never appears. Surface it instead.
     let optimized;
+    let grammarIssues = [];
+    let scopeIssues = [];
     try {
-        optimized = PromptMeterOptimizer.optimizePrompt(text);
+        const report = PromptMeterOptimizer.optimizeWithReport(text);
+        optimized = report.text;
+        grammarIssues = report.grammar;
+        scopeIssues = report.scope;
     } catch (err) {
         console.error("🌿 PromptMeter: optimizePrompt failed for this text.", err, text);
         hideOptimizationCard();
@@ -418,14 +482,20 @@ function analyzeAndOfferOptimization(text) {
         PromptMeterTokenizer.countTokens(text) - PromptMeterTokenizer.countTokens(optimized)
     );
 
-    // Only interrupt for a worthwhile saving: 2+ tokens, or a 5% character reduction
+    // Only interrupt for a worthwhile change: 2+ tokens saved, a 5% character
+    // reduction, or a grammatical error found. Grammar earns an interruption on its own
+    // because correcting it rarely saves a token -- "he go" becomes "he goes", which is
+    // longer -- yet an agreement or tense error is exactly the kind of thing that makes
+    // the model answer the wrong question and cost a whole extra turn.
     const charSavingsPct = ((text.length - optimized.length) / text.length) * 100;
-    if (tokensSaved < 2 && charSavingsPct < 5.0) {
+    if (tokensSaved < 2 && charSavingsPct < 5.0 && grammarIssues.length === 0 &&
+        scopeIssues.length === 0) {
         hideOptimizationCard();
         return;
     }
 
-    showOptimizationCard(text, optimized, tokensSaved, PromptMeterCalculator.savings(tokensSaved).carbon);
+    showOptimizationCard(text, optimized, tokensSaved,
+        PromptMeterCalculator.savings(tokensSaved).carbon, grammarIssues, scopeIssues);
 }
 
 // 5. Apply the optimized prompt text directly into ChatGPT's input area
