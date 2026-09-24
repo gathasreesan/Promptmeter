@@ -44,9 +44,9 @@ const THEME_OPTIONS = [
 ];
 
 const TABS = [
-    { id: 'overview', icon: '📊', label: 'Overview' },
-    { id: 'queries', icon: '📂', label: 'Queries Log' },
-    { id: 'insights', icon: '🧠', label: 'Advisor Insights' }
+    { id: 'overview', label: 'Overview' },
+    { id: 'queries', label: 'Queries Log' },
+    { id: 'insights', label: 'Advisor Insights' }
 ];
 
 const CHART_RANGES = ['daily', 'weekly', 'monthly'];
@@ -772,7 +772,7 @@ export default function App() {
                             className={`nav-btn${activeTab === tab.id ? ' active' : ''}`}
                             onClick={() => handleTabChange(tab.id)}
                         >
-                            <span>{tab.icon}</span> {tab.label}
+                            {tab.label}
                         </button>
                     ))}
                 </div>

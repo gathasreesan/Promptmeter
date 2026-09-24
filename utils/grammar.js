@@ -597,9 +597,14 @@ const PromptMeterGrammar = {
                     : (past ? 'were' : 'are');
                 if (wanted === verb.toLowerCase()) return match;
 
+                const cue = (determiner || '').trim();
                 issues.push({
                     type: 'agreement',
-                    label: `"there ${verb} ${(determiner || '').trim()}" should be "there ${wanted} ${(determiner || '').trim()}"`.replace(/\s+"/g, '"')
+                    // Built by concatenation rather than by tidying a template afterwards:
+                    // the previous .replace(/\s+"/g, '"') removed the space before every
+                    // closing quote, so the label read 'should be"there are many"'.
+                    label: '"there ' + verb + (cue ? ' ' + cue : '') + '" should be '
+                        + '"there ' + wanted + (cue ? ' ' + cue : '') + '"'
                 });
                 return `there ${this.matchCase(wanted, verb)} ${determiner || ''}${noun}`;
             });

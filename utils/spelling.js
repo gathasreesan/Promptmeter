@@ -376,9 +376,24 @@ const PromptMeterSpelling = {
         // only fix the five that happened to be tested.
         if (word[0] !== candidate[0]) return false;
 
-        if (word.length < candidate.length) return this.isSubsequence(word, candidate);
-        if (word.length > candidate.length) return this.isSubsequence(candidate, word);
-        return this.isTransposition(word, candidate);
+        // A transposition reorders letters, so its ends may legitimately differ: "teh" and
+        // "the" is the classic case.
+        if (word.length === candidate.length) return this.isTransposition(word, candidate);
+
+        // For a length change the LAST letter must survive too, for the same reason as the
+        // first. Dropping a trailing letter is not a slip people make, but it is a tidy way
+        // to turn one real word into another: sweeping words that end in a silent -e turned
+        // up "huge" becoming "hug", "site" becoming "sit", "cute" becoming "cut" and "stare"
+        // becoming "star". One comparison rules out that family, and it also removes an
+        // earlier gap where "rat" reached "rate".
+        //
+        // Truncation is the deliberate exception and is handled outside this check, since
+        // dropping the end is exactly what it is for.
+        if (word[word.length - 1] !== candidate[candidate.length - 1]) return false;
+
+        return word.length < candidate.length
+            ? this.isSubsequence(word, candidate)
+            : this.isSubsequence(candidate, word);
     },
 
     /**
@@ -414,15 +429,19 @@ const PromptMeterSpelling = {
         // separately lets a poor skeleton match pre-empt a good truncation: "monda" has
         // the same skeleton as "mind" (two edits away) but is a prefix of "monday" (one
         // edit away), and whichever rule ran first would win rather than the better fit.
+        // Calendar truncations are kept apart from skeleton matches because they are the
+        // one case that legitimately drops the END of a word, and isPlausibleEdit refuses
+        // that shape for everything else.
+        const truncated = this.truncations(word);
         const candidates = (this.skeletonIndex.get(this.skeleton(word)) || [])
-            .concat(this.truncations(word));
+            .filter(candidate => this.isPlausibleEdit(word, candidate))
+            .concat(truncated);
 
         let best = null;
         let bestDistance = Infinity;
         let tied = false;
 
         for (const candidate of candidates) {
-            if (!this.isPlausibleEdit(word, candidate)) continue;
             const gap = this.distance(word, candidate);
             if (gap > this.budget(word, candidate)) continue;
 
