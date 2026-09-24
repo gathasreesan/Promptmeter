@@ -232,6 +232,23 @@ record('[misspelling] no typo key is a real dictionary word',
     realWordKeys.length === 0, `these are real words: ${JSON.stringify(realWordKeys)}`);
 
 // ---------------------------------------------------------------------------
+// 9. The last letter must survive too
+// ---------------------------------------------------------------------------
+
+// Found by sweeping words that end in a silent -e: dropping a trailing letter is not a
+// slip people make, but it is a tidy way to turn one real word into another. "a huge
+// syllabus" was being rewritten to "a hug syllabus" in a real prompt.
+for (const word of ['huge', 'site', 'cute', 'stare', 'rate', 'note', 'code', 'mode',
+    'role', 'size', 'time', 'line', 'file', 'name', 'page', 'type', 'move', 'hope']) {
+    keeps(word, 'the last letter must survive');
+}
+
+// Transpositions are exempt, since reordering legitimately changes both ends.
+corrects('teh', 'the');
+// Calendar truncation is the deliberate exception: dropping the end is what it is for.
+corrects('monda', 'monday');
+
+// ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length > 0) {

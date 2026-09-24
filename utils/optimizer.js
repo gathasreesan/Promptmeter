@@ -527,7 +527,10 @@ const PromptMeterOptimizer = {
         // Hedging, apology and self-deprecation
         /\b(?:sorry\s+(?:if|for)\s+(?:this\s+is|the)\s+(?:a\s+)?(?:dumb|stupid|silly|basic|long|obvious)[\w\s]{0,12}|i\s+know\s+this\s+(?:might\s+be|is|sounds)\s+(?:a\s+)?(?:basic|dumb|stupid|silly|obvious)[\w\s]{0,12}|this\s+may(?:be)?\s+(?:be\s+)?(?:a\s+)?(?:dumb|stupid|basic)\s+question|not\s+sure\s+if\s+(?:this|that)(?:'s|\s+is)\s+(?:right|correct|clear)|correct\s+me\s+if\s+(?:i'?m|i\s+am)\s+wrong|i\s+hope\s+(?:this|that)\s+makes\s+sense|(?:i\s+was\s+)?just\s+wondering|(?:i\s+was\s+)?just\s+curious|out\s+of\s+curiosity)\b[,!.\s]*/gi,
         // Sign-offs and gratitude tails
-        /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
+        // The "for your time" tail is part of the sign-off, not a separate clause. Without
+        // it the rule ate "thanks so much" and left "For your time!" standing alone as its
+        // own sentence -- a fragment that reads as an instruction and is not one.
+        /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble))?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
         // Urgency padding: an LLM cannot act on it, so it is pure token cost
         /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
@@ -599,8 +602,15 @@ const PromptMeterOptimizer = {
     // ("I am trying to build X"), because mid-clause it is ordinary grammar
     // ("explain what I am trying to do"). The unanchored group is padding anywhere.
     wrapperStrippers: [
-        // Left behind when the junk rules eat "I was just wondering" off the front
-        /(?<=^|[.!?]|[,;]|\n)\s*if\s+you\s+(?:could|can|would)(?:\s+maybe|\s+please|\s+kindly)?\s+/gim,
+        // Left behind when the junk rules eat "I was just wondering" off the front.
+        // The hedges repeat -- "if you could maybe possibly help me" stacks two of them --
+        // so the group is quantified rather than optional. With a single optional slot the
+        // rule matched nothing here and the whole wrapper survived into the output.
+        // A coordinator may still sit in front of the wrapper at this point -- "so if you
+        // could ..." -- because the leading-connective tidy does not run until stage 8,
+        // after every stripper pass. Consuming it here is what lets the clause-start
+        // anchor match at all.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:so|and|but|then|well|ok(?:ay)?)\s+)?if\s+you\s+(?:could|can|would)(?:\s+(?:maybe|possibly|perhaps|please|kindly|just))*\s+/gim,
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:i'?m|i\s+am)\s+trying\s+to|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:could|would|can)(?:\s+maybe)?|i\s+wonder(?:ed)?\s+if\s+you\s+(?:could|can|would)|(?:i'?m|i\s+am)\s+looking\s+for\s+(?:a\s+way\s+to|help\s+(?:with|to)))\b\s*/gim,
         /\b(?:i\s+need\s+help\s+(?:with|on|to)|i\s+could\s+use\s+(?:some\s+)?help\s+(?:with|on)|any\s+chance\s+you\s+(?:could|can))\b\s*/gi
     ],

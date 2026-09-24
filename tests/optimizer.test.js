@@ -941,6 +941,32 @@ for (const [name, prompt, block] of [
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
+// 13. Stranded fragments and stacked hedges
+// ---------------------------------------------------------------------------
+
+// The gratitude rule ate "thanks so much" and left "For your time!" standing as its own
+// sentence -- a fragment that reads like an instruction and is not one.
+stripped('a sign-off tail goes with the sign-off',
+    'Quick question, just to clarify - what is a promise? Thanks so much for your time!',
+    ['for your time', 'thanks']);
+preserved('the question survives the sign-off removal',
+    'Quick question, just to clarify - what is a promise? Thanks so much for your time!',
+    ['what is a promise']);
+
+// Hedges stack, so the wrapper rule quantifies them rather than allowing one. A leading
+// coordinator is consumed too, because the connective tidy does not run until stage 8.
+stripped('stacked hedges are removed with their wrapper',
+    'hey um so i was just wondering if you could maybe possibly help me understand recursion',
+    ['wondering', 'if you could', 'maybe', 'possibly']);
+preserved('the instruction under stacked hedges survives',
+    'hey um so i was just wondering if you could maybe possibly help me understand recursion',
+    ['help me understand recursion']);
+
+// "if you could" mid-sentence is an ordinary conditional, not a request wrapper.
+untouched('a mid-sentence conditional is not a wrapper',
+    'Tell me if you could do this without a loop');
+
+// ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failures.length} failed\n`);
 if (failures.length > 0) {
