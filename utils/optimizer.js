@@ -65,6 +65,29 @@ const PromptMeterOptimizer = {
         "beatifull": "beautiful", "alot": "a lot", "goverment": "government",
         "knowlege": "knowledge", "similiar": "similar",
         "javascriptt": "javascript", "javscript": "javascript",
+        // Typos that add or drop a CONSONANT, plus the classic letter swaps. The
+        // corrector in spelling.js cannot reach these: its whole precision argument is
+        // that consonants are preserved, and a distance-1 fallback that ignored them was
+        // measured doubling the corruption rate on held-out English. Exact pairs give the
+        // same coverage with none of that exposure.
+        "abou": "about", "adn": "and", "ahve": "have", "anser": "answer", "ansewr": "answer",
+        "bcak": "back", "beacuse": "because", "becasue": "because", "becuase": "because",
+        "clases": "classes", "classs": "class", "cna": "can", "coudl": "could",
+        "craete": "create", "creat": "create", "delet": "delete", "exaple": "example",
+        "exmaple": "example", "expalin": "explain", "explian": "explain", "exprot": "export",
+        "fo": "of", "fro": "from", "fucntion": "function",
+        "funtcion": "function", "heigth": "height", "hel": "help", "hlep": "help",
+        "htis": "this", "hvae": "have", "hwat": "what", "improt": "import", "jsut": "just",
+        "juts": "just", "liek": "like", "liste": "list", "maek": "make", "mkae": "make",
+        "nad": "and", "nee": "need", "onilne": "online", "onlien": "online", "ot": "to",
+        "oyu": "you", "paramter": "parameter", "paremeter": "parameter", "pelase": "please",
+        "plaese": "please", "pritn": "print", "prnit": "print", "quesiton": "question",
+        "questoin": "question", "retrun": "return", "reutrn": "return", "satrt": "start",
+        "shoudl": "should", "starst": "start", "stat": "start", "strat": "start",
+        "strign": "string", "taht": "that", "ther": "there", "thta": "that", "tihs": "this",
+        "tuo": "to", "updat": "update", "waht": "what", "wan": "want", "watn": "want",
+        "whta": "what", "wiht": "with", "witdh": "width", "wnat": "want", "wnt": "want",
+        "woudl": "would", "wtih": "with", "yuo": "you",
         // Commonly misspelled English words, as exact pairs.
         // Listed rather than left to spelling.js because these are nearly all
         // SUBSTITUTIONS ("seperate", "definately", "independant"), the one edit shape
