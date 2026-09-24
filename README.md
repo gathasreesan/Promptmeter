@@ -70,10 +70,10 @@ The analytics dashboard is built with **React** and **Chart.js**, bundled using 
 
 ### Step 1b: Run the Test Suites (Optional)
 
-Four dependency-free suites, 714 checks in total. From the project root:
+Four dependency-free suites, 735 checks in total. From the project root:
 
 ```bash
-node tests/optimizer.test.js    # 285 - protected spans, meaning preservation, filler removal
+node tests/optimizer.test.js    # 306 - protected spans, meaning preservation, filler removal
 node tests/grammar.test.js      # 109 - grammar corrections, and what must NOT be corrected
 node tests/spelling.test.js     # 192 - typo correction, and what must NOT be corrected
 node tests/ml-parity.test.js    # 128 - JavaScript reproduces scikit-learn exactly
@@ -251,7 +251,7 @@ Promptmeter/
   - Strips greetings (`hello`, `hi chatgpt`, `good morning`).
   - Removes polite conversational padding (`could you please`, `would you mind`, `thank you`).
   - Removes non-instructional preambles (`I am bored so I want to...`, `I was wondering if...`).
-  - Simplifies wordy phrases — 87 one-for-many substitutions (`in order to` → `to`,
+  - Simplifies wordy phrases — 99 one-for-many substitutions (`in order to` → `to`,
     `carry out an analysis of` → `analyze`, `on a daily basis` → `daily`,
     `has the ability to` → `can`). Replacing many words with one of the same meaning is
     the only rephrasing safe to automate: the words change, the request does not.
