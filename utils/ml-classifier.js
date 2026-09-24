@@ -6,10 +6,13 @@
  * logistic regression -- so it can run inside a Chrome content script with no server,
  * no WASM and no network call.
  *
- * The transform below MUST stay in step with build_model() in ml/train.py:
+ * The transform below mirrors build_model() in ml/train.py. The settings that can
+ * change between training runs -- the n-gram range and whether term frequency is
+ * sublinear -- are read from the model's own `config` block rather than hard-coded
+ * here, so retraining with different hyperparameters cannot leave the browser applying
+ * a transform the coefficients were never fitted for. The rest is fixed by sklearn:
  *
  *     token pattern   \b\w[\w']*\b, lowercased
- *     term frequency  raw counts          (sublinear_tf=False)
  *     idf             taken from the model, already computed by sklearn
  *     norm            L2                  (norm='l2')
  *     decision        softmax(W . x + b)
@@ -46,6 +49,20 @@ const PromptMeterML = {
     },
 
     /**
+     * The transform settings the model was fitted with. Older exports predate the
+     * config block, and unigrams with raw term frequency is what they used.
+     * @returns {Object} { ngramMin, ngramMax, sublinearTf }
+     */
+    config: function () {
+        const stored = (PM_MODEL && PM_MODEL.config) || {};
+        return {
+            ngramMin: stored.ngramMin || 1,
+            ngramMax: stored.ngramMax || 1,
+            sublinearTf: Boolean(stored.sublinearTf)
+        };
+    },
+
+    /**
      * Splits text the way sklearn's default token_pattern does.
      * @param {string} text
      * @returns {Array} Lowercased tokens.
@@ -53,6 +70,29 @@ const PromptMeterML = {
     tokenize: function (text) {
         if (!text) return [];
         return text.toLowerCase().match(/\b\w[\w']*\b/g) || [];
+    },
+
+    /**
+     * Expands tokens into the n-grams the model was fitted on. sklearn joins the words
+     * of an n-gram with a single space, and emits every order in the configured range.
+     * @param {Array} tokens - Lowercased tokens.
+     * @returns {Array} Features, in sklearn's order.
+     */
+    features: function (tokens) {
+        const settings = this.config();
+        if (settings.ngramMax <= 1) return tokens;
+
+        const out = [];
+        for (let n = settings.ngramMin; n <= settings.ngramMax; n++) {
+            if (n === 1) {
+                for (const token of tokens) out.push(token);
+                continue;
+            }
+            for (let i = 0; i + n <= tokens.length; i++) {
+                out.push(tokens.slice(i, i + n).join(' '));
+            }
+        }
+        return out;
     },
 
     /**
@@ -66,8 +106,8 @@ const PromptMeterML = {
         const counts = new Map();
         let known = 0;
 
-        for (const token of this.tokenize(text)) {
-            const index = PM_MODEL.vocabulary[token];
+        for (const feature of this.features(this.tokenize(text))) {
+            const index = PM_MODEL.vocabulary[feature];
             if (index === undefined) continue;
             counts.set(index, (counts.get(index) || 0) + 1);
             known += 1;
@@ -75,12 +115,16 @@ const PromptMeterML = {
 
         if (known < this.MIN_KNOWN_TOKENS) return null;
 
+        const sublinear = this.config().sublinearTf;
         const indices = [];
         const values = [];
         let sumOfSquares = 0;
 
         counts.forEach((count, index) => {
-            const value = count * PM_MODEL.idf[index];
+            // sublinear_tf replaces the raw count with 1 + ln(count), which is what
+            // sklearn does when the option is on and must be mirrored exactly here.
+            const tf = sublinear ? 1 + Math.log(count) : count;
+            const value = tf * PM_MODEL.idf[index];
             indices.push(index);
             values.push(value);
             sumOfSquares += value * value;

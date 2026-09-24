@@ -96,6 +96,72 @@ const PromptMeterProtect = {
         { name: 'camel-case', rx: /\b[a-z]+[A-Z][\w]*\b/g }
     ],
 
+    // A line that looks like program text rather than prose. Deliberately broad: the
+    // block rule below only fires when most lines in a run qualify, so a single false
+    // positive cannot protect a paragraph of English.
+    CODE_LINE: /(?:[{}();]\s*$|^\s*[}\])]|=>|:=|==|!=|\+\+|--|^\s*(?:function|const|let|var|class|def|return|if|else|elif|for|while|switch|case|try|catch|except|import|from|public|private|static|void|int|string|bool|async|await|package|use|fn|impl|struct|enum)\b|^\s*[\w$.]+\s*=[^=]|^\s*[-*]\s|^\s{2,}[\w$"'#.@<-])/,
+
+    // A line that is plainly prose, whatever else it contains. A run is not code when
+    // it is made of sentences.
+    PROSE_LINE: /^[^\n]*[a-z]{3,}\s+[a-z]{3,}\s+[a-z]{3,}[^\n]*[.!?]?\s*$/i,
+
+    // Minimum consecutive code-shaped lines before a run counts as a block.
+    MIN_CODE_BLOCK_LINES: 2,
+
+    /**
+     * Masks runs of consecutive lines that are mostly program text.
+     *
+     * Kept out of the pattern table because the test is proportional -- "most lines in
+     * this run look like code" -- which a regex cannot express. Without it a prompt that
+     * pastes code with no fence and a two-space indent defeats the whole pipeline: the
+     * indented-code pattern needs four spaces, so nothing is masked, isCodeSnippet()
+     * then reads the entire prompt as code, and optimizePrompt returns it untouched.
+     * The filler around the snippet is never stripped.
+     *
+     * @param {string} text - Text, already partly masked.
+     * @param {Array} spans - Span table, appended to in place.
+     * @returns {string} Text with code runs replaced by placeholders.
+     */
+    maskCodeBlocks: function (text, spans) {
+        if (text.indexOf('\n') === -1) return text;
+
+        const lines = text.split('\n');
+        const out = [];
+        let index = 0;
+
+        while (index < lines.length) {
+            if (!this.CODE_LINE.test(lines[index]) || this.PROSE_LINE.test(lines[index])) {
+                out.push(lines[index]);
+                index += 1;
+                continue;
+            }
+
+            // Extend the run over code-shaped lines, allowing a blank line inside a block
+            // but never ending on one.
+            let end = index;
+            let last = index;
+            while (end < lines.length) {
+                const line = lines[end];
+                if (line.trim() === '') { end += 1; continue; }
+                if (!this.CODE_LINE.test(line) || this.PROSE_LINE.test(line)) break;
+                last = end;
+                end += 1;
+            }
+
+            const run = lines.slice(index, last + 1);
+            if (run.length < this.MIN_CODE_BLOCK_LINES) {
+                out.push(lines[index]);
+                index += 1;
+                continue;
+            }
+
+            spans.push(run.join('\n'));
+            out.push(`${this.MASK_OPEN}${spans.length - 1}${this.MASK_CLOSE}`);
+            index = last + 1;
+        }
+
+        return out.join('\n');
+    },
     /**
      * Replaces every protected span with a placeholder.
      * @param {string} text - The raw prompt.
@@ -103,7 +169,10 @@ const PromptMeterProtect = {
      */
     mask: function (text) {
         const spans = [];
-        let masked = text;
+        // Before the pattern table: a code block is the largest construct here, and
+        // letting camel-case or call patterns nibble at its insides first would leave
+        // the block unrecognisable as a run.
+        let masked = this.maskCodeBlocks(text, spans);
 
         for (const pattern of this.patterns) {
             pattern.rx.lastIndex = 0;

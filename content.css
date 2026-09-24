@@ -195,6 +195,81 @@
     color: var(--diff-added-text);
 }
 
+/* Grammar findings. The pill in the header carries the count; this panel names the
+   errors, so accepting the rewrite is an informed choice rather than a leap of faith. */
+.promptmeter-metric-grammar {
+    color: var(--color-error);
+}
+
+/* The host page's stylesheet is aggressive and can set a display value on any element
+   it reaches. Without this the [hidden] attribute stops hiding anything. */
+.promptmeter-opt-card [hidden] {
+    display: none !important;
+}
+
+.promptmeter-opt-grammar {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    flex: 0 0 auto;
+}
+
+.promptmeter-grammar-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-error);
+    margin-bottom: 6px;
+}
+
+.promptmeter-grammar-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.promptmeter-grammar-list li {
+    margin: 0;
+}
+
+.promptmeter-grammar-more {
+    opacity: 0.7;
+    font-style: italic;
+    list-style: none;
+    margin-left: -16px;
+}
+
+/* Scope advice. Styled apart from the grammar panel because it is not an edit already
+   applied to the preview -- it is a judgement only the user can act on. */
+.promptmeter-opt-scope {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--color-error);
+    background: var(--bg-surface);
+    flex: 0 0 auto;
+}
+
+.promptmeter-scope-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.promptmeter-scope-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
 .promptmeter-opt-actions {
     display: flex;
     justify-content: flex-end;

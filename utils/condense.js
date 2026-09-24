@@ -40,8 +40,26 @@ const PromptMeterCondense = {
     // A sentence the rules classify as core -- it asks something, constrains the output,
     // or holds protected content -- is never offered to the model at all. No confidence
     // level lets the classifier delete the user's actual request.
-    ML_KEEP_VETO: 0.75,
-    ML_DROP_PROPOSE: 0.90,
+    // Both thresholds are set from measured precision rather than taste. Running
+    // 5-fold cross-validated probabilities over the training corpus and asking, at each
+    // cut-off, how often the rule that fires is actually right:
+    //
+    //   PROPOSE (removable >= t)        VETO (keep >= t)
+    //     t     fires  precision          t     fires  precision
+    //    0.85    299     0.973           0.70     79     0.911
+    //    0.88    281     0.975           0.75     71     0.916
+    //    0.90    259     0.981           0.80     58     0.931
+    //    0.92    231     0.991           0.85     45     0.978
+    //
+    // PROPOSE sits at 0.92: it deletes the user's text, so it is held to ~99%
+    // precision, and the 28 extra removals that 0.90 would buy cost three more wrong
+    // deletions. VETO sits at 0.80, where precision climbs meaningfully over 0.75 while
+    // still firing often; being wrong there only costs a few tokens.
+    //
+    // Re-derive these after retraining -- they describe a particular fitted model, not
+    // a property of the approach.
+    ML_KEEP_VETO: 0.80,
+    ML_DROP_PROPOSE: 0.92,
 
     /** The classifier, or null when no model is loaded. */
     ml: function () {
@@ -76,8 +94,21 @@ const PromptMeterCondense = {
         return Boolean(advice && advice.removable >= this.ML_DROP_PROPOSE);
     },
 
-    // Below this length a prompt is not an essay, and sentence pruning stays off.
-    MIN_WORDS: 35,
+    // Below this length sentence pruning stays off.
+    //
+    // This was 35, on the reasoning that a shorter prompt is not an essay and has no
+    // padding to find. That is true of the RULES -- a blacklist needs bulk to work on --
+    // but it also switched off the classifier for almost every real prompt, because the
+    // propose path below only runs inside condense(). Backstory a rule has never seen
+    // ("my cousin just adopted two rescue cats from the shelter") sat in two-sentence
+    // prompts untouched, even with the model calling it removable at 0.93.
+    //
+    // 15 is low enough to cover an ordinary two-sentence prompt and high enough that a
+    // one-line question is still never pruned. The guards that make this safe are
+    // unchanged and do the real work: a sentence that asks, constrains or holds
+    // protected content is never offered to the model, the propose threshold is set for
+    // ~99% precision, and pruneNarrative never returns an empty prompt.
+    MIN_WORDS: 15,
 
     // A sentence must contribute at least this many previously unseen content words to
     // survive on vocabulary alone.
@@ -119,6 +150,18 @@ const PromptMeterCondense = {
 
     // The sentence states a requirement about the output.
     CONSTRAINT: /\b(?:must|should|needs?\s+to|has\s+to|make\s+sure|ensure|include|exclude|avoid|format|at\s+least|no\s+more\s+than|\d+\s+words?|step[-\s]by[-\s]step|in\s+\w+\s+style|bullet\s+points?|tone)\b/i,
+
+    // The sentence reports a symptom: something is broken, failing or wrong.
+    //
+    // This is core content, not narrative. "The codes don't work properly and I don't
+    // know why" IS the question -- the training corpus labels its own examples of this
+    // shape ("my code throws a TypeError on line 42", "the API returns a 401") as
+    // IMPORTANT -- but it asks for nothing and constrains nothing, so without this
+    // pattern the rules classify it as non-core and hand it to the model. The model then
+    // reads the "I have a doubt ... I don't know why" frame around it, calls it
+    // removable at 0.95, and the user's actual problem is deleted while "help me"
+    // survives. A sentence describing a malfunction is never offered to the model.
+    PROBLEM: /\b(?:does\s*n[o']?t\s+work|do\s*n[o']?t\s+work|not\s+working|is\s*n[o']?t\s+working|fails?|failing|failed|crash(?:es|ed|ing)?|throws?|threw|errors?|exception|traceback|bug|broken|breaks?|wrong|incorrect|inconsistent|unexpected|times?\s+out|timed\s+out|hangs?|freezes?|stuck|returns?\s+(?:a\s+|an\s+)?(?:\d{3}|null|undefined|nothing|empty|duplicate))\b/i,
 
     // Sentences that are pure hedging, uncertainty or research narrative. These are
     // dropped even when they introduce new vocabulary, because the vocabulary is about
@@ -218,6 +261,10 @@ const PromptMeterCondense = {
         "MEBE\\s+(?:having|writing|giving|taking|attending|appearing\\s+for|sitting\\s+for|going\\s+to\\s+(?:have|write|give|take|attend|face|appear\\s+for|sit\\s+for))\\s+(?:an?\\s+|my\\s+|our\\s+|the\\s+|some\\s+|this\\s+)?EVENT",
         // "my exam is tomorrow", "our finals are coming up", "the deadline is tonight"
         "(?:my|our|the)\\s+EVENT\\s*(?:is|are|was|were|will\\s+be|starts?|starting|begins?|beginning|comes?\\s+up|(?:is|are)\\s+coming\\s+up|got\\s+(?:preponed|postponed|moved))",
+        // "tomorrow is my exam", "monday is the deadline" -- the mirror image of the
+        // clause above, with the occasion after the copula instead of in front of it.
+        // Both word orders are common and neither implies the other, so both are listed.
+        "(?:tomorrow|today|tonight|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next\\s+\\w+|this\\s+\\w+)\\s+(?:is|are|was|were|will\\s+be)\\s+(?:my|our|the|a|an)\\s+EVENT",
         // "my exam tomorrow", "our sem exams next month" -- no verb, just an announcement
         "(?:my|our)\\s+EVENT\\s+(?=(?:tomorrow|today|tonight|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next|this|in|on|are|is)\\b)",
         // "tomorrow I have an exam", "next week we have a viva"
@@ -451,10 +498,14 @@ const PromptMeterCondense = {
         const trimmed = sentence.trim();
         const bare = trimmed.replace(this.LEAD_IN, '');
         const protectedSpan = trimmed.indexOf(this.MASK_OPEN) !== -1;
+        // MID_ASK catches a request that does not open the sentence ("...tomorrow, teach
+        // me ML"), which the anchored patterns cannot see. Every clause here widens what
+        // counts as core, which only ever keeps MORE -- the safe direction.
         const asks = this.IMPERATIVE.test(bare) ||
             this.QUESTION_OPENER.test(trimmed) ||
+            this.MID_ASK.test(trimmed) ||
             trimmed.indexOf('?') !== -1;
-        const constrains = this.CONSTRAINT.test(trimmed);
+        const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed);
 
         // A short leftover that asks for nothing is a fragment, not a sentence.
         const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
