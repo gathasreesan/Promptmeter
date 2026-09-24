@@ -7,11 +7,11 @@
   --bg-sidebar: #F2F7F2;
   --bg-card: #FFFFFF;
   --bg-hover-card: #F9FCF8;
-  --border-color: #DCE8DD;
-  --divider-color: #E7EFE7;
+  --border-color: #E3E8E4;
+  --divider-color: #EDF1EE;
 
   /* Brand Accents */
-  --color-primary: #2E7D32;
+  --color-primary: #1c5d20;
   --color-secondary: #4CAF50;
   --color-mint: #81C784;
   --color-sage: #A5D6A7;
@@ -19,18 +19,18 @@
   --gradient-panel: linear-gradient(135deg, #EEF5EC, #FFFFFF);
 
   /* Typographic Hierarchy */
-  --text-primary: #1B1F1C;
-  --text-secondary: #55605A;
-  --text-muted: #7A857E;
-  --text-disabled: #A8B0AA;
+  --text-primary: #14181A;
+  --text-secondary: #5A6470;
+  --text-muted: #6E7781;
+  --text-disabled: #A9B1BA;
   --font-heading: 'Sora', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Buttons & Navigation */
   --bg-hover: rgba(46, 125, 50, 0.08);
   --bg-selected: #E8F5E9;
-  --btn-primary: #2E7D32;
-  --btn-primary-hover: #256B2A;
+  --btn-primary: #1c5d20;
+  --btn-primary-hover: #164A19;
   --btn-secondary: #FFFFFF;
   --btn-secondary-border: #DCE8DD;
   --btn-secondary-hover: #EEF5EC;
@@ -67,9 +67,9 @@
   --danger-wash-hover: rgba(211, 47, 47, 0.16);
 
   /* Elevation Shadows & Radius */
-  --shadow-premium: 0 6px 18px rgba(46, 125, 50, 0.08);
-  --radius-card: 18px;
-  --radius-btn: 12px;
+  --shadow-premium: 0 1px 2px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06);
+  --radius-card: 12px;
+  --radius-btn: 8px;
   --radius-input: 12px;
   --radius-pill: 6px;
 }
@@ -224,6 +224,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .kpi-value {
+    font-variant-numeric: tabular-nums;
   font-family: var(--font-heading);
   font-size: 36px;
   font-weight: 800;
@@ -398,6 +399,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .score-pill {
+    font-variant-numeric: tabular-nums;
   display: inline-block;
   padding: 4px 10px;
   border: 1px solid var(--border-color);
@@ -415,7 +417,8 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 13px;
 }
 .stat-row span:first-child { color: var(--text-secondary); font-weight: 500; }
-.stat-row span:last-child { font-weight: 700; font-size: 14px; }
+.stat-row span:last-child {
+    font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; }
 
 /* ---------------------------------------------------------------------------
    Queries table
@@ -444,6 +447,7 @@ h1, h2, h3, h4, h5, h6 {
   vertical-align: top;
 }
 .data-table td {
+    font-variant-numeric: tabular-nums;
   padding: 16px 10px;
   color: var(--text-primary);
 }
@@ -572,6 +576,7 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 .comparison-metric-value {
+    font-variant-numeric: tabular-nums;
   display: block;
   font-family: var(--font-heading);
   font-size: 15px;
@@ -719,7 +724,7 @@ h1, h2, h3, h4, h5, h6 {
     --bg-sidebar: #131A15;
     --bg-card: #1A231C;
     --bg-hover-card: #1F2A21;
-    --border-color: #2A3A2D;
+    --border-color: #2B3430;
     --divider-color: #243127;
 
     --color-primary: #66BB6A;
@@ -729,9 +734,9 @@ h1, h2, h3, h4, h5, h6 {
     --gradient-accent: linear-gradient(135deg, #388E3C, #66BB6A);
     --gradient-panel: linear-gradient(135deg, #17201A, #1A231C);
 
-    --text-primary: #E8EDE8;
-    --text-secondary: #A9B5AC;
-    --text-muted: #7E8C82;
+    --text-primary: #E6EAE8;
+    --text-secondary: #A2ADB4;
+    --text-muted: #8B949E;
     --text-disabled: #5C6960;
 
     --bg-hover: rgba(102, 187, 106, 0.12);
@@ -769,7 +774,7 @@ h1, h2, h3, h4, h5, h6 {
     --danger-border: rgba(239, 83, 80, 0.32);
     --danger-wash-hover: rgba(239, 83, 80, 0.24);
 
-    --shadow-premium: 0 6px 18px rgba(0, 0, 0, 0.45);
+    --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
   }
 }
 
@@ -779,7 +784,7 @@ h1, h2, h3, h4, h5, h6 {
   --bg-sidebar: #131A15;
   --bg-card: #1A231C;
   --bg-hover-card: #1F2A21;
-  --border-color: #2A3A2D;
+  --border-color: #2B3430;
   --divider-color: #243127;
 
   --color-primary: #66BB6A;
@@ -789,9 +794,9 @@ h1, h2, h3, h4, h5, h6 {
   --gradient-accent: linear-gradient(135deg, #388E3C, #66BB6A);
   --gradient-panel: linear-gradient(135deg, #17201A, #1A231C);
 
-  --text-primary: #E8EDE8;
-  --text-secondary: #A9B5AC;
-  --text-muted: #7E8C82;
+  --text-primary: #E6EAE8;
+  --text-secondary: #A2ADB4;
+  --text-muted: #8B949E;
   --text-disabled: #5C6960;
 
   --bg-hover: rgba(102, 187, 106, 0.12);
@@ -829,7 +834,7 @@ h1, h2, h3, h4, h5, h6 {
   --danger-border: rgba(239, 83, 80, 0.32);
   --danger-wash-hover: rgba(239, 83, 80, 0.24);
 
-  --shadow-premium: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
 }
 
 body {
@@ -886,4 +891,155 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   Icons and the elements built around them.
+
+   The UI used emoji for every glyph. They render differently on each platform,
+   cannot take colour or stroke weight from their context, and sit on the text
+   baseline rather than the label's optical centre, so a row of them never lines
+   up. These rules style the inline SVG set that replaced them.
+   --------------------------------------------------------------------------- */
+
+.icon {
+    flex: 0 0 auto;
+    vertical-align: -0.125em;
+}
+
+/* Anything pairing an icon with a label aligns on the centre, not the baseline. */
+.pill,
+.btn-danger,
+.nav-btn,
+.comparison-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.panel-icon {
+    color: var(--text-muted);
+}
+
+.brand-name {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.badge-icon .icon {
+    color: var(--color-primary);
+}
+
+.badge-tile.locked .badge-icon .icon {
+    color: var(--text-disabled);
+}
+
+.streak-mark {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: var(--color-carbon);
+}
+
+.btn-danger-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Surface and motion polish.
+   --------------------------------------------------------------------------- */
+
+/* One easing curve and two durations across the whole app, so nothing feels like
+   it belongs to a different product. */
+:root {
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 120ms;
+    --dur-base: 200ms;
+}
+
+.glass-panel,
+.kpi-card {
+    transition: border-color var(--dur-base) var(--ease-out),
+                box-shadow var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+}
+
+/* Lift on hover was a 2px translate with no shadow change, which reads as the card
+   twitching. Pairing a smaller move with a shadow makes it read as depth. */
+.kpi-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-premium);
+}
+
+.nav-btn,
+.segmented button,
+.btn-danger,
+.dashboard-btn {
+    transition: background var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
+}
+
+/* Headings carry slightly negative tracking; at these weights the default spacing
+   looks loose next to the body text. */
+h1, h2, h3, h4 {
+    letter-spacing: -0.015em;
+}
+
+/* Uppercase micro-labels need the opposite treatment to stay readable. */
+.kpi-label,
+.section-label,
+.stat-label {
+    letter-spacing: 0.04em;
+}
+
+/* A table that can scroll sideways should say so at its edge rather than clipping
+   silently. */
+.table-scroll {
+    scrollbar-width: thin;
+}
+
+/* ---------------------------------------------------------------------------
+   Focus, motion and numerals.
+
+   Three gaps that were the same in the popup, the card and the dashboard:
+
+   FOCUS      Nothing defined a focus style, and several controls set outline:none
+              or sit on a coloured fill, so tabbing through the UI showed nothing at
+              all. :focus-visible keeps the ring for keyboard users without putting
+              it back on every mouse click.
+   MOTION     Every transition ran regardless of the viewer's setting. A prompt tool
+              that animates on each keystroke is exactly the case the reduced-motion
+              preference exists for.
+   NUMERALS   Figures that update in place (token counts, scores, carbon) shifted
+              width as their digits changed, because the default numerals are
+              proportional. Tabular numerals hold the column still.
+   --------------------------------------------------------------------------- */
+
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-btn);
+}
+
+/* The ring is drawn outside the element, so a control flush against a panel edge
+   still shows it in full. */
+:where(button, a):focus-visible {
+    position: relative;
+    z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

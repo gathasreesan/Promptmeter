@@ -38,10 +38,56 @@ const readChartTokens = () => {
 };
 
 const THEME_OPTIONS = [
-    { id: 'light', icon: '☀️', label: 'Light' },
-    { id: 'dark', icon: '🌙', label: 'Dark' },
-    { id: 'auto', icon: '🖥️', label: 'Auto' }
+    { id: 'light', label: 'Light' },
+    { id: 'dark', label: 'Dark' },
+    { id: 'auto', label: 'Auto' }
 ];
+
+/**
+ * Inline icon set.
+ *
+ * Replaces the emoji the UI used to render. Emoji look different on every platform,
+ * cannot inherit colour or stroke weight, and sit on the text baseline rather than
+ * aligning to the label beside them, so a row of them never quite lines up. These are
+ * drawn on a 24-unit grid, inherit currentColor and take their size from a prop.
+ */
+const ICON_PATHS = {
+    link: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71',
+    image: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6',
+    document: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+    trash: 'M4 7h16M10 11v6M14 11v6M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13M9 7V4h6v3',
+    lock: 'M6 11h12v10H6zM9 11V7a3 3 0 0 1 6 0v4',
+    warning: 'M12 3 2 20h20zM12 10v5M12 18h.01',
+    trophy: 'M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M10 19h4M12 14v5',
+    flame: 'M12 3s5 4 5 9a5 5 0 0 1-10 0c0-2 1-3 1-3s1 2 2 2 1-4 2-8z',
+    scissors: 'M6 4l12 12M18 4L6 16M8 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM20 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0z',
+    chevronDown: 'M6 9l6 6 6-6',
+    chevronRight: 'M9 6l6 6-6 6',
+    check: 'M4 12l5 5L20 6'
+};
+
+const Icon = ({ name, size = 16, className = '' }) => {
+    const path = ICON_PATHS[name];
+    if (!path) return null;
+
+    return (
+        <svg
+            className={`icon${className ? ' ' + className : ''}`}
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+        >
+            <path d={path} />
+        </svg>
+    );
+};
 
 const TABS = [
     { id: 'overview', label: 'Overview' },
@@ -239,7 +285,7 @@ const Panel = ({ className = '', style, children }) => (
 const PanelHeader = ({ icon, title, children }) => (
     <div className={children ? "row-between" : "panel-header"} style={children ? { marginBottom: 20 } : undefined}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
+            {icon && <Icon name={icon} size={16} className="panel-icon" />}
             <h3 className="panel-title">{title}</h3>
         </div>
         {children}
@@ -306,8 +352,8 @@ const RecommendationList = ({ icon, title, items, emptyMessage }) => (
 
 const BadgeTile = ({ badge }) => (
     <div className={`badge-tile${badge.unlocked ? '' : ' locked'}`}>
-        {!badge.unlocked && <span className="badge-lock">🔒</span>}
-        <div className="badge-icon">{badge.icon}</div>
+        {!badge.unlocked && <span className="badge-lock"><Icon name="lock" size={14} /></span>}
+        <div className="badge-icon"><Icon name={badge.icon} size={20} /></div>
         <span className="badge-name">{badge.name}</span>
         <span className="badge-desc">{badge.description}</span>
     </div>
@@ -315,9 +361,9 @@ const BadgeTile = ({ badge }) => (
 
 const AttachmentPills = ({ item }) => {
     const pills = [
-        { count: item.attachedLinks, icon: '🔗', label: 'URL', color: COLOR.info },
-        { count: item.attachedImages, icon: '🖼️', label: 'Img', color: COLOR.primary },
-        { count: item.attachedDocs, icon: '📎', label: 'Doc', color: COLOR.carbon }
+        { count: item.attachedLinks, icon: 'link', label: 'URL', color: COLOR.info },
+        { count: item.attachedImages, icon: 'image', label: 'Img', color: COLOR.primary },
+        { count: item.attachedDocs, icon: 'document', label: 'Doc', color: COLOR.carbon }
     ].filter(pill => pill.count > 0);
 
     if (pills.length === 0) return null;
@@ -326,7 +372,7 @@ const AttachmentPills = ({ item }) => {
         <div className="pill-group">
             {pills.map(pill => (
                 <span key={pill.label} className="pill" style={{ '--pill-color': pill.color }}>
-                    {pill.icon} {pill.count} {pill.label}
+                    <Icon name={pill.icon} size={13} /> {pill.count} {pill.label}
                 </span>
             ))}
         </div>
@@ -349,7 +395,7 @@ const ComparisonBox = ({ item }) => {
     return (
         <div className="comparison-box">
             <div className="comparison-head">
-                <span className="comparison-title">✂️ What the coach removed</span>
+                <span className="comparison-title">Removed by the optimizer</span>
                 <span className="comparison-headline">
                     {before} → {after} tokens
                     <em>{percent}% shorter</em>
@@ -413,7 +459,7 @@ const QueryRow = ({ item, onDelete }) => {
                         aria-expanded={expanded}
                         onClick={() => setExpanded(!expanded)}
                     >
-                        {expanded ? '▾' : '▸'} {expanded ? 'Hide' : 'Compare'} original vs optimized
+                        <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={13} /> {expanded ? 'Hide' : 'Compare'} original vs optimized
                     </button>
                 )}
             </td>
@@ -442,7 +488,7 @@ const QueryRow = ({ item, onDelete }) => {
                     title="Delete query log entry"
                     onClick={() => onDelete(item.timestamp)}
                 >
-                    🗑️
+                    <Icon name="trash" size={15} />
                 </button>
             </td>
         </tr>
@@ -468,7 +514,7 @@ const ThemeSwitch = ({ value, onChange }) => (
                     title={`${option.label} theme`}
                     aria-pressed={value === option.id}
                 >
-                    <span aria-hidden="true">{option.icon}</span> {option.label}
+                    {option.label}
                 </button>
             ))}
         </div>
@@ -491,7 +537,7 @@ const OverviewTab = ({ stats, weeklyChallenge, currentStreak, filterMode, setFil
                 <Panel>
                     <div className="row-between" style={{ marginBottom: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 16 }}>🏆</span>
+                            <Icon name="trophy" size={16} />
                             <h3 className="panel-title">{weeklyChallenge.title}</h3>
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR.primary }}>
@@ -515,7 +561,7 @@ const OverviewTab = ({ stats, weeklyChallenge, currentStreak, filterMode, setFil
 
             <div className="stack">
                 <Panel className="panel-accent" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔥</div>
+                    <div className="streak-mark"><Icon name="flame" size={26} /></div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.textSecondary, marginBottom: 4 }}>
                         Coaching Streak
                     </div>
@@ -548,7 +594,7 @@ const QueriesTab = ({ rows, hasHistory, searchTerm, setSearchTerm, onClearAll, o
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {hasHistory && (
-                    <button className="btn-danger" onClick={onClearAll}>🗑️ Clear All Logs</button>
+                    <button className="btn-danger" onClick={onClearAll}><Icon name="trash" size={14} /> Clear all logs</button>
                 )}
             </div>
         </PanelHeader>
@@ -608,13 +654,13 @@ const InsightsTab = ({ avgEfficiency, rating, recommendations, badges, currentSt
             <div className="split-wide">
                 <div className="stack">
                     <RecommendationList
-                        icon="⚠️"
+                        icon="warning"
                         title="Critical Optimization Warnings"
                         items={criticalFixes}
-                        emptyMessage="🎉 Excellent work! No warnings detected. Your prompting cycles are carbon efficient."
+                        emptyMessage="No warnings. Your prompts are running efficiently."
                     />
                     <RecommendationList
-                        icon="💡"
+                        icon="check"
                         title="Efficiency Best Practices"
                         items={bestPractices}
                         emptyMessage="No diagnostics logs available yet. Make more queries to generate tips."
@@ -753,9 +799,8 @@ export default function App() {
         <div className="app-shell">
             <div className="sidebar">
                 <div className="sidebar-brand">
-                    <span style={{ fontSize: 20 }}>🌿</span>
                     <div>
-                        <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em' }}>
+                        <div className="brand-name">
                             PromptMeter
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10, fontWeight: 700, color: COLOR.primary }}>

@@ -1,4 +1,4 @@
-console.log("✅ PromptMeter Active on ChatGPT");
+console.log("[PromptMeter] active on ChatGPT");
 
 // Each util is loaded as its own content script, so one of them failing to parse leaves
 // the others running and the failure is easy to miss. Report what actually arrived.
@@ -14,7 +14,7 @@ console.log("✅ PromptMeter Active on ChatGPT");
     };
     const missing = Object.keys(required).filter(name => required[name] === 'undefined');
     if (missing.length > 0) {
-        console.error(`🌿 PromptMeter: these modules failed to load -> ${missing.join(', ')}. ` +
+        console.error(`[PromptMeter] these modules failed to load: ${missing.join(', ')}. ` +
             `Check chrome://extensions for a script error.`);
     }
 })();
@@ -128,7 +128,7 @@ if (hasChromeStorage()) {
         if (changes.isEnabled === undefined) return;
         isPromptMeterEnabled = changes.isEnabled.newValue !== false;
         if (!isPromptMeterEnabled) hideOptimizationCard();
-        console.log(`🌿 PromptMeter is now ${isPromptMeterEnabled ? 'ACTIVE' : 'PAUSED'}`);
+        console.log(`[PromptMeter] ${isPromptMeterEnabled ? 'active' : 'paused'}`);
     });
 }
 
@@ -465,7 +465,7 @@ function analyzeAndOfferOptimization(text) {
         grammarIssues = report.grammar;
         scopeIssues = report.scope;
     } catch (err) {
-        console.error("🌿 PromptMeter: optimizePrompt failed for this text.", err, text);
+        console.error("[PromptMeter] optimizePrompt failed for this text.", err, text);
         hideOptimizationCard();
         return;
     }
@@ -710,7 +710,7 @@ function handleResponseCaptured(prompt, response) {
         lastOriginalPrompt = "";
 
         PromptMeterStorage.saveTurn(turnData, () => {
-            console.log(`✅ Turn saved (Score: ${analysis.score}%).`);
+            console.log(`[PromptMeter] turn saved, score ${analysis.score}%.`);
         });
     });
 }

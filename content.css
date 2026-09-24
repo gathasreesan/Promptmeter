@@ -7,16 +7,16 @@
 .promptmeter-opt-card {
   --bg-card: #FFFFFF;
   --bg-surface: #EEF5EC;
-  --border-color: #DCE8DD;
-  --radius-card: 10px;
-  --radius-btn: 6px;
-  --color-primary: #2F6B33;
+  --border-color: #E3E8E4;
+  --radius-card: 12px;
+  --radius-btn: 8px;
+  --color-primary: #1c5d20;
   --color-secondary: #4CAF50;
   --color-error: #D32F2F;
-  --text-primary: #1B1F1C;
-  --text-secondary: #55605A;
-  --text-muted: #7A857E;
-  --btn-primary-hover: #255425;
+  --text-primary: #14181A;
+  --text-secondary: #5A6470;
+  --text-muted: #6E7781;
+  --btn-primary-hover: #164A19;
   --btn-secondary-border: #DCE8DD;
   --btn-secondary-hover: #EEF5EC;
   --shadow-premium: 0 4px 14px rgba(16, 24, 18, 0.10);
@@ -34,13 +34,13 @@
   .promptmeter-opt-card:not([data-theme="light"]) {
     --bg-card: #1A231C;
     --bg-surface: #17201A;
-    --border-color: #2A3A2D;
+    --border-color: #2B3430;
     --color-primary: #66BB6A;
     --color-secondary: #81C784;
     --color-error: #EF5350;
-    --text-primary: #E8EDE8;
-    --text-secondary: #A9B5AC;
-    --text-muted: #7E8C82;
+    --text-primary: #E6EAE8;
+    --text-secondary: #A2ADB4;
+    --text-muted: #8B949E;
     --btn-primary-hover: #7CCB80;
     --btn-secondary: #1A231C;
     --btn-secondary-border: #2A3A2D;
@@ -57,13 +57,13 @@
 .promptmeter-opt-card[data-theme="dark"] {
   --bg-card: #1A231C;
   --bg-surface: #17201A;
-  --border-color: #2A3A2D;
+  --border-color: #2B3430;
   --color-primary: #66BB6A;
   --color-secondary: #81C784;
   --color-error: #EF5350;
-  --text-primary: #E8EDE8;
-  --text-secondary: #A9B5AC;
-  --text-muted: #7E8C82;
+  --text-primary: #E6EAE8;
+  --text-secondary: #A2ADB4;
+  --text-muted: #8B949E;
   --btn-primary-hover: #7CCB80;
   --btn-secondary: #1A231C;
   --btn-secondary-border: #2A3A2D;
@@ -308,4 +308,91 @@
 
 .promptmeter-btn-ignore:hover {
     background: var(--btn-secondary-hover);
+}
+
+/* ---------------------------------------------------------------------------
+   Focus, motion and numerals.
+
+   Three gaps that were the same in the popup, the card and the dashboard:
+
+   FOCUS      Nothing defined a focus style, and several controls set outline:none
+              or sit on a coloured fill, so tabbing through the UI showed nothing at
+              all. :focus-visible keeps the ring for keyboard users without putting
+              it back on every mouse click.
+   MOTION     Every transition ran regardless of the viewer's setting. A prompt tool
+              that animates on each keystroke is exactly the case the reduced-motion
+              preference exists for.
+   NUMERALS   Figures that update in place (token counts, scores, carbon) shifted
+              width as their digits changed, because the default numerals are
+              proportional. Tabular numerals hold the column still.
+   --------------------------------------------------------------------------- */
+
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-btn);
+}
+
+/* The ring is drawn outside the element, so a control flush against a panel edge
+   still shows it in full. */
+:where(button, a):focus-visible {
+    position: relative;
+    z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Card corrections.
+   --------------------------------------------------------------------------- */
+
+/* The card sets a 16px blur on a fully opaque background, so the filter costs a
+   compositor layer on every ChatGPT repaint and shows nothing. It only earns its
+   keep behind a translucent surface. */
+.promptmeter-opt-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Figures that change on each keystroke hold their width. */
+.promptmeter-metric {
+    font-variant-numeric: tabular-nums;
+}
+
+/* The card is injected into a page whose stylesheet it does not control, so the
+   button box model is stated rather than inherited. Without this, a host rule on
+   `button` can change the padding under the card's own. */
+.promptmeter-opt-btn {
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 0;
+}
+
+/* The diff scrolls when the composer is tall; a thin scrollbar keeps it from
+   looking like a second panel. */
+.promptmeter-opt-diff {
+    scrollbar-width: thin;
+}
+
+/* Respect the viewer's motion setting for the card's own entrance, which the
+   shared block covers, and for the composer-anchored transform. */
+@media (prefers-reduced-motion: reduce) {
+    .promptmeter-opt-card,
+    .promptmeter-opt-card.visible,
+    .promptmeter-opt-card.promptmeter-anchored,
+    .promptmeter-opt-card.promptmeter-anchored.visible {
+        transition: opacity 0.01ms;
+    }
 }

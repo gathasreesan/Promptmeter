@@ -77,28 +77,28 @@ const PromptMeterGamification = {
                 id: "green_user",
                 name: "Green User",
                 description: "Maintain an average prompt efficiency of >= 90% over 5+ prompts.",
-                icon: "🟢",
+                icon: "check",
                 unlocked: history.length >= 5 && avgEfficiency >= 90
             },
             {
                 id: "carbon_crusader",
                 name: "Carbon Crusader",
                 description: "Save a total of 1.0g or more of CO₂ through prompt optimizations.",
-                icon: "🛡️",
+                icon: "trophy",
                 unlocked: totalCarbonSaved >= 1.0
             },
             {
                 id: "streak_starter",
                 name: "Streak Starter",
                 description: "Achieve a 3-day sustainability streak.",
-                icon: "🔥",
+                icon: "flame",
                 unlocked: currentStreak >= 3
             },
             {
                 id: "eco_champion",
                 name: "Eco Champion",
                 description: "Log 20+ queries with prompt efficiency >= 85%.",
-                icon: "🏆",
+                icon: "trophy",
                 unlocked: highEffCount >= 20
             }
         ];
