@@ -148,6 +148,12 @@ let lastSavedCarbon = 0;
 let lastOriginalPrompt = "";
 
 // State for attachments
+// Tokens this page's conversation has used, as far as the extension can see. Only turns
+// captured since the script loaded are counted, so a reloaded page starts from zero and
+// the figure is a floor, never a measurement -- see utils/headroom.js for what it cannot
+// observe at all.
+let conversationTokens = 0;
+
 let activeAttachments = { images: [], documents: [] };
 let lastNonEmptyAttachments = { images: [], documents: [] };
 
@@ -342,7 +348,7 @@ window.addEventListener("resize", schedulePositionUpdate);
 window.addEventListener("scroll", schedulePositionUpdate, true);
 
 // 3. Create and show the optimization overlay
-function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues) {
+function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues, tokenStats, headroom) {
     let card = document.getElementById("promptmeter-opt-card");
     if (!card) {
         card = document.createElement("div");
@@ -351,6 +357,11 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         document.body.appendChild(card);
         applyCardTheme();
     }
+
+    // stats() is the source for the counts. A caller that does not supply it (an older
+    // call site, a test) still gets a card rather than a crash.
+    const stats = tokenStats || { originalTokens: 0, optimizedTokens: 0, saved: tokensSaved,
+        percent: 0, exact: false, encoding: 'heuristic' };
 
     const issues = grammarIssues || [];
     // De-duplicated, because one rule can fire on several spans of the same prompt and
@@ -366,8 +377,9 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         <div class="promptmeter-opt-header">
             <div class="promptmeter-opt-title">PromptMeter</div>
             <div class="promptmeter-opt-metrics">
-                <span class="promptmeter-metric">−${tokensSaved} tokens</span>
-                <span class="promptmeter-metric">${carbonSaved.toFixed(3)} g CO₂</span>
+                <span class="promptmeter-metric">${stats.originalTokens} −> ${stats.optimizedTokens} tokens</span>
+                <span class="promptmeter-metric">−${stats.percent}%</span>
+                <span class="promptmeter-metric" title="Estimated">~${carbonSaved.toFixed(3)} g CO₂</span>
                 ${issueLabels.length > 0
                     ? `<span class="promptmeter-metric promptmeter-metric-grammar">${issueLabels.length} fixed</span>`
                     : ''}
@@ -377,8 +389,9 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-diff-box promptmeter-diff-original"></div>
             <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
         </div>
+        <div class="promptmeter-opt-headroom" hidden></div>
         <div class="promptmeter-opt-scope" hidden>
-            <div class="promptmeter-scope-title">Worth splitting up</div>
+            <div class="promptmeter-scope-title">${(scopeIssues || []).some(f => f.type === 'complexity') ? 'Worth reconsidering' : 'Worth splitting up'}</div>
             <ul class="promptmeter-scope-list"></ul>
         </div>
         <div class="promptmeter-opt-grammar" hidden>
@@ -396,6 +409,18 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // preview -- and anything pasted in from elsewhere would be parsed as markup too.
     card.querySelector('.promptmeter-diff-original').textContent = originalText;
     card.querySelector('.promptmeter-diff-optimized').textContent = optimizedText;
+
+    // Headroom. Only rendered when a report exists, and always worded as an estimate:
+    // the extension cannot see the system prompt, attachments or server-side truncation,
+    // so the true usage is always higher by an unknown margin.
+    if (headroom) {
+        const row = card.querySelector('.promptmeter-opt-headroom');
+        row.textContent = `Context: about ${headroom.percentUsed}% used, `
+            + `~${headroom.remaining.toLocaleString()} tokens left of ${headroom.contextLimit.toLocaleString()}`
+            + (headroom.message ? ` · ${headroom.message}` : '');
+        row.className = 'promptmeter-opt-headroom promptmeter-headroom-' + headroom.level;
+        row.hidden = false;
+    }
 
     // Scope advice. Deliberately separate from the grammar panel: those are edits already
     // applied to the preview, whereas this is a judgement the user has to act on, because
@@ -475,10 +500,16 @@ function analyzeAndOfferOptimization(text) {
         return;
     }
 
-    const tokensSaved = Math.max(
-        0,
-        PromptMeterTokenizer.countTokens(text) - PromptMeterTokenizer.countTokens(optimized)
-    );
+    // One call gives before, after, saved, percent, and whether the counts came from a
+    // real encoder or the estimate -- the card labels the two differently.
+    const tokenStats = PromptMeterTokenizer.stats(text, optimized);
+    const tokensSaved = tokenStats.saved;
+
+    // Headroom only once there is something to base it on. With no turns captured yet
+    // the only honest report is none at all.
+    const headroom = (typeof PromptMeterHeadroom !== 'undefined' && conversationTokens > 0)
+        ? PromptMeterHeadroom.report(conversationTokens, tokenStats.optimizedTokens)
+        : null;
 
     // Only interrupt for a worthwhile change: 2+ tokens saved, a 5% character
     // reduction, or a grammatical error found. Grammar earns an interruption on its own
@@ -493,7 +524,8 @@ function analyzeAndOfferOptimization(text) {
     }
 
     showOptimizationCard(text, optimized, tokensSaved,
-        PromptMeterCalculator.savings(tokensSaved).carbon, grammarIssues, scopeIssues);
+        PromptMeterCalculator.savings(tokensSaved).carbon, grammarIssues, scopeIssues,
+        tokenStats, headroom);
 }
 
 // 5. Apply the optimized prompt text directly into ChatGPT's input area
@@ -674,6 +706,8 @@ function handleResponseCaptured(prompt, response) {
         documents.reduce((sum, doc) => sum + (doc.tokens || 2000), 0);
     const responseTokens = PromptMeterTokenizer.countTokens(cleanResponse);
     const totalTokens = promptTokens + responseTokens;
+
+    conversationTokens += totalTokens;
 
     const footprint = PromptMeterCalculator.calculate(totalTokens);
     const attachmentCounts = {

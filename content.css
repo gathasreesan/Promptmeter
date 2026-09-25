@@ -396,3 +396,18 @@
         transition: opacity 0.01ms;
     }
 }
+
+/* Context headroom. Sits between the metrics and the diff as a single quiet line: it is
+   an estimate of something the extension cannot fully observe, so it reads as context
+   rather than as a measurement competing with the token counts. */
+.promptmeter-opt-headroom {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+}
+
+.promptmeter-headroom-warn { color: var(--text-secondary); }
+.promptmeter-headroom-critical,
+.promptmeter-headroom-full { color: var(--color-error); }

@@ -953,6 +953,27 @@ const PromptMeterOptimizer = {
     // is what turns a prompt into one no answer can satisfy.
     EXHAUSTIVE: /\b(?:every|all|each|complete|full|entire|comprehensive|exhaustive|production-ready|end-to-end|in\s+detail|detailed)\b/gi,
 
+    // Coding requests that ask for more work than the task needs. Unlike the rules
+    // above, which count how MUCH is being asked for, these look at what is being asked
+    // for: a request to rebuild something that already exists costs the user tokens on
+    // the way in and a worse answer on the way out.
+    //
+    // Each entry is [pattern, advice]. The advice is phrased as a question, never an
+    // instruction -- "from scratch" is the whole point of a learning exercise, and a
+    // library ban is sometimes a real constraint (no network, licence, exam). The
+    // optimizer cannot tell those apart, so it raises the question and leaves the
+    // decision where it belongs.
+    CODING_COMPLEXITY: [
+        [/\b(?:write|build|implement|create|code|roll)\s+(?:my|your|our)?\s*own\s+(?:custom\s+)?(?:date\s+(?:parser|library)|json\s+(?:parser|serializer)|http\s+(?:client|server)|auth(?:entication)?\s+system|password\s+hash\w*|encryption|regex\s+engine|template\s+engine|orm|router|logger|uuid\s+generator|hash\s+(?:map|table)|linked\s+list|sorting\s+algorithm)\b/i,
+            'this asks for something the standard library or an existing dependency already provides -- worth saying why that one will not do'],
+        [/\bfrom\s+scratch\b/i,
+            'building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse'],
+        [/\b(?:without\s+(?:using\s+)?any\s+(?:external\s+)?(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?|packages?)|do\s+not\s+use\s+any\s+(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?|packages?)|no\s+(?:external\s+)?(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?))\b/i,
+            'a no-dependency constraint usually costs more code than it saves -- keep it only if it is a real requirement'],
+        [/\b(?:production[-\s]?ready|production[-\s]grade|enterprise(?:[-\s]grade)?|fully[-\s]functional)\s+(?:code|implementation|system|application|app|solution|version)\b/i,
+            'production-ready in one turn is a large ask; scoping it to one component first usually lands better']
+    ],
+
     /**
      * Longest run of comma-separated items in the text.
      * @param {string} text
@@ -1019,6 +1040,16 @@ const PromptMeterOptimizer = {
                 label: `"complete", "every" and "in detail" appear ${exhaustive} times over a ` +
                     'list this long, asking for more than one response can hold'
             });
+        }
+
+        // Coding-specific complexity. Carries no penalty: the rules above measure a
+        // prompt that is too big to answer, which is a scoring matter, while these raise
+        // a question about the approach that only the user can settle. Scoring a prompt
+        // down for saying "from scratch" would punish a legitimate exercise.
+        for (const [pattern, advice] of this.CODING_COMPLEXITY) {
+            if (pattern.test(scorable)) {
+                findings.push({ type: 'complexity', penalty: 0, label: advice });
+            }
         }
 
         return findings;
