@@ -1,0 +1,281 @@
+{
+  "testSet": {
+    "rows": 156,
+    "source": "human-written phrases.csv, stratified 25% hold-out",
+    "randomState": 42
+  },
+  "synthetic": {
+    "rows": 1007,
+    "droppedAsLeakage": 4,
+    "usedForTraining": 1003,
+    "leakThreshold": 0.85
+  },
+  "armA": {
+    "name": "A -- original only",
+    "params": "TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2) + LogisticRegression(C=2.0, balanced)",
+    "trainRows": 465,
+    "vocabulary": 1281,
+    "accuracy": 0.8077,
+    "macro": {
+      "precision": 0.8133,
+      "recall": 0.8057,
+      "f1": 0.807
+    },
+    "perClass": {
+      "FILLER": {
+        "precision": 0.8,
+        "recall": 0.9,
+        "f1": 0.8471,
+        "support": 40
+      },
+      "IMPORTANT": {
+        "precision": 0.8095,
+        "recall": 0.8293,
+        "f1": 0.8193,
+        "support": 41
+      },
+      "REDUNDANT": {
+        "precision": 0.9,
+        "recall": 0.75,
+        "f1": 0.8182,
+        "support": 36
+      },
+      "REPETITIVE": {
+        "precision": 0.7436,
+        "recall": 0.7436,
+        "f1": 0.7436,
+        "support": 39
+      }
+    },
+    "binary": {
+      "accuracy": 0.9038,
+      "precision": 0.8741,
+      "recall": 0.8799,
+      "f1": 0.8769
+    },
+    "importantDropped": 7,
+    "importantTotal": 41,
+    "importantDropRate": 0.1707,
+    "confusion": {
+      "labels": [
+        "FILLER",
+        "IMPORTANT",
+        "REDUNDANT",
+        "REPETITIVE"
+      ],
+      "matrix": [
+        [
+          36,
+          1,
+          3,
+          0
+        ],
+        [
+          1,
+          34,
+          0,
+          6
+        ],
+        [
+          1,
+          4,
+          27,
+          4
+        ],
+        [
+          7,
+          3,
+          0,
+          29
+        ]
+      ]
+    }
+  },
+  "armB": {
+    "name": "B -- original + synthetic",
+    "params": "TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=3) + LogisticRegression(C=16.0, balanced)",
+    "trainRows": 1468,
+    "vocabulary": 3015,
+    "accuracy": 0.8333,
+    "macro": {
+      "precision": 0.8341,
+      "recall": 0.8355,
+      "f1": 0.8337
+    },
+    "perClass": {
+      "FILLER": {
+        "precision": 0.8095,
+        "recall": 0.85,
+        "f1": 0.8293,
+        "support": 40
+      },
+      "IMPORTANT": {
+        "precision": 0.8649,
+        "recall": 0.7805,
+        "f1": 0.8205,
+        "support": 41
+      },
+      "REDUNDANT": {
+        "precision": 0.8462,
+        "recall": 0.9167,
+        "f1": 0.88,
+        "support": 36
+      },
+      "REPETITIVE": {
+        "precision": 0.8158,
+        "recall": 0.7949,
+        "f1": 0.8052,
+        "support": 39
+      }
+    },
+    "binary": {
+      "accuracy": 0.9103,
+      "precision": 0.8946,
+      "recall": 0.8685,
+      "f1": 0.8803
+    },
+    "importantDropped": 9,
+    "importantTotal": 41,
+    "importantDropRate": 0.2195,
+    "confusion": {
+      "labels": [
+        "FILLER",
+        "IMPORTANT",
+        "REDUNDANT",
+        "REPETITIVE"
+      ],
+      "matrix": [
+        [
+          34,
+          3,
+          3,
+          0
+        ],
+        [
+          1,
+          32,
+          3,
+          5
+        ],
+        [
+          1,
+          0,
+          33,
+          2
+        ],
+        [
+          6,
+          2,
+          0,
+          31
+        ]
+      ]
+    }
+  },
+  "delta": {
+    "note": "mean over 25 held-out splits",
+    "accuracy": 0.029,
+    "binaryAccuracy": 0.0085,
+    "importantDropRate": -0.0263
+  },
+  "spread": {
+    "accuracy": {
+      "meanDelta": 0.029,
+      "stdDelta": 0.0203,
+      "deltas": [
+        0.0256,
+        -0.0129,
+        0.0641,
+        0.0513,
+        0.0384,
+        0.0449,
+        0.0192,
+        0.0449,
+        0.0449,
+        0.0577,
+        -0.0193,
+        0.032,
+        0.0192,
+        0.0257,
+        0.0,
+        0.032,
+        0.0256,
+        0.0256,
+        0.0321,
+        0.0321,
+        0.0256,
+        0.0,
+        0.0256,
+        0.0577,
+        0.032
+      ]
+    },
+    "binary": {
+      "meanDelta": 0.0085,
+      "stdDelta": 0.0218,
+      "deltas": [
+        0.0065,
+        -0.0321,
+        -0.0129,
+        0.0192,
+        0.0128,
+        0.0193,
+        0.0256,
+        0.0256,
+        0.0512,
+        0.0449,
+        0.0,
+        0.0,
+        0.0513,
+        -0.0128,
+        -0.0065,
+        -0.0256,
+        -0.0064,
+        0.0192,
+        0.0,
+        0.0128,
+        0.0128,
+        0.0065,
+        0.0,
+        0.0257,
+        -0.0256
+      ]
+    },
+    "harm": {
+      "meanDelta": -0.0263,
+      "stdDelta": 0.0573,
+      "deltas": [
+        0.0488,
+        0.0244,
+        -0.0244,
+        -0.1463,
+        0.0244,
+        -0.0244,
+        -0.0244,
+        -0.0976,
+        -0.0731,
+        0.0,
+        -0.0244,
+        0.0244,
+        -0.1219,
+        -0.0244,
+        0.0488,
+        0.0488,
+        -0.0244,
+        -0.0976,
+        0.0244,
+        0.0244,
+        -0.0732,
+        -0.0487,
+        0.0488,
+        -0.0731,
+        -0.0976
+      ]
+    },
+    "splits": 25,
+    "binaryWins": 14,
+    "harmWorseIn": 9
+  },
+  "promote": false,
+  "note": "This script never writes utils/ml-model.js or metrics.json."
+}

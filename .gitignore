@@ -20,3 +20,6 @@ __pycache__/
 # machine's Python user-scripts directory, so committing it would hand everyone else
 # a path that does not exist. Recreate it per machine, or run `headroom mcp install`.
 .mcp.json
+
+# generation checkpoint, not a deliverable
+ml/dataset/.synthetic_raw.jsonl

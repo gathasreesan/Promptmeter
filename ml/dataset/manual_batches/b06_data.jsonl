@@ -1,0 +1,128 @@
+{"text": "my dataframe has mixed dtypes in one column and groupby breaks", "label": "IMPORTANT"}
+{"text": "the csv is 40 gb so it will not fit in memory", "label": "IMPORTANT"}
+{"text": "write the query as a cte, not nested subqueries", "label": "IMPORTANT"}
+{"text": "we are on spark 3.2, no newer syntax", "label": "IMPORTANT"}
+{"text": "explain why my f1 dropped after balancing the classes", "label": "IMPORTANT"}
+{"text": "the labels are noisy, about fifteen percent are wrong", "label": "IMPORTANT"}
+{"text": "give me a window function that ranks within each region", "label": "IMPORTANT"}
+{"text": "our cluster has no gpu so keep it cpu only", "label": "IMPORTANT"}
+{"text": "plot it with matplotlib, we cannot install plotly", "label": "IMPORTANT"}
+{"text": "the index is a timezone aware timestamp", "label": "IMPORTANT"}
+{"text": "how do I detect drift without labels in production", "label": "IMPORTANT"}
+{"text": "we retrain weekly so training time under an hour", "label": "IMPORTANT"}
+{"text": "the target is imbalanced at roughly one in four hundred", "label": "IMPORTANT"}
+{"text": "explain the difference between a left join and a left anti join", "label": "IMPORTANT"}
+{"text": "our terraform state lives in an s3 bucket with locking", "label": "IMPORTANT"}
+{"text": "write a spreadsheet formula that ignores blanks in the range", "label": "IMPORTANT"}
+{"text": "the pipeline must be idempotent, it gets replayed", "label": "IMPORTANT"}
+{"text": "show me how to shard this without a distributed lock", "label": "IMPORTANT"}
+{"text": "we cannot change the schema, only the query", "label": "IMPORTANT"}
+{"text": "interpret this confusion matrix for a fraud model", "label": "IMPORTANT"}
+{"text": "the cron runs at midnight utc which is mid afternoon for us", "label": "IMPORTANT"}
+{"text": "give me the airflow dag shape, not the full code", "label": "IMPORTANT"}
+{"text": "our logs are json lines, one object per row", "label": "IMPORTANT"}
+{"text": "which is cheaper for this, a lambda or a small always on box", "label": "IMPORTANT"}
+{"text": "explain vacuum and analyze in postgres and when each matters", "label": "IMPORTANT"}
+{"text": "the model has to explain its decision for compliance", "label": "IMPORTANT"}
+{"text": "we use bigquery so no postgres specific functions", "label": "IMPORTANT"}
+{"text": "compute a rolling median over seven days per user", "label": "IMPORTANT"}
+{"text": "my kubernetes pod gets oomkilled every few hours", "label": "IMPORTANT"}
+{"text": "keep the feature count under fifty for interpretability", "label": "IMPORTANT"}
+{"text": "how do I backfill two years without hammering the api", "label": "IMPORTANT"}
+{"text": "our data team is two people so nothing that needs a platform", "label": "IMPORTANT"}
+{"text": "I inherited this pipeline and nobody documented it", "label": "FILLER"}
+{"text": "our on call rotation is brutal this month", "label": "FILLER"}
+{"text": "data engineering was not what I expected", "label": "FILLER"}
+{"text": "the dashboard has been broken for weeks and nobody noticed", "label": "FILLER"}
+{"text": "I started learning pandas last month", "label": "FILLER"}
+{"text": "my laptop only has eight gb of ram which is painful", "label": "FILLER"}
+{"text": "we migrated clouds last year and it was hell", "label": "FILLER"}
+{"text": "sorry, long day of meetings", "label": "FILLER"}
+{"text": "the analytics team keeps changing the definition", "label": "FILLER"}
+{"text": "I am more of a backend person really", "label": "FILLER"}
+{"text": "thanks, this has been blocking me all week", "label": "FILLER"}
+{"text": "our vendor support is useless", "label": "FILLER"}
+{"text": "I read the docs three times and understood nothing", "label": "FILLER"}
+{"text": "the deploy went out at five on a friday, obviously", "label": "FILLER"}
+{"text": "my manager wants this by standup tomorrow", "label": "FILLER"}
+{"text": "we have too many tools and not enough people", "label": "FILLER"}
+{"text": "I am self taught so forgive the gaps", "label": "FILLER"}
+{"text": "someone renamed the table without telling anyone", "label": "FILLER"}
+{"text": "the staging environment has been down since tuesday", "label": "FILLER"}
+{"text": "hope this is an easy one for you", "label": "FILLER"}
+{"text": "I keep forgetting how joins work, embarrassing", "label": "FILLER"}
+{"text": "our slack is 90 percent alerts nobody reads", "label": "FILLER"}
+{"text": "I have had this tab open for two days", "label": "FILLER"}
+{"text": "the previous engineer left no handover notes", "label": "FILLER"}
+{"text": "cheers, really appreciate it", "label": "FILLER"}
+{"text": "we are mid reorg so everything is uncertain", "label": "FILLER"}
+{"text": "I am doing this on the train", "label": "FILLER"}
+{"text": "the ticket has been open since january", "label": "FILLER"}
+{"text": "my rubber duck has stopped helping", "label": "FILLER"}
+{"text": "anyway here is what I have tried", "label": "FILLER"}
+{"text": "that is the whole setup", "label": "FILLER"}
+{"text": "ok that is everything from my side", "label": "FILLER"}
+{"text": "a large big huge massive enormous amount of data", "label": "REDUNDANT"}
+{"text": "the process of processing that is processed", "label": "REDUNDANT"}
+{"text": "efficiently in an efficient and optimal optimised way", "label": "REDUNDANT"}
+{"text": "automate it automatically with automation", "label": "REDUNDANT"}
+{"text": "integrate and combine and bring together into one", "label": "REDUNDANT"}
+{"text": "scalable and able to scale up at scale", "label": "REDUNDANT"}
+{"text": "the data itself that is the data in question", "label": "REDUNDANT"}
+{"text": "monitor and watch and keep an eye on and observe", "label": "REDUNDANT"}
+{"text": "in real time instantly immediately right away live", "label": "REDUNDANT"}
+{"text": "robust and reliable and dependable and stable", "label": "REDUNDANT"}
+{"text": "we would like you to please go ahead and do", "label": "REDUNDANT"}
+{"text": "the existing current system that exists currently", "label": "REDUNDANT"}
+{"text": "validate and verify and check and confirm it", "label": "REDUNDANT"}
+{"text": "best practices that are considered best practice", "label": "REDUNDANT"}
+{"text": "a complete full end to end entire whole pipeline", "label": "REDUNDANT"}
+{"text": "optimise for performance performantly and fast", "label": "REDUNDANT"}
+{"text": "considering and taking into account and factoring in", "label": "REDUNDANT"}
+{"text": "seamlessly without any seams or friction smoothly", "label": "REDUNDANT"}
+{"text": "cost effective at an effective cost that is cheap", "label": "REDUNDANT"}
+{"text": "leverage and utilise and use and employ the tool", "label": "REDUNDANT"}
+{"text": "granular at a granular level of granularity", "label": "REDUNDANT"}
+{"text": "we need to ensure and make sure and guarantee", "label": "REDUNDANT"}
+{"text": "holistically as a whole in a holistic manner overall", "label": "REDUNDANT"}
+{"text": "the output that is outputted as output", "label": "REDUNDANT"}
+{"text": "proactively in advance ahead of time preemptively", "label": "REDUNDANT"}
+{"text": "streamline and simplify and reduce and cut down", "label": "REDUNDANT"}
+{"text": "actionable insights that you can act upon actionably", "label": "REDUNDANT"}
+{"text": "at a high level broadly speaking generally overall", "label": "REDUNDANT"}
+{"text": "we should probably perhaps maybe consider looking at", "label": "REDUNDANT"}
+{"text": "the root cause underlying the root of the cause", "label": "REDUNDANT"}
+{"text": "consistently in a consistent and uniform way always", "label": "REDUNDANT"}
+{"text": "deprecate and remove and delete and get rid of", "label": "REDUNDANT"}
+{"text": "sql, in sql, write it in sql", "label": "REPETITIVE"}
+{"text": "again, no gpu available", "label": "REPETITIVE", "context": "Our cluster is cpu only with no gpu."}
+{"text": "as i said the file is 40 gb", "label": "REPETITIVE", "context": "The csv is about 40 gb on disk."}
+{"text": "fast query, make the query fast, query speed", "label": "REPETITIVE"}
+{"text": "restating that we run on bigquery", "label": "REPETITIVE", "context": "We use bigquery as our warehouse."}
+{"text": "pandas, use pandas, in pandas", "label": "REPETITIVE"}
+{"text": "one more time, the schema cannot change", "label": "REPETITIVE", "context": "I cannot alter the schema, only the query."}
+{"text": "explain, explain it, i want an explanation", "label": "REPETITIVE"}
+{"text": "repeating that the labels are noisy", "label": "REPETITIVE", "context": "About fifteen percent of the labels are wrong."}
+{"text": "indexed, add an index, indexing matters", "label": "REPETITIVE"}
+{"text": "i already mentioned we retrain weekly", "label": "REPETITIVE", "context": "The model is retrained every week."}
+{"text": "chart, draw a chart, charted", "label": "REPETITIVE"}
+{"text": "again the timestamps are in utc", "label": "REPETITIVE", "context": "All timestamps are stored in utc."}
+{"text": "batch, batched, in batches", "label": "REPETITIVE"}
+{"text": "as noted it has to be idempotent", "label": "REPETITIVE", "context": "The job gets replayed so it must be idempotent."}
+{"text": "aggregate, aggregation, aggregate it up", "label": "REPETITIVE"}
+{"text": "saying again there are two of us", "label": "REPETITIVE", "context": "Our whole data team is two people."}
+{"text": "cheap, keep costs low, low cost", "label": "REPETITIVE"}
+{"text": "to repeat, no new dependencies", "label": "REPETITIVE", "context": "We cannot add new dependencies to this repo."}
+{"text": "accurate, accuracy matters, be accurate", "label": "REPETITIVE"}
+{"text": "mentioning again that logs are jsonl", "label": "REPETITIVE", "context": "The logs are json lines format."}
+{"text": "test, add tests, tested properly", "label": "REPETITIVE"}
+{"text": "i repeat it is postgres not mysql", "label": "REPETITIVE"}
+{"text": "incremental, do it incrementally, increments", "label": "REPETITIVE"}
+{"text": "as stated the api rate limits us", "label": "REPETITIVE", "context": "The api rate limits at sixty calls a minute."}
+{"text": "readable, keep it readable, readability", "label": "REPETITIVE"}
+{"text": "again, under fifty features", "label": "REPETITIVE", "context": "Keep the feature count under fifty."}
+{"text": "monitor it, add monitoring, monitored", "label": "REPETITIVE"}
+{"text": "once more the target is rare", "label": "REPETITIVE", "context": "The positive class is about one in four hundred."}
+{"text": "sorted, sort it, in sorted order", "label": "REPETITIVE"}
+{"text": "saying it again we use airflow", "label": "REPETITIVE", "context": "We orchestrate everything with airflow."}
+{"text": "simple query, keep the query simple, simply", "label": "REPETITIVE"}

@@ -1,0 +1,128 @@
+{"text": "plan a four day trip to hampi without a car", "label": "IMPORTANT"}
+{"text": "we are travelling with an infant so short travel days", "label": "IMPORTANT"}
+{"text": "my visa only allows a single entry", "label": "IMPORTANT"}
+{"text": "suggest a dinner for six that reheats well", "label": "IMPORTANT"}
+{"text": "I have twenty minutes and whatever is in the fridge", "label": "IMPORTANT"}
+{"text": "substitute the butter, we do not eat dairy", "label": "IMPORTANT"}
+{"text": "how do I fix a tap that drips only when the heating is on", "label": "IMPORTANT"}
+{"text": "my emi is forty percent of my take home pay", "label": "IMPORTANT"}
+{"text": "explain the difference between an index fund and an etf", "label": "IMPORTANT"}
+{"text": "I am forty six and starting to save now", "label": "IMPORTANT"}
+{"text": "we have no emergency fund yet", "label": "IMPORTANT"}
+{"text": "what questions should I ask a doctor about this test result", "label": "IMPORTANT"}
+{"text": "I am on blood thinners so check interactions", "label": "IMPORTANT"}
+{"text": "explain what a normal range means on a blood report", "label": "IMPORTANT"}
+{"text": "my knee hurts going down stairs but not up", "label": "IMPORTANT"}
+{"text": "give me a beginner routine with no equipment", "label": "IMPORTANT"}
+{"text": "I have a desk job and sit for nine hours", "label": "IMPORTANT"}
+{"text": "how long does it take to get a passport renewed in india", "label": "IMPORTANT"}
+{"text": "write a complaint letter about a delayed refund", "label": "IMPORTANT"}
+{"text": "the landlord kept the deposit without giving reasons", "label": "IMPORTANT"}
+{"text": "explain how compound interest turns against you on a credit card", "label": "IMPORTANT"}
+{"text": "I want to learn to swim at thirty five, where do I start", "label": "IMPORTANT"}
+{"text": "we are moving flats and have a dog", "label": "IMPORTANT"}
+{"text": "what should I check before buying a used scooter", "label": "IMPORTANT"}
+{"text": "my plant has yellow leaves only at the bottom", "label": "IMPORTANT"}
+{"text": "suggest gifts under five hundred rupees for a teenager", "label": "IMPORTANT"}
+{"text": "the wedding is outdoors in may in rajasthan", "label": "IMPORTANT"}
+{"text": "how do I read a nutrition label properly", "label": "IMPORTANT"}
+{"text": "I cannot drive so everything must be walkable or by bus", "label": "IMPORTANT"}
+{"text": "explain why my electricity bill doubled this month", "label": "IMPORTANT"}
+{"text": "make a packing list for a week of monsoon travel", "label": "IMPORTANT"}
+{"text": "I am lactose intolerant and my partner is coeliac", "label": "IMPORTANT"}
+{"text": "I always overthink these decisions", "label": "FILLER"}
+{"text": "my last holiday was three years ago", "label": "FILLER"}
+{"text": "I am not much of a cook honestly", "label": "FILLER"}
+{"text": "we argued about this all evening", "label": "FILLER"}
+{"text": "my mother would know this instantly", "label": "FILLER"}
+{"text": "money stresses me out a lot", "label": "FILLER"}
+{"text": "I am asking on behalf of my father", "label": "FILLER"}
+{"text": "we have been putting this off for months", "label": "FILLER"}
+{"text": "the shop assistant was no help at all", "label": "FILLER"}
+{"text": "I am terrible at planning anything", "label": "FILLER"}
+{"text": "thanks, you always explain things nicely", "label": "FILLER"}
+{"text": "it is very hot here today", "label": "FILLER"}
+{"text": "my friends think I worry too much", "label": "FILLER"}
+{"text": "I saw an ad about this and got curious", "label": "FILLER"}
+{"text": "we just had a baby so life is chaos", "label": "FILLER"}
+{"text": "I hate going to the doctor", "label": "FILLER"}
+{"text": "my neighbour gave me conflicting advice", "label": "FILLER"}
+{"text": "I have been meaning to ask this for ages", "label": "FILLER"}
+{"text": "the traffic here is unbelievable", "label": "FILLER"}
+{"text": "I am writing this from the waiting room", "label": "FILLER"}
+{"text": "my cousin did something similar last year", "label": "FILLER"}
+{"text": "we are not very adventurous eaters", "label": "FILLER"}
+{"text": "I got scammed once so I am cautious", "label": "FILLER"}
+{"text": "my phone keeps buzzing with notifications", "label": "FILLER"}
+{"text": "sorry for asking something so ordinary", "label": "FILLER"}
+{"text": "I am usually the organised one", "label": "FILLER"}
+{"text": "the weather forecast keeps changing", "label": "FILLER"}
+{"text": "we have guests arriving and I am flustered", "label": "FILLER"}
+{"text": "I appreciate you reading all this", "label": "FILLER"}
+{"text": "my sister says I should just book it", "label": "FILLER"}
+{"text": "anyway that is my situation", "label": "FILLER"}
+{"text": "thanks again, have a good one", "label": "FILLER"}
+{"text": "I would be ever so grateful if you might kindly", "label": "REDUNDANT"}
+{"text": "cheap and inexpensive and affordable and low priced", "label": "REDUNDANT"}
+{"text": "healthy and good for health and healthful and nutritious", "label": "REDUNDANT"}
+{"text": "quick and fast and rapid and speedy and swift", "label": "REDUNDANT"}
+{"text": "the plan that I am planning to plan out", "label": "REDUNDANT"}
+{"text": "safe and secure and protected and risk free", "label": "REDUNDANT"}
+{"text": "easy and simple and straightforward and uncomplicated", "label": "REDUNDANT"}
+{"text": "I need to buy and purchase and get and acquire", "label": "REDUNDANT"}
+{"text": "advice and guidance and suggestions and recommendations", "label": "REDUNDANT"}
+{"text": "comfortable and comfy and cosy and pleasant", "label": "REDUNDANT"}
+{"text": "the money and the funds and the cash and the amount", "label": "REDUNDANT"}
+{"text": "beautiful scenery of scenic beauty that is scenic", "label": "REDUNDANT"}
+{"text": "worth it and worthwhile and good value and worth doing", "label": "REDUNDANT"}
+{"text": "delicious and tasty and flavourful and yummy", "label": "REDUNDANT"}
+{"text": "I want to know what I should do about doing this", "label": "REDUNDANT"}
+{"text": "regularly on a regular basis with regularity often", "label": "REDUNDANT"}
+{"text": "a decision that needs deciding and to be decided", "label": "REDUNDANT"}
+{"text": "practical and useful and handy and functional", "label": "REDUNDANT"}
+{"text": "avoid and stay away from and steer clear of and skip", "label": "REDUNDANT"}
+{"text": "the situation that I find myself in currently now", "label": "REDUNDANT"}
+{"text": "warm and cosy and snug and toasty and heated", "label": "REDUNDANT"}
+{"text": "compare and contrast the differences and similarities", "label": "REDUNDANT"}
+{"text": "I am trying to try and attempt to figure out", "label": "REDUNDANT"}
+{"text": "reasonable and sensible and rational and logical", "label": "REDUNDANT"}
+{"text": "the options and choices and alternatives available", "label": "REDUNDANT"}
+{"text": "plenty of lots of many of a large number of", "label": "REDUNDANT"}
+{"text": "improve and better and enhance and upgrade it", "label": "REDUNDANT"}
+{"text": "honestly truthfully to be honest frankly speaking", "label": "REDUNDANT"}
+{"text": "a place to visit and go to and see and travel to", "label": "REDUNDANT"}
+{"text": "difficult and hard and tough and challenging", "label": "REDUNDANT"}
+{"text": "I am seeking to look for and find and search out", "label": "REDUNDANT"}
+{"text": "the best and top and finest and greatest option", "label": "REDUNDANT"}
+{"text": "vegetarian food, veg only, vegetarian please", "label": "REPETITIVE"}
+{"text": "again, no car available", "label": "REPETITIVE", "context": "We will not have a car on this trip."}
+{"text": "as i said the budget is tight", "label": "REPETITIVE", "context": "Our budget for the whole trip is tight."}
+{"text": "cheap, keep it cheap, cheapest possible", "label": "REPETITIVE"}
+{"text": "restating that we have a toddler", "label": "REPETITIVE", "context": "We are travelling with a two year old."}
+{"text": "quick recipe, something quick, quickly made", "label": "REPETITIVE"}
+{"text": "one more time, no dairy", "label": "REPETITIVE", "context": "We cannot eat anything with dairy in it."}
+{"text": "healthy, keep it healthy, health first", "label": "REPETITIVE"}
+{"text": "i repeat, four days only", "label": "REPETITIVE", "context": "The trip is four days long."}
+{"text": "walkable, everything walkable, on foot", "label": "REPETITIVE"}
+{"text": "mentioning again that i have no oven at home", "label": "REPETITIVE", "context": "There is no oven in my kitchen."}
+{"text": "simple, keep it simple, simply done", "label": "REPETITIVE"}
+{"text": "as noted i am on medication", "label": "REPETITIVE", "context": "I take blood thinners daily."}
+{"text": "safe, has to be safe, safety wise", "label": "REPETITIVE"}
+{"text": "saying again we are moving in march", "label": "REPETITIVE", "context": "We move house in march."}
+{"text": "beginner, i am a beginner, for beginners", "label": "REPETITIVE"}
+{"text": "to repeat, no gym equipment", "label": "REPETITIVE", "context": "I have no gym equipment at home."}
+{"text": "list, give me a list, in list form", "label": "REPETITIVE"}
+{"text": "again there is a dog coming with us", "label": "REPETITIVE", "context": "Our dog is coming with us."}
+{"text": "short, keep it short, short answer", "label": "REPETITIVE"}
+{"text": "i already said i cannot drive", "label": "REPETITIVE", "context": "I do not drive at all."}
+{"text": "steps, step by step, the steps", "label": "REPETITIVE"}
+{"text": "repeating that it is monsoon season", "label": "REPETITIVE", "context": "We are travelling during monsoon season."}
+{"text": "warm clothes, pack warm, warmth", "label": "REPETITIVE"}
+{"text": "as stated the wedding is outdoors", "label": "REPETITIVE", "context": "The wedding ceremony is outdoors."}
+{"text": "practical, be practical, practically useful", "label": "REPETITIVE"}
+{"text": "once more, under five hundred rupees", "label": "REPETITIVE", "context": "The gift should cost under five hundred rupees."}
+{"text": "compare, compare them, a comparison please", "label": "REPETITIVE"}
+{"text": "again i am forty six", "label": "REPETITIVE", "context": "I am forty six years old."}
+{"text": "local food, eat local, local places", "label": "REPETITIVE"}
+{"text": "saying it again there is no lift in the building", "label": "REPETITIVE"}
+{"text": "clear, make it clear, clearly explained", "label": "REPETITIVE"}

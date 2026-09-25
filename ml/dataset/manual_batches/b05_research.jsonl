@@ -1,0 +1,128 @@
+{"text": "summarise this paper in one paragraph for a non specialist", "label": "IMPORTANT"}
+{"text": "the journal caps the abstract at 250 words", "label": "IMPORTANT"}
+{"text": "my sample size is 43 which reviewers will attack", "label": "IMPORTANT"}
+{"text": "suggest a control group design for this experiment", "label": "IMPORTANT"}
+{"text": "we cannot randomise because the wards are already assigned", "label": "IMPORTANT"}
+{"text": "explain why my p value changes when I drop the outliers", "label": "IMPORTANT"}
+{"text": "the ethics board requires anonymised transcripts", "label": "IMPORTANT"}
+{"text": "rewrite this methods section in past passive", "label": "IMPORTANT"}
+{"text": "which test fits paired ordinal data", "label": "IMPORTANT"}
+{"text": "our field uses vancouver referencing not harvard", "label": "IMPORTANT"}
+{"text": "critique the internal validity of this study", "label": "IMPORTANT"}
+{"text": "I have only cross sectional data, no follow up", "label": "IMPORTANT"}
+{"text": "draft a response to reviewer two who called it derivative", "label": "IMPORTANT"}
+{"text": "the figure has to be legible in greyscale print", "label": "IMPORTANT"}
+{"text": "explain the difference between correlation and causation with my data", "label": "IMPORTANT"}
+{"text": "we measured at three time points, not continuously", "label": "IMPORTANT"}
+{"text": "propose a coding frame for these open ended answers", "label": "IMPORTANT"}
+{"text": "my supervisor wants a conceptual framework diagram", "label": "IMPORTANT"}
+{"text": "the literature I can access stops at 2019", "label": "IMPORTANT"}
+{"text": "how do I report a non significant result honestly", "label": "IMPORTANT"}
+{"text": "write the limitations section without undermining the whole paper", "label": "IMPORTANT"}
+{"text": "the conference wants a structured abstract with five headings", "label": "IMPORTANT"}
+{"text": "explain bonferroni correction and when it is too conservative", "label": "IMPORTANT"}
+{"text": "our participants were all undergraduates from one university", "label": "IMPORTANT"}
+{"text": "turn this table into a figure caption", "label": "IMPORTANT"}
+{"text": "I need a search string for scopus not pubmed", "label": "IMPORTANT"}
+{"text": "the thesis has a hard limit of eighty pages", "label": "IMPORTANT"}
+{"text": "help me phrase the research gap more sharply", "label": "IMPORTANT"}
+{"text": "we used a likert scale from one to seven", "label": "IMPORTANT"}
+{"text": "what does an f statistic of 0.8 tell me here", "label": "IMPORTANT"}
+{"text": "the data is proprietary so I cannot share it publicly", "label": "IMPORTANT"}
+{"text": "suggest three journals that publish negative results", "label": "IMPORTANT"}
+{"text": "my viva is next month and I am terrified", "label": "FILLER"}
+{"text": "my supervisor has not replied in two weeks", "label": "FILLER"}
+{"text": "I have been in this phd for five years now", "label": "FILLER"}
+{"text": "academia is exhausting, honestly", "label": "FILLER"}
+{"text": "the department printer ate my draft", "label": "FILLER"}
+{"text": "everyone in my cohort has published already", "label": "FILLER"}
+{"text": "I had a panic attack about this last week", "label": "FILLER"}
+{"text": "the reviewers were unnecessarily harsh", "label": "FILLER"}
+{"text": "I am writing from a library basement with no windows", "label": "FILLER"}
+{"text": "thanks for reading all of this", "label": "FILLER"}
+{"text": "my funding runs out in march", "label": "FILLER"}
+{"text": "I chose this topic because it sounded interesting", "label": "FILLER"}
+{"text": "conference deadlines always land badly", "label": "FILLER"}
+{"text": "my labmate spilled buffer on the bench again", "label": "FILLER"}
+{"text": "I should have done a masters first", "label": "FILLER"}
+{"text": "hoping you can save me here", "label": "FILLER"}
+{"text": "the stats course I took was years ago", "label": "FILLER"}
+{"text": "I have read this paper eleven times", "label": "FILLER"}
+{"text": "my coffee has gone cold twice today", "label": "FILLER"}
+{"text": "sorry this is long, I am thinking out loud", "label": "FILLER"}
+{"text": "our lab meeting is tomorrow morning", "label": "FILLER"}
+{"text": "I genuinely do not know what I am doing", "label": "FILLER"}
+{"text": "the grant office is impossible to reach", "label": "FILLER"}
+{"text": "someone told me this journal is predatory", "label": "FILLER"}
+{"text": "I love the reading, I hate the writing", "label": "FILLER"}
+{"text": "my keyboard has a sticky e key", "label": "FILLER"}
+{"text": "it is two in the morning here", "label": "FILLER"}
+{"text": "my cohort has a group chat full of despair", "label": "FILLER"}
+{"text": "thank you for being patient with my questions", "label": "FILLER"}
+{"text": "I nearly quit last semester", "label": "FILLER"}
+{"text": "anyway that is the context", "label": "FILLER"}
+{"text": "right, enough preamble", "label": "FILLER"}
+{"text": "it is important to note and worth noting that", "label": "REDUNDANT"}
+{"text": "the results of the findings that were found", "label": "REDUNDANT"}
+{"text": "prior previous earlier antecedent work before this", "label": "REDUNDANT"}
+{"text": "in this present current study that we conducted here", "label": "REDUNDANT"}
+{"text": "a novel new original previously unseen approach", "label": "REDUNDANT"}
+{"text": "we sought to attempt to try to investigate", "label": "REDUNDANT"}
+{"text": "these data show and demonstrate and indicate that", "label": "REDUNDANT"}
+{"text": "further additional supplementary extra analysis beyond", "label": "REDUNDANT"}
+{"text": "it can be seen and observed and noted from the above", "label": "REDUNDANT"}
+{"text": "the aim and objective and goal and purpose was to", "label": "REDUNDANT"}
+{"text": "future research in the future should research further", "label": "REDUNDANT"}
+{"text": "a significant and notable and considerable difference", "label": "REDUNDANT"}
+{"text": "as has been previously reported before in the past", "label": "REDUNDANT"}
+{"text": "we utilised and made use of the utilisation of", "label": "REDUNDANT"}
+{"text": "the underlying basis on which the foundation rests", "label": "REDUNDANT"}
+{"text": "in terms of relating to with regard to concerning", "label": "REDUNDANT"}
+{"text": "it should be mentioned that we should mention", "label": "REDUNDANT"}
+{"text": "a total sum of all together combined overall", "label": "REDUNDANT"}
+{"text": "these findings suggest and imply and point towards", "label": "REDUNDANT"}
+{"text": "methodological methods used in the methodology", "label": "REDUNDANT"}
+{"text": "in the majority of most cases usually typically", "label": "REDUNDANT"}
+{"text": "we conclude in conclusion that we can conclude", "label": "REDUNDANT"}
+{"text": "empirical evidence based on observed empirical data", "label": "REDUNDANT"}
+{"text": "there exists the existence of an existing", "label": "REDUNDANT"}
+{"text": "a detailed in depth thorough comprehensive review", "label": "REDUNDANT"}
+{"text": "the participants who took part and participated", "label": "REDUNDANT"}
+{"text": "has the potential possibility of possibly being able", "label": "REDUNDANT"}
+{"text": "relatively comparatively somewhat rather fairly", "label": "REDUNDANT"}
+{"text": "we hypothesise the hypothesis that we hypothesised", "label": "REDUNDANT"}
+{"text": "on the basis of based upon founded on grounds of", "label": "REDUNDANT"}
+{"text": "an important key critical crucial vital factor", "label": "REDUNDANT"}
+{"text": "subsequently afterwards thereafter following this later", "label": "REDUNDANT"}
+{"text": "again, 250 words for the abstract", "label": "REPETITIVE", "context": "The abstract is capped at 250 words."}
+{"text": "apa, in apa style, apa formatting", "label": "REPETITIVE"}
+{"text": "as i said the sample is 43 people", "label": "REPETITIVE", "context": "My sample size is 43 participants."}
+{"text": "citations, with citations, cite everything", "label": "REPETITIVE"}
+{"text": "restating that it is qualitative work", "label": "REPETITIVE", "context": "This is a qualitative interview study."}
+{"text": "rigorous, be rigorous, rigour matters", "label": "REPETITIVE"}
+{"text": "once more, no speculation", "label": "REPETITIVE", "context": "Stick to what the data shows, no speculation."}
+{"text": "critique it, criticise it, give me criticism", "label": "REPETITIVE"}
+{"text": "i repeat the field is sociology", "label": "REPETITIVE", "context": "My field is sociology."}
+{"text": "academic, academic tone, academically written", "label": "REPETITIVE"}
+{"text": "mentioning again there is no control group", "label": "REPETITIVE", "context": "We have no control group in this design."}
+{"text": "structured, give it structure, structurally clear", "label": "REPETITIVE"}
+{"text": "as noted the data is anonymised", "label": "REPETITIVE", "context": "All transcripts are anonymised before analysis."}
+{"text": "sources, name the sources, source them", "label": "REPETITIVE"}
+{"text": "saying again it is a systematic review", "label": "REPETITIVE", "context": "I am writing a systematic review."}
+{"text": "brief, keep it brief, briefly", "label": "REPETITIVE"}
+{"text": "one more time, british spelling", "label": "REPETITIVE", "context": "The journal uses british spelling."}
+{"text": "evidence, show evidence, evidence based", "label": "REPETITIVE"}
+{"text": "again the timeframe is three months", "label": "REPETITIVE", "context": "The study ran over three months."}
+{"text": "neutral, stay neutral, neutrally phrased", "label": "REPETITIVE"}
+{"text": "i already said the n is small", "label": "REPETITIVE", "context": "I am aware the n is small."}
+{"text": "outline, just an outline, outline form", "label": "REPETITIVE"}
+{"text": "repeating that ethics approval is done", "label": "REPETITIVE", "context": "We already have ethics approval."}
+{"text": "precise, be precise, precision please", "label": "REPETITIVE"}
+{"text": "as stated it is for a masters thesis", "label": "REPETITIVE", "context": "This is for my masters thesis."}
+{"text": "compare, a comparison, compare them both", "label": "REPETITIVE"}
+{"text": "to say it again, no jargon in the abstract", "label": "REPETITIVE", "context": "The abstract must avoid jargon."}
+{"text": "detailed, in detail, with detail", "label": "REPETITIVE"}
+{"text": "again we used spss not r", "label": "REPETITIVE", "context": "We ran the analysis in spss."}
+{"text": "logical, keep it logical, logically ordered", "label": "REPETITIVE"}
+{"text": "mentioning once more it is peer reviewed", "label": "REPETITIVE", "context": "The target venue is peer reviewed."}
+{"text": "clear, clarity, make it clearer", "label": "REPETITIVE"}

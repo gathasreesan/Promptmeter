@@ -1,0 +1,128 @@
+{"text": "Refactor this handler so it retries on a 429 with exponential backoff", "label": "IMPORTANT"}
+{"text": "the build passes locally but fails on the CI runner with exit code 137", "label": "IMPORTANT"}
+{"text": "we are still on Node 16 so no top level await please", "label": "IMPORTANT"}
+{"text": "show me the diff only, I will apply it myself", "label": "IMPORTANT"}
+{"text": "Why does my goroutine leak when the context is cancelled", "label": "IMPORTANT"}
+{"text": "convert this callback chain into async await", "label": "IMPORTANT"}
+{"text": "it needs to work on both arm64 and x86 macs", "label": "IMPORTANT"}
+{"text": "explain what a segfault at 0x0 usually means", "label": "IMPORTANT"}
+{"text": "pls write a regex that matches indian mobile numbers with or without +91", "label": "IMPORTANT"}
+{"text": "my docker image is 1.2 gb, help me get it under 300 mb", "label": "IMPORTANT"}
+{"text": "Give me the rollback steps if the migration fails halfway", "label": "IMPORTANT"}
+{"text": "I cannot install anything, the box has no internet", "label": "IMPORTANT"}
+{"text": "rewrite the loop so it does not allocate inside the hot path", "label": "IMPORTANT"}
+{"text": "what is the difference between a mutex and a semaphore", "label": "IMPORTANT"}
+{"text": "the function must stay pure, no logging inside it", "label": "IMPORTANT"}
+{"text": "Trace through this recursion and tell me where the base case is wrong", "label": "IMPORTANT"}
+{"text": "our linter forbids default exports so use named ones", "label": "IMPORTANT"}
+{"text": "write the unit test first then the implementation", "label": "IMPORTANT"}
+{"text": "how do i cherry pick a commit that touches a deleted file", "label": "IMPORTANT"}
+{"text": "the api response nests errors three levels deep, flatten it", "label": "IMPORTANT"}
+{"text": "Compare grpc and rest for a service that streams sensor readings", "label": "IMPORTANT"}
+{"text": "i need this in typescript not javascript", "label": "IMPORTANT"}
+{"text": "kindly explain why my websocket disconnects after exactly sixty seconds", "label": "IMPORTANT"}
+{"text": "assume the reader has never used git before", "label": "IMPORTANT"}
+{"text": "the table already has four million rows so the migration has to be online", "label": "IMPORTANT"}
+{"text": "stub the network layer, do not hit the real endpoint", "label": "IMPORTANT"}
+{"text": "Walk me through what happens between typing a url and the page painting", "label": "IMPORTANT"}
+{"text": "my unit tests pass individually but fail when run together", "label": "IMPORTANT"}
+{"text": "keep the public api exactly as it is, change only the internals", "label": "IMPORTANT"}
+{"text": "explain memory ordering in c++ atomics without using the word fence", "label": "IMPORTANT"}
+{"text": "this runs on a raspberry pi zero so keep it light", "label": "IMPORTANT"}
+{"text": "give me a single command, not a shell script", "label": "IMPORTANT"}
+{"text": "hey there hope the code gods are treating you well today", "label": "FILLER"}
+{"text": "been staring at this screen since eight in the morning", "label": "FILLER"}
+{"text": "my manager is breathing down my neck about this one", "label": "FILLER"}
+{"text": "sorry for the wall of text below", "label": "FILLER"}
+{"text": "I usually figure these things out on my own but not today", "label": "FILLER"}
+{"text": "our standup is in twenty minutes wish me luck", "label": "FILLER"}
+{"text": "the coffee machine in the office broke again", "label": "FILLER"}
+{"text": "anyway enough about me", "label": "FILLER"}
+{"text": "you have been a lifesaver on my last three questions", "label": "FILLER"}
+{"text": "I am typing this on my phone so excuse the formatting", "label": "FILLER"}
+{"text": "this codebase was written by someone who left the company years ago", "label": "FILLER"}
+{"text": "not gonna lie i am a bit lost here", "label": "FILLER"}
+{"text": "cheers mate appreciate the help in advance", "label": "FILLER"}
+{"text": "my cat just walked across the keyboard", "label": "FILLER"}
+{"text": "I googled for two hours before coming here", "label": "FILLER"}
+{"text": "ok so here is the situation", "label": "FILLER"}
+{"text": "we inherited this microservice from the platform team", "label": "FILLER"}
+{"text": "honestly stackoverflow was no help at all", "label": "FILLER"}
+{"text": "let me know if any of this makes sense", "label": "FILLER"}
+{"text": "I hope I am not bothering you with such a basic thing", "label": "FILLER"}
+{"text": "the whole team is out sick this week", "label": "FILLER"}
+{"text": "thanks a ton, you are the best", "label": "FILLER"}
+{"text": "i swear this worked yesterday", "label": "FILLER"}
+{"text": "Good evening, trust you are doing well", "label": "FILLER"}
+{"text": "fingers crossed this is something silly", "label": "FILLER"}
+{"text": "I will probably regret asking this", "label": "FILLER"}
+{"text": "my laptop fan sounds like a jet engine right now", "label": "FILLER"}
+{"text": "kindly do the needful and revert at your earliest", "label": "FILLER"}
+{"text": "bear with me while i paste the logs", "label": "FILLER"}
+{"text": "we had a release party last night so my head hurts", "label": "FILLER"}
+{"text": "that is pretty much the whole story", "label": "FILLER"}
+{"text": "signing off for now, talk later", "label": "FILLER"}
+{"text": "I was wondering whether it might be possible for you to perhaps", "label": "REDUNDANT"}
+{"text": "in the event that it should happen to occur", "label": "REDUNDANT"}
+{"text": "it goes without saying that obviously", "label": "REDUNDANT"}
+{"text": "for all intents and purposes basically", "label": "REDUNDANT"}
+{"text": "a brand new fresh implementation from scratch anew", "label": "REDUNDANT"}
+{"text": "with regard to the matter concerning the topic of", "label": "REDUNDANT"}
+{"text": "please be advised that you should note that", "label": "REDUNDANT"}
+{"text": "in my own personal experience that I have had", "label": "REDUNDANT"}
+{"text": "at the present moment in time currently", "label": "REDUNDANT"}
+{"text": "the reason why is because of the fact that", "label": "REDUNDANT"}
+{"text": "kindly be so kind as to graciously", "label": "REDUNDANT"}
+{"text": "combine and merge them together into one single unit", "label": "REDUNDANT"}
+{"text": "it is absolutely essential and totally necessary", "label": "REDUNDANT"}
+{"text": "in order for it to be able to properly function correctly", "label": "REDUNDANT"}
+{"text": "I just wanted to quickly reach out and touch base", "label": "REDUNDANT"}
+{"text": "whether or not it may or may not be the case", "label": "REDUNDANT"}
+{"text": "going forward from this point onwards in future", "label": "REDUNDANT"}
+{"text": "a general overall broad summary of everything in general", "label": "REDUNDANT"}
+{"text": "if you could possibly maybe see your way to helping", "label": "REDUNDANT"}
+{"text": "totally and completely finished and done with", "label": "REDUNDANT"}
+{"text": "due to the fact that owing to the circumstance", "label": "REDUNDANT"}
+{"text": "I would like to take this opportunity to say", "label": "REDUNDANT"}
+{"text": "advance planning ahead of time beforehand", "label": "REDUNDANT"}
+{"text": "as a matter of fact actually in reality", "label": "REDUNDANT"}
+{"text": "the honest truth of the matter truthfully", "label": "REDUNDANT"}
+{"text": "sum up and total everything all together", "label": "REDUNDANT"}
+{"text": "in a manner of speaking so to speak as it were", "label": "REDUNDANT"}
+{"text": "you might perhaps possibly want to consider thinking about", "label": "REDUNDANT"}
+{"text": "first and foremost before anything else initially", "label": "REDUNDANT"}
+{"text": "close down and shut it off completely to a halt", "label": "REDUNDANT"}
+{"text": "on the subject of the topic under discussion here", "label": "REDUNDANT"}
+{"text": "basically what I am essentially trying to say is", "label": "REDUNDANT"}
+{"text": "use postgres for the database", "label": "REPETITIVE", "context": "Build me a rest api with postgres as the backing store."}
+{"text": "again, no external dependencies", "label": "REPETITIVE", "context": "Write it with the standard library only, no external dependencies."}
+{"text": "and it has to run on windows too", "label": "REPETITIVE", "context": "The script needs to work on windows, mac and linux."}
+{"text": "debug it, find the bug and fix the bug", "label": "REPETITIVE"}
+{"text": "as i mentioned earlier the timeout is thirty seconds", "label": "REPETITIVE", "context": "The client gives up after a thirty second timeout."}
+{"text": "so again the version is 3.11", "label": "REPETITIVE", "context": "I am running python 3.11 on ubuntu."}
+{"text": "make it fast, performance is the priority, it has to be fast", "label": "REPETITIVE"}
+{"text": "to repeat, comments in english", "label": "REPETITIVE", "context": "Write the code comments in english."}
+{"text": "and like i said the file is a csv", "label": "REPETITIVE", "context": "I have a csv file with two hundred columns."}
+{"text": "test it, write tests, I want tests", "label": "REPETITIVE"}
+{"text": "once more, do not use jquery", "label": "REPETITIVE", "context": "Plain javascript only, do not use jquery."}
+{"text": "the error is a null pointer, a null pointer error", "label": "REPETITIVE"}
+{"text": "just restating that it is a monorepo", "label": "REPETITIVE", "context": "We keep everything in one monorepo with pnpm workspaces."}
+{"text": "simple, keep it simple, as simple as you can", "label": "REPETITIVE"}
+{"text": "reiterating that the branch is main", "label": "REPETITIVE", "context": "Our default branch is called main not master."}
+{"text": "explain the stack trace, walk me through the stack trace", "label": "REPETITIVE"}
+{"text": "and again it is a docker container", "label": "REPETITIVE", "context": "The app runs inside a docker container behind nginx."}
+{"text": "document it, add documentation, documented properly", "label": "REPETITIVE"}
+{"text": "stating it a second time, no typescript", "label": "REPETITIVE", "context": "Plain javascript please, no typescript."}
+{"text": "the log, look at the log I pasted, the log above", "label": "REPETITIVE"}
+{"text": "repeating myself, the team is five people", "label": "REPETITIVE", "context": "We are a team of five engineers."}
+{"text": "optimise it and make it optimised", "label": "REPETITIVE"}
+{"text": "sorry saying again, it is a legacy system", "label": "REPETITIVE", "context": "This is a legacy system from 2011 with no tests."}
+{"text": "step by step, one step at a time, step wise", "label": "REPETITIVE"}
+{"text": "as stated the db is mysql", "label": "REPETITIVE", "context": "We run mysql 8 on a managed instance."}
+{"text": "short answer, keep the answer short, short please", "label": "REPETITIVE"}
+{"text": "just to say it again it is for production", "label": "REPETITIVE", "context": "This code is going straight to production."}
+{"text": "secure it, make it secure, security matters here", "label": "REPETITIVE"}
+{"text": "one more time, indentation with tabs", "label": "REPETITIVE", "context": "Our style guide uses tabs for indentation."}
+{"text": "compare them, give me a comparison, compare the two", "label": "REPETITIVE"}
+{"text": "saying it again the deadline is friday", "label": "REPETITIVE", "context": "This has to ship by friday."}
+{"text": "clean code, keep the code clean, clean it up", "label": "REPETITIVE"}

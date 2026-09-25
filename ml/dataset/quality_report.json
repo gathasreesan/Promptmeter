@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-09-25T05:41:26+00:00",
+  "provider": "manual",
+  "model": null,
+  "requested": 10000,
+  "rawRows": 1024,
+  "accepted": 1007,
+  "flaggedForReview": 6,
+  "rejected": 11,
+  "shortfall": 8993,
+  "labelCounts": {
+    "IMPORTANT": 256,
+    "FILLER": 254,
+    "REDUNDANT": 255,
+    "REPETITIVE": 242
+  },
+  "rejectionReasons": {
+    "duplicate-of-original-dataset": 3,
+    "near-duplicate": 8
+  },
+  "reviewFlagCounts": {
+    "removable-label-on-explicit-constraint": 2,
+    "repetitive-with-nothing-to-repeat": 4
+  },
+  "blindVerification": {
+    "note": "not run -- needs an API provider",
+    "agreementRate": null
+  },
+  "length": {
+    "minChars": 11,
+    "maxChars": 73,
+    "medianChars": 43
+  },
+  "withContext": 125,
+  "nearDuplicateThreshold": 0.85,
+  "guidelines": "Each example is ONE sentence or clause taken from a prompt written to an AI assistant.\n\nIMPORTANT  The request itself, its subject matter, or any constraint on the answer:\n           format, length, language, library or version, audience, exclusions, the\n           shape of the output. Detail that LOOKS like small talk but actually\n           constrains the answer is IMPORTANT, not FILLER -- \"running Python 3.8\" rules\n           out newer syntax, \"I am a complete beginner\" sets the register of the\n           explanation, \"it has to fit on one slide\" is a length constraint. If\n           removing the span could turn a correct answer into a wrong one, it is\n           IMPORTANT.\n\nFILLER     Social or emotional content that constrains nothing: greetings, sign-offs,\n           thanks, apologies, the mood of the asker, and backstory no correct answer\n           depends on. \"My roommate played loud music all night\" is FILLER even though\n           every word in it is new.\n\nREDUNDANT  On-topic wording that carries no information once removed -- wrappers,\n           hedges and tautologies. \"I would like to ask you if you could possibly\",\n           \"in order to be able to\", \"as you probably already know\". The span is about\n           the task; it just says nothing about it.\n\nREPETITIVE Restates something the prompt has ALREADY said. The repetition is the whole\n           reason for the label, so a repetitive span is only recognisable next to what\n           it repeats -- see the `context` field.\n\nThe boundary got wrong most often: FILLER is off-task, REDUNDANT is on-task but empty.\n\"Thanks so much!\" is FILLER. \"I was wondering if you would be able to\" is REDUNDANT.\n",
+  "outputs": {
+    "dataset": "dataset\\synthetic_10000.csv",
+    "reviewQueue": "dataset\\review_queue.csv"
+  }
+}
