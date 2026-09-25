@@ -30,6 +30,7 @@
         "utils/grammar.js",
         "utils/tokenizer.js",
         "utils/calculator.js",
+        "utils/headroom.js",
         "utils/storage.js",
         "utils/optimizer.js",
         "utils/recommendations.js",
