@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" class="pm-tokens">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptMeter UI states</title>
+
+<!--
+    Every UI state on one page, so the extension does not have to be reloaded into
+    ChatGPT to see what a change did.
+
+    Open it directly: double-click the file, or `start preview.html`.
+
+    It loads the REAL stylesheets. Nothing here restyles a component -- the only rules
+    below are the ones that take the card out of `position: fixed`, because the card is
+    written to hover over a composer that does not exist on this page. If something
+    looks wrong here it is wrong in the extension too, which is the entire point.
+
+    The markup mirrors showOptimizationCard() in content.js. When that function changes,
+    change it here as well; tests/tokens.test.js checks the token contract but cannot
+    check that this file still resembles the card.
+-->
+<link rel="stylesheet" href="utils/tokens.css">
+<link rel="stylesheet" href="content.css">
+<link rel="stylesheet" href="style.css">
+
+<style>
+    /* Page chrome only. */
+    body {
+        width: auto;
+        margin: 0;
+        padding: 32px;
+        border-top: none;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+    }
+    h1 {
+        font-family: var(--font-heading);
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 4px;
+        letter-spacing: -0.02em;
+    }
+    .sub { color: var(--text-muted); font-size: 13px; margin: 0 0 28px; }
+    .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+    .case { display: flex; flex-direction: column; gap: 8px; }
+    .case > label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+    }
+    .frame {
+        border: 1px dashed var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 16px;
+        background: var(--bg-secondary);
+    }
+    .switcher { display: flex; gap: 8px; margin-bottom: 24px; }
+    .switcher button {
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: var(--radius-btn);
+        border: 1px solid var(--btn-secondary-border);
+        background: var(--btn-secondary);
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+    .switcher button[aria-pressed="true"] {
+        background: var(--btn-primary);
+        border-color: var(--btn-primary);
+        color: var(--on-accent);
+    }
+
+    /* The card is fixed to a composer that is not on this page. Static it, and let it
+       be visible without the entrance transition. Position only -- no colours here. */
+    .frame .promptmeter-opt-card {
+        position: static;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        width: 420px;
+        max-width: 100%;
+        max-height: none;
+    }
+    .popup-shell {
+        width: 270px;
+        padding: 16px;
+        background: var(--bg-primary);
+        border-top: 3px solid var(--color-primary);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-premium);
+    }
+</style>
+</head>
+<body>
+
+<h1>PromptMeter UI states</h1>
+<p class="sub">The real stylesheets, every state at once. Switch the theme to check both.</p>
+
+<div class="switcher" id="switcher">
+    <button data-mode="light" aria-pressed="false">Light</button>
+    <button data-mode="dark" aria-pressed="false">Dark</button>
+    <button data-mode="auto" aria-pressed="true">Auto (system)</button>
+</div>
+
+<div class="row">
+
+    <div class="case">
+        <label>Card &mdash; everything on</label>
+        <div class="frame">
+            <div class="promptmeter-opt-card pm-tokens visible">
+                <div class="promptmeter-opt-header">
+                    <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-opt-metrics">
+                        <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
+                            <span class="promptmeter-count-from">~412</span>
+                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                            <span class="promptmeter-count-to">~331</span>
+                            <span class="promptmeter-count-unit">tokens</span>
+                        </span>
+                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;20%</span>
+                        <span class="promptmeter-metric" title="Estimated">~0.041 g CO&#8322;</span>
+                        <span class="promptmeter-metric promptmeter-metric-grammar">3 fixed</span>
+                    </div>
+                </div>
+                <div class="promptmeter-opt-diff">
+                    <div class="promptmeter-diff-box promptmeter-diff-original">hey so i was wondering if u could possibly maybe help me out, i wan to starst online classess and i have no idea where to begin honestly. thanks so much in advance!!</div>
+                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Help me start online classes. Where do I begin?</div>
+                </div>
+                <div class="promptmeter-opt-headroom promptmeter-headroom-warn">Context: about 78% used, ~1,540 tokens left of 8,192 &middot; Context is filling up. Consider starting a new chat soon.</div>
+                <div class="promptmeter-opt-scope">
+                    <div class="promptmeter-scope-title">Worth splitting up</div>
+                    <ul class="promptmeter-scope-list">
+                        <li>Three separate requests in one prompt</li>
+                        <li>Asks for both a plan and the finished work</li>
+                    </ul>
+                </div>
+                <div class="promptmeter-opt-grammar">
+                    <div class="promptmeter-grammar-title">Also corrected</div>
+                    <ul class="promptmeter-grammar-list">
+                        <li>starst &rarr; start</li>
+                        <li>classess &rarr; classes</li>
+                        <li>Sentence capitalisation</li>
+                    </ul>
+                </div>
+                <div class="promptmeter-opt-actions">
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="case">
+        <label>Card &mdash; exact counts, nothing else</label>
+        <div class="frame">
+            <div class="promptmeter-opt-card pm-tokens visible">
+                <div class="promptmeter-opt-header">
+                    <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-opt-metrics">
+                        <span class="promptmeter-metric promptmeter-metric-count" title="Counted with cl100k_base">
+                            <span class="promptmeter-count-from">38</span>
+                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                            <span class="promptmeter-count-to">21</span>
+                            <span class="promptmeter-count-unit">tokens</span>
+                        </span>
+                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;45%</span>
+                        <span class="promptmeter-metric" title="Estimated">~0.009 g CO&#8322;</span>
+                    </div>
+                </div>
+                <div class="promptmeter-opt-diff">
+                    <div class="promptmeter-diff-box promptmeter-diff-original">I would like to kindly request that you please explain to me how binary search works</div>
+                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how binary search works</div>
+                </div>
+                <div class="promptmeter-opt-actions">
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="case">
+        <label>Card &mdash; context critical</label>
+        <div class="frame">
+            <div class="promptmeter-opt-card pm-tokens visible">
+                <div class="promptmeter-opt-header">
+                    <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-opt-metrics">
+                        <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
+                            <span class="promptmeter-count-from">~1,204</span>
+                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                            <span class="promptmeter-count-to">~1,150</span>
+                            <span class="promptmeter-count-unit">tokens</span>
+                        </span>
+                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;4%</span>
+                    </div>
+                </div>
+                <div class="promptmeter-opt-diff">
+                    <div class="promptmeter-diff-box promptmeter-diff-original">Build a complete production ready platform that handles students, teachers, courses, attendance, billing, analytics and a mobile app, with tests and documentation and CI.</div>
+                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Build a production platform handling students, teachers, courses, attendance, billing, analytics and a mobile app, with tests, docs and CI.</div>
+                </div>
+                <div class="promptmeter-opt-headroom promptmeter-headroom-critical">Context: about 96% used, ~280 tokens left of 8,192 &middot; Very little context left. Start a new chat to keep the full history.</div>
+                <div class="promptmeter-opt-scope">
+                    <div class="promptmeter-scope-title">Worth reconsidering</div>
+                    <ul class="promptmeter-scope-list">
+                        <li>&ldquo;production ready&rdquo; pulls in far more than the task needs</li>
+                        <li>Seven subsystems in one request</li>
+                    </ul>
+                </div>
+                <div class="promptmeter-opt-actions">
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="case">
+        <label>Popup &mdash; active</label>
+        <div class="frame">
+            <div class="popup-shell">
+                <div class="popup-container">
+                    <div class="popup-header">
+                        <div class="header-brand">
+                            <h2>PromptMeter</h2>
+                            <span class="badge">Active</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="status-banner">
+                        <span class="status-dot"></span>
+                        <span>Watching your prompts</span>
+                    </div>
+                    <div class="stats-preview">
+                        <div class="stat-box stat-box-carbon">
+                            <span class="stat-label">Carbon Footprint</span>
+                            <span class="stat-value">4.2g</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Avg Efficiency</span>
+                            <span class="stat-value stat-good">94%</span>
+                        </div>
+                    </div>
+                    <button class="dashboard-btn">Open Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="case">
+        <label>Popup &mdash; paused, poor score</label>
+        <div class="frame">
+            <div class="popup-shell">
+                <div class="popup-container">
+                    <div class="popup-header">
+                        <div class="header-brand">
+                            <h2>PromptMeter</h2>
+                            <span class="badge disabled">Paused</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="status-banner disabled">
+                        <span class="status-dot"></span>
+                        <span>Paused</span>
+                    </div>
+                    <div class="stats-preview">
+                        <div class="stat-box stat-box-carbon">
+                            <span class="stat-label">Carbon Footprint</span>
+                            <span class="stat-value">18.7g</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Avg Efficiency</span>
+                            <span class="stat-value stat-poor">61%</span>
+                        </div>
+                    </div>
+                    <button class="dashboard-btn">Open Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="utils/theme.js"></script>
+<script src="utils/preview.js"></script>
+</body>
+</html>
