@@ -1,80 +1,10 @@
-/* content.css */
+/* content.css -- the card injected into the host page.
 
-/* Tokens are scoped to the card, never to the host page's :root. ChatGPT defines its
-   own --bg-card / --border-color style variables, and leaking ours onto :root would
-   restyle their UI. Custom properties inherit, so every child of the card still sees
-   them. */
-.promptmeter-opt-card {
-  --bg-card: #FFFFFF;
-  --bg-surface: #EEF5EC;
-  --border-color: #E3E8E4;
-  --radius-card: 12px;
-  --radius-btn: 8px;
-  --color-primary: #1c5d20;
-  --color-secondary: #4CAF50;
-  --color-error: #D32F2F;
-  --text-primary: #14181A;
-  --text-secondary: #5A6470;
-  --text-muted: #6E7781;
-  --btn-primary-hover: #164A19;
-  --btn-secondary-border: #DCE8DD;
-  --btn-secondary-hover: #EEF5EC;
-  --shadow-premium: 0 4px 14px rgba(16, 24, 18, 0.10);
-  --btn-secondary: #FFFFFF;
-  --on-accent: #FFFFFF;
-  --diff-removed-bg: rgba(211, 47, 47, 0.05);
-  --diff-removed-text: #B91C1C;
-  --diff-added-bg: rgba(46, 125, 50, 0.05);
-  --diff-added-text: #15803D;
-}
-
-/* Dark theme, matched to the dashboard so the coach card never looks foreign
-   against a dark ChatGPT window. */
-@media (prefers-color-scheme: dark) {
-  .promptmeter-opt-card:not([data-theme="light"]) {
-    --bg-card: #1A231C;
-    --bg-surface: #17201A;
-    --border-color: #2B3430;
-    --color-primary: #66BB6A;
-    --color-secondary: #81C784;
-    --color-error: #EF5350;
-    --text-primary: #E6EAE8;
-    --text-secondary: #A2ADB4;
-    --text-muted: #8B949E;
-    --btn-primary-hover: #7CCB80;
-    --btn-secondary: #1A231C;
-    --btn-secondary-border: #2A3A2D;
-    --btn-secondary-hover: #222D24;
-    --on-accent: #0F1511;
-    --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
-    --diff-removed-bg: rgba(239, 83, 80, 0.12);
-    --diff-removed-text: #FCA5A5;
-    --diff-added-bg: rgba(102, 187, 106, 0.12);
-    --diff-added-text: #86EFAC;
-  }
-}
-
-.promptmeter-opt-card[data-theme="dark"] {
-  --bg-card: #1A231C;
-  --bg-surface: #17201A;
-  --border-color: #2B3430;
-  --color-primary: #66BB6A;
-  --color-secondary: #81C784;
-  --color-error: #EF5350;
-  --text-primary: #E6EAE8;
-  --text-secondary: #A2ADB4;
-  --text-muted: #8B949E;
-  --btn-primary-hover: #7CCB80;
-  --btn-secondary: #1A231C;
-  --btn-secondary-border: #2A3A2D;
-  --btn-secondary-hover: #222D24;
-  --on-accent: #0F1511;
-  --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --diff-removed-bg: rgba(239, 83, 80, 0.12);
-  --diff-removed-text: #FCA5A5;
-  --diff-added-bg: rgba(102, 187, 106, 0.12);
-  --diff-added-text: #86EFAC;
-}
+   Colours, radii and shadows come from utils/tokens.css, which the manifest loads
+   first. The card element carries .pm-tokens, so the tokens land on the card and
+   inherit to its subtree without ever touching the host page's :root -- ChatGPT
+   defines its own --bg-card and --border-color, and overwriting those would restyle
+   their UI. */
 
 .promptmeter-opt-card {
     position: fixed;
@@ -98,7 +28,7 @@
     padding: 16px;
     box-shadow: var(--shadow-premium); /* Premium Shadow */
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     z-index: 999999;
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -411,3 +341,59 @@
 .promptmeter-headroom-warn { color: var(--text-secondary); }
 .promptmeter-headroom-critical,
 .promptmeter-headroom-full { color: var(--color-error); }
+
+/* ---------------------------------------------------------------------------
+   The count, read as one figure.
+
+   It used to be a single run of text -- "412 -> 331 tokens" -- at the same muted
+   weight as everything beside it, so the one number a person opens this card to see
+   had no more presence than the carbon estimate. Splitting it lets the result carry
+   the emphasis while the original stays available to compare against, without adding
+   a second type size or another colour to the card.
+
+   A leading "~" appears on both figures when no exact tokenizer is loaded. It is set
+   by content.js from PromptMeterTokenizer.isExact(), never assumed here.
+   --------------------------------------------------------------------------- */
+
+.promptmeter-metric-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.promptmeter-count-from {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--border-color);
+}
+
+.promptmeter-count-arrow {
+    color: var(--text-disabled);
+    font-size: 10px;
+}
+
+.promptmeter-count-to {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.promptmeter-count-unit {
+    color: var(--text-muted);
+}
+
+/* The saving is the payoff, so it gets the brand colour -- but as a tinted chip
+   rather than coloured text, which at 11px on a white card sits under AA. */
+.promptmeter-metric-saved {
+    color: var(--color-primary);
+    font-weight: 600;
+    background: var(--wash-success);
+    border-radius: var(--radius-pill);
+    padding: 1px 6px;
+}
+
+/* The middot separator is a caption device. It should not appear between the chip
+   and what follows it, where it reads as punctuation inside the chip. */
+.promptmeter-metric-saved + .promptmeter-metric::before {
+    content: none;
+}

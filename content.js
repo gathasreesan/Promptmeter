@@ -353,15 +353,30 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     if (!card) {
         card = document.createElement("div");
         card.id = "promptmeter-opt-card";
-        card.className = "promptmeter-opt-card";
+        // pm-tokens carries every colour and radius from utils/tokens.css. It sits on
+        // the card rather than on :root so the host page keeps its own variables.
+        card.className = "promptmeter-opt-card pm-tokens";
         document.body.appendChild(card);
         applyCardTheme();
     }
 
     // stats() is the source for the counts. A caller that does not supply it (an older
-    // call site, a test) still gets a card rather than a crash.
-    const stats = tokenStats || { originalTokens: 0, optimizedTokens: 0, saved: tokensSaved,
-        percent: 0, exact: false, encoding: 'heuristic' };
+    // call site, a test) still gets a card rather than a crash -- but it gets no token
+    // figures at all, rather than "0 -> 0 tokens, -0%", which is not a smaller claim
+    // than the truth, it is a different and wrong one.
+    const stats = tokenStats || null;
+
+    // "~" marks a count that came from the heuristic rather than a real BPE encoder.
+    // PromptMeterTokenizer.isExact() exists precisely so this can be said out loud:
+    // a carbon figure derived from a guess must not be dressed up as a measurement.
+    const approx = stats && stats.exact ? '' : '~';
+    const countNote = stats && stats.exact
+        ? `Counted with ${stats.encoding}`
+        : 'Estimated -- no exact tokenizer is loaded';
+
+    // The carbon figure is always an estimate, and an older call site may not pass one.
+    const carbon = typeof carbonSaved === 'number' && isFinite(carbonSaved)
+        ? carbonSaved : null;
 
     const issues = grammarIssues || [];
     // De-duplicated, because one rule can fire on several spans of the same prompt and
@@ -377,9 +392,17 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         <div class="promptmeter-opt-header">
             <div class="promptmeter-opt-title">PromptMeter</div>
             <div class="promptmeter-opt-metrics">
-                <span class="promptmeter-metric">${stats.originalTokens} −> ${stats.optimizedTokens} tokens</span>
-                <span class="promptmeter-metric">−${stats.percent}%</span>
-                <span class="promptmeter-metric" title="Estimated">~${carbonSaved.toFixed(3)} g CO₂</span>
+                ${stats ? `
+                <span class="promptmeter-metric promptmeter-metric-count" title="${countNote}">
+                    <span class="promptmeter-count-from">${approx}${stats.originalTokens}</span>
+                    <span class="promptmeter-count-arrow" aria-hidden="true">→</span>
+                    <span class="promptmeter-count-to">${approx}${stats.optimizedTokens}</span>
+                    <span class="promptmeter-count-unit">tokens</span>
+                </span>
+                <span class="promptmeter-metric promptmeter-metric-saved">−${stats.percent}%</span>` : ''}
+                ${carbon !== null
+                    ? `<span class="promptmeter-metric" title="Estimated">~${carbon.toFixed(3)} g CO₂</span>`
+                    : ''}
                 ${issueLabels.length > 0
                     ? `<span class="promptmeter-metric promptmeter-metric-grammar">${issueLabels.length} fixed</span>`
                     : ''}
@@ -454,8 +477,11 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         panel.hidden = false;
     }
 
-    document.getElementById("promptmeter-btn-accept").onclick = () => applyOptimization(optimizedText);
-    document.getElementById("promptmeter-btn-ignore").onclick = () => {
+    // Scoped to the card, not getElementById. These ids live in somebody else's
+    // document: if the host page ever ships an element called promptmeter-btn-accept,
+    // a global lookup binds the handler to theirs and the button silently stops working.
+    card.querySelector("#promptmeter-btn-accept").onclick = () => applyOptimization(optimizedText);
+    card.querySelector("#promptmeter-btn-ignore").onclick = () => {
         ignoredPromptText = originalText;
         hideOptimizationCard();
     };
