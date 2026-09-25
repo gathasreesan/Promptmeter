@@ -10,6 +10,7 @@ training data, and the damage only shows up as a model that deletes things it sh
 keep.
 """
 
+import random
 import sys
 
 from generate_synthetic import (
@@ -20,6 +21,7 @@ from generate_synthetic import (
     parse_rows,
     repeats_internally,
     validate,
+    verify,
 )
 
 passed = failed = 0
@@ -126,6 +128,33 @@ check("asks for context only on REPETITIVE",
       and "give each example a `context` field" not in filler)
 check("passes the avoid list through", "thanks in advance" in filler)
 check("names the requested label", "labeled FILLER" in filler)
+
+# --- verify ---------------------------------------------------------------------
+# The rule that matters: a row the blind pass never reached must survive. Losing
+# unchecked rows would silently shrink the corpus every time the API rate-limited.
+corpus = [row("alpha one two three", "FILLER"),
+          row("beta four five six", "IMPORTANT"),
+          row("gamma seven eight nine", "REDUNDANT"),
+          row("delta ten eleven twelve", "FILLER")]
+
+kept, disagreed, rate = verify(corpus, lambda prompt, model: "FILLER", "stub")
+check("blind pass keeps what it agrees with", len(kept) == 2)
+check("blind pass rejects what it disagrees with", len(disagreed) == 2)
+check("agreement rate is the checked fraction", rate == 0.5)
+
+random.seed(0)
+kept, disagreed, _ = verify(corpus, lambda prompt, model: "FILLER", "stub", sample=2)
+check("sampling loses nothing", len(kept) + len(disagreed) == len(corpus))
+
+
+def explode(prompt, model):
+    raise RuntimeError("rate limited")
+
+
+kept, disagreed, rate = verify(corpus, explode, "stub")
+check("an API failure keeps every row", len(kept) == len(corpus))
+check("an API failure flags nothing", disagreed == [])
+check("an API failure reports no agreement", rate == 0.0)
 
 print("{0} passed, {1} failed".format(passed, failed))
 sys.exit(1 if failed else 0)

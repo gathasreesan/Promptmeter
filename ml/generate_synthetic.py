@@ -275,6 +275,11 @@ def load_manual_batches():
     One JSON object per line: {"text": ..., "label": ..., "context": ..., "batch": ...}.
     This is the path used when no API key is configured. Those rows are not trusted any
     further than generated ones -- they go through the identical validator.
+
+    These are deliberately NOT written to the checkpoint. The checkpoint exists so an
+    interrupted API run does not re-pay for rows it already bought; these files cost
+    nothing to re-read and are edited by hand, so checkpointing them would only create a
+    way for a corrected row and its stale twin to both survive into the corpus.
     """
     rows = []
     if not os.path.isdir(MANUAL_DIR):
@@ -497,7 +502,12 @@ def verify(rows, call, model, sample=None):
 
     @returns (agreed rows, disagreed rows, agreement rate)
     """
-    subject = rows if sample is None else random.sample(rows, min(sample, len(rows)))
+    # Indices rather than rows: the unchecked set below is computed by membership, and
+    # `row not in subject` over dicts is a linear scan per row -- fine at 100 rows, a
+    # hundred million dict comparisons at the 10,000 this is built for.
+    chosen = (list(range(len(rows))) if sample is None
+              else sorted(random.sample(range(len(rows)), min(sample, len(rows)))))
+    subject = [rows[index] for index in chosen]
     agreed, disagreed = [], []
 
     for index, row in enumerate(subject, 1):
@@ -523,9 +533,11 @@ def verify(rows, call, model, sample=None):
             print("  verified {0}/{1}".format(index, len(subject)))
 
     checked = len(agreed) + len(disagreed)
-    # Rows never reached because the API failed part-way stay accepted; they were not
-    # checked, and treating unchecked as failed would silently delete good data.
-    unchecked = [row for row in rows if row not in subject] + subject[checked:]
+    # Rows never reached -- outside the sample, or after the API gave up part-way --
+    # stay accepted. They were not checked, and treating unchecked as failed would
+    # silently delete good data.
+    reached = set(chosen[:checked])
+    unchecked = [row for index, row in enumerate(rows) if index not in reached]
     return agreed + unchecked, disagreed, (len(agreed) / checked if checked else 0.0)
 
 
@@ -603,15 +615,8 @@ def main():
 
     if args.provider == "manual":
         manual = load_manual_batches()
-        known = {normalise(row.get("text") or "") + "|" + (row.get("label") or "")
-                 for row in rows}
-        fresh = [row for row in manual
-                 if normalise(row.get("text") or "") + "|" + (row.get("label") or "")
-                 not in known]
-        if fresh:
-            append_checkpoint(fresh)
-            rows += fresh
-        print("Read {0} rows from manual_batches ({1} new)".format(len(manual), len(fresh)))
+        rows += manual
+        print("Read {0} rows from manual_batches".format(len(manual)))
 
     elif not args.validate_only:
         if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")):

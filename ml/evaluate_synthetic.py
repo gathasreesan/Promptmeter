@@ -343,6 +343,13 @@ def main():
     # the same 621 rows, so they are nowhere near independent and the effective sample
     # is far smaller than the number of repeats. Requiring mean > std is the blunt,
     # defensible version of that correction.
+    #
+    # One caveat that does not remove: the hyperparameters are searched once, on the
+    # first split, and reused across the rest. Re-searching per split would be the clean
+    # thing and costs 25 grid sweeps. Because later splits put some of the first split's
+    # training rows into their test sets, both arms pick up a small optimistic bias --
+    # equally, which is why the DELTA is still worth reading even though the absolute
+    # numbers are a little flattering.
     promote = delta_binary > 0 and delta_harm <= 0
     if spread:
         promote = promote and delta_binary > spread["binary"]["stdDelta"]
