@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
             statusBanner.className = isEnabled ? "status-banner" : "status-banner disabled";
         }
         if (statusText) {
-            statusText.textContent = isEnabled ? "Coach is actively monitoring" : "Coach is paused on ChatGPT";
+            statusText.textContent = isEnabled ? "Watching your prompts" : "Paused";
         }
     }
 
@@ -65,14 +65,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     const effVal = isNaN(stats.avgEfficiency) ? 100 : stats.avgEfficiency;
                     effEl.textContent = `${effVal}%`;
 
-                    // Adjust efficiency color dynamically
-                    if (effVal >= 90) {
-                        effEl.style.color = "#2E7D32"; // Green
-                    } else if (effVal >= 70) {
-                        effEl.style.color = "#F9A825"; // Amber
-                    } else {
-                        effEl.style.color = "#D32F2F"; // Red
-                    }
+                    // A class, not an inline hex. The three literals that used to be
+                    // written here were the light-theme greens and reds, set straight
+                    // onto style.color, which wins over any stylesheet -- so in dark
+                    // mode the number kept a colour picked for a white card and the
+                    // contrast went with it. The stylesheet resolves these against the
+                    // active theme instead.
+                    effEl.className = "stat-value " + (
+                        effVal >= 90 ? "stat-good" : effVal >= 70 ? "stat-fair" : "stat-poor"
+                    );
                 }
             });
         } catch (err) {

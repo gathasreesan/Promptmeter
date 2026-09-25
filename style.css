@@ -1,82 +1,6 @@
-/* style.css */
+/* style.css -- the toolbar popup.
 
-:root {
-  --bg-primary: #F7F9F4;
-  --bg-secondary: #EEF5EC;
-  --bg-card: #FFFFFF;
-  --border-color: #E3E8E4;
-  --color-primary: #1c5d20;
-  --color-secondary: #4CAF50;
-  --text-primary: #14181A;
-  --text-secondary: #5A6470;
-  --text-muted: #6E7781;
-  --bg-hover: rgba(46, 125, 50, 0.08);
-  --bg-selected: #E8F5E9;
-  --btn-primary: #1c5d20;
-  --btn-primary-hover: #164A19;
-  --color-carbon: #EF6C00;
-  --radius-card: 12px;
-  --radius-btn: 8px;
-  --shadow-premium: 0 1px 2px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06);
-  --toggle-off: #CFD8DC;
-  --toggle-knob: #FFFFFF;
-  --disabled-bg: #ECEFF1;
-  --disabled-border: #CFD8DC;
-  --disabled-dot: #90A4AE;
-  --on-accent: #FFFFFF;
-}
-
-/* Dark theme. Declared twice: under prefers-color-scheme for "auto" (guarded so an
-   explicit light choice still wins) and under [data-theme="dark"] for an explicit one. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-primary: #0F1511;
-    --bg-secondary: #17201A;
-    --bg-card: #1A231C;
-    --border-color: #2B3430;
-    --color-primary: #66BB6A;
-    --color-secondary: #81C784;
-    --text-primary: #E6EAE8;
-    --text-secondary: #A2ADB4;
-    --text-muted: #8B949E;
-    --bg-hover: rgba(102, 187, 106, 0.12);
-    --bg-selected: #1E2E20;
-    --btn-primary: #66BB6A;
-    --btn-primary-hover: #7CCB80;
-    --color-carbon: #FF9800;
-    --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
-    --toggle-off: #3A4A3D;
-    --toggle-knob: #E8EDE8;
-    --disabled-bg: #222D24;
-    --disabled-border: #2A3A2D;
-    --disabled-dot: #5C6960;
-    --on-accent: #0F1511;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg-primary: #0F1511;
-  --bg-secondary: #17201A;
-  --bg-card: #1A231C;
-  --border-color: #2B3430;
-  --color-primary: #66BB6A;
-  --color-secondary: #81C784;
-  --text-primary: #E6EAE8;
-  --text-secondary: #A2ADB4;
-  --text-muted: #8B949E;
-  --bg-hover: rgba(102, 187, 106, 0.12);
-  --bg-selected: #1E2E20;
-  --btn-primary: #66BB6A;
-  --btn-primary-hover: #7CCB80;
-  --color-carbon: #FF9800;
-  --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
-  --toggle-off: #3A4A3D;
-  --toggle-knob: #E8EDE8;
-  --disabled-bg: #222D24;
-  --disabled-border: #2A3A2D;
-  --disabled-dot: #5C6960;
-  --on-accent: #0F1511;
-}
+   Colours come from utils/tokens.css via <html class="pm-tokens">. */
 
 body {
     width: 270px;
@@ -84,8 +8,8 @@ body {
     padding: 16px;
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    border-top: 3px solid var(--color-primary); /* green top accent */
+    font-family: var(--font-body);
+    border-top: 3px solid var(--color-primary);
 }
 
 .popup-container {
@@ -113,7 +37,7 @@ body {
     font-size: 15px;
     font-weight: 800;
     color: var(--text-primary);
-    font-family: 'Sora', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-heading);
     letter-spacing: -0.02em;
 }
 
@@ -124,7 +48,7 @@ body {
     border-radius: var(--radius-btn);
     font-size: 11px;
     font-weight: 700;
-    border: 1px solid rgba(46, 125, 50, 0.15);
+    border: 1px solid var(--rec-border-success);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: all 0.2s ease;
@@ -206,13 +130,13 @@ input:checked + .slider:before {
     font-weight: 600;
     color: var(--color-primary);
     transition: all 0.2s ease;
-    border: 1px solid rgba(46, 125, 50, 0.1);
+    border: 1px solid var(--rec-border-success);
 }
 
 .status-banner.disabled {
-    background: #ECEFF1;
+    background: var(--disabled-bg);
     color: var(--text-muted);
-    border-color: #CFD8DC;
+    border-color: var(--disabled-border);
 }
 
 .status-dot {
@@ -269,7 +193,7 @@ input:checked + .slider:before {
 
 /* Specific Carbon Indicator Stat Box override */
 .stat-box-carbon .stat-value {
-    color: var(--color-carbon) !important;
+    color: var(--color-carbon);
 }
 
 .dashboard-btn {
@@ -292,13 +216,6 @@ input:checked + .slider:before {
 .dashboard-btn:active {
     transform: scale(0.97);
 }
-/* The badge keeps its own disabled treatment */
-.badge.disabled {
-  background: var(--disabled-bg);
-  color: var(--text-muted);
-  border-color: var(--disabled-border);
-}
-
 body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -379,3 +296,10 @@ body {
         animation: none;
     }
 }
+
+/* Efficiency colouring, set by popup.js as a class so the theme resolves it.
+   These used to be three hex literals written straight onto style.color, which beats
+   any stylesheet -- so the dark theme inherited a green chosen for a white card. */
+.stat-value.stat-good { color: var(--color-success); }
+.stat-value.stat-fair { color: var(--color-warning); }
+.stat-value.stat-poor { color: var(--color-error); }

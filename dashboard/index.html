@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="pm-tokens">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PromptMeter Coach Dashboard</title>
-    <!-- Import Google Fonts: Sora and Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Use local bundled output styling -->
+    <title>PromptMeter</title>
+    <!-- Tokens first, then the bundled app styles which read them. No webfont is
+         fetched -- the extension has to work with no connection after install. -->
+    <link rel="stylesheet" href="../utils/tokens.css">
     <link rel="stylesheet" href="dist/bundle.css">
     <style>
         /* Only layout here. Colours come from the token blocks in bundle.css so the
@@ -16,7 +14,7 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: var(--font-body);
             overflow-x: hidden;
         }
     </style>
