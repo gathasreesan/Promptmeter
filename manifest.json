@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "PromptMeter",
+  "version": "1.0",
+  "description": "AI Sustainability Coach",
+
+  "permissions": ["storage"],
+
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "js": [
+        "utils/theme.js",
+        "utils/protect.js",
+        "utils/ml-model.js",
+        "utils/ml-classifier.js",
+        "utils/condense.js",
+        "utils/spelling.js",
+        "utils/grammar.js",
+        "utils/tokenizer.js",
+        "utils/calculator.js",
+        "utils/storage.js",
+        "utils/optimizer.js",
+        "utils/recommendations.js",
+        "utils/gamification.js",
+        "content.js"
+      ]
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

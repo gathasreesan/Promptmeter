@@ -1,0 +1,22 @@
+# Dependencies — reproducible from dashboard/package-lock.json via `npm install`
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python bytecode from the ML trainer
+__pycache__/
+*.pyc
+
+# Local MCP server registration. It names headroom.exe by absolute path under this
+# machine's Python user-scripts directory, so committing it would hand everyone else
+# a path that does not exist. Recreate it per machine, or run `headroom mcp install`.
+.mcp.json

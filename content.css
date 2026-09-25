@@ -1,0 +1,398 @@
+/* content.css */
+
+/* Tokens are scoped to the card, never to the host page's :root. ChatGPT defines its
+   own --bg-card / --border-color style variables, and leaking ours onto :root would
+   restyle their UI. Custom properties inherit, so every child of the card still sees
+   them. */
+.promptmeter-opt-card {
+  --bg-card: #FFFFFF;
+  --bg-surface: #EEF5EC;
+  --border-color: #E3E8E4;
+  --radius-card: 12px;
+  --radius-btn: 8px;
+  --color-primary: #1c5d20;
+  --color-secondary: #4CAF50;
+  --color-error: #D32F2F;
+  --text-primary: #14181A;
+  --text-secondary: #5A6470;
+  --text-muted: #6E7781;
+  --btn-primary-hover: #164A19;
+  --btn-secondary-border: #DCE8DD;
+  --btn-secondary-hover: #EEF5EC;
+  --shadow-premium: 0 4px 14px rgba(16, 24, 18, 0.10);
+  --btn-secondary: #FFFFFF;
+  --on-accent: #FFFFFF;
+  --diff-removed-bg: rgba(211, 47, 47, 0.05);
+  --diff-removed-text: #B91C1C;
+  --diff-added-bg: rgba(46, 125, 50, 0.05);
+  --diff-added-text: #15803D;
+}
+
+/* Dark theme, matched to the dashboard so the coach card never looks foreign
+   against a dark ChatGPT window. */
+@media (prefers-color-scheme: dark) {
+  .promptmeter-opt-card:not([data-theme="light"]) {
+    --bg-card: #1A231C;
+    --bg-surface: #17201A;
+    --border-color: #2B3430;
+    --color-primary: #66BB6A;
+    --color-secondary: #81C784;
+    --color-error: #EF5350;
+    --text-primary: #E6EAE8;
+    --text-secondary: #A2ADB4;
+    --text-muted: #8B949E;
+    --btn-primary-hover: #7CCB80;
+    --btn-secondary: #1A231C;
+    --btn-secondary-border: #2A3A2D;
+    --btn-secondary-hover: #222D24;
+    --on-accent: #0F1511;
+    --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
+    --diff-removed-bg: rgba(239, 83, 80, 0.12);
+    --diff-removed-text: #FCA5A5;
+    --diff-added-bg: rgba(102, 187, 106, 0.12);
+    --diff-added-text: #86EFAC;
+  }
+}
+
+.promptmeter-opt-card[data-theme="dark"] {
+  --bg-card: #1A231C;
+  --bg-surface: #17201A;
+  --border-color: #2B3430;
+  --color-primary: #66BB6A;
+  --color-secondary: #81C784;
+  --color-error: #EF5350;
+  --text-primary: #E6EAE8;
+  --text-secondary: #A2ADB4;
+  --text-muted: #8B949E;
+  --btn-primary-hover: #7CCB80;
+  --btn-secondary: #1A231C;
+  --btn-secondary-border: #2A3A2D;
+  --btn-secondary-hover: #222D24;
+  --on-accent: #0F1511;
+  --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --diff-removed-bg: rgba(239, 83, 80, 0.12);
+  --diff-removed-text: #FCA5A5;
+  --diff-added-bg: rgba(102, 187, 106, 0.12);
+  --diff-added-text: #86EFAC;
+}
+
+.promptmeter-opt-card {
+    position: fixed;
+    /* Fallback only. content.js measures the live composer and overrides bottom, left,
+       width and max-height, because the composer grows as the user types and a fixed
+       offset ends up sitting on top of the prompt box. */
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    width: 90%;
+    max-width: 580px;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-card); /* Card Background */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color); /* Border Color */
+    border-radius: var(--radius-card); /* Card Radius */
+    padding: 16px;
+    box-shadow: var(--shadow-premium); /* Premium Shadow */
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    z-index: 999999;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.promptmeter-opt-card.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* Anchored to the measured composer: JS supplies left and width, so the centring
+   half-translate must not be applied on top of them. */
+.promptmeter-opt-card.promptmeter-anchored {
+    transform: translateY(20px);
+}
+
+.promptmeter-opt-card.promptmeter-anchored.visible {
+    transform: translateY(0);
+}
+
+.promptmeter-opt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    flex: 0 0 auto;
+}
+
+/* The product name, set as plain text. It was a green 800-weight display face with a
+   leaf glyph and a "Sustainability Coach" tagline, which is a lot of branding for a
+   panel that interrupts someone mid-sentence. */
+.promptmeter-opt-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.promptmeter-opt-metrics {
+    display: flex;
+    gap: 8px;
+}
+
+/* Secondary information, so it reads as a quiet caption rather than three badges
+   competing with the title. Separated by a middot instead of borders. */
+.promptmeter-metric {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.promptmeter-metric + .promptmeter-metric::before {
+    content: "·";
+    margin: 0 6px;
+    color: var(--border-color);
+}
+
+/* The diff is the only part that may scroll. When the composer is tall there is little
+   room left above it, and the header and buttons must stay reachable. */
+.promptmeter-opt-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.promptmeter-diff-box {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn); /* Button/Input Radius */
+    word-break: break-word;
+    border: 1px solid var(--border-color);
+    flex: 0 0 auto;
+}
+
+/* The original is struck through only where it helps; running a line through the whole
+   block made a short prompt hard to read and looked like an error state rather than a
+   before/after. Colour and position already say which one is which. */
+.promptmeter-diff-original {
+    background: var(--diff-removed-bg);
+    border-left: 2px solid var(--color-error);
+    color: var(--diff-removed-text);
+}
+
+.promptmeter-diff-optimized {
+    background: var(--diff-added-bg);
+    border-left: 2px solid var(--color-primary);
+    color: var(--diff-added-text);
+}
+
+/* Grammar findings. The pill in the header carries the count; this panel names the
+   errors, so accepting the rewrite is an informed choice rather than a leap of faith. */
+.promptmeter-metric-grammar {
+    color: var(--text-secondary);
+}
+
+/* The host page's stylesheet is aggressive and can set a display value on any element
+   it reaches. Without this the [hidden] attribute stops hiding anything. */
+.promptmeter-opt-card [hidden] {
+    display: none !important;
+}
+
+.promptmeter-opt-grammar {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    flex: 0 0 auto;
+}
+
+.promptmeter-grammar-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.promptmeter-grammar-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.promptmeter-grammar-list li {
+    margin: 0;
+}
+
+.promptmeter-grammar-more {
+    opacity: 0.7;
+    font-style: italic;
+    list-style: none;
+    margin-left: -16px;
+}
+
+/* Scope advice. Styled apart from the grammar panel because it is not an edit already
+   applied to the preview -- it is a judgement only the user can act on. */
+.promptmeter-opt-scope {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--border-color);
+    border-left: 2px solid var(--color-error);
+    background: var(--bg-surface);
+    flex: 0 0 auto;
+}
+
+.promptmeter-scope-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.promptmeter-scope-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.promptmeter-opt-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.promptmeter-opt-btn {
+    padding: 7px 14px;
+    border-radius: var(--radius-btn); /* Button Radius */
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    box-sizing: border-box;
+}
+
+.promptmeter-opt-btn:active {
+    transform: scale(0.97);
+}
+
+.promptmeter-btn-accept {
+    background: var(--color-primary);
+    color: var(--on-accent);
+    border: none;
+}
+
+.promptmeter-btn-accept:hover {
+    background: var(--btn-primary-hover);
+}
+
+.promptmeter-btn-ignore {
+    background: var(--btn-secondary); /* White secondary button */
+    color: var(--text-primary);
+    border: 1px solid var(--btn-secondary-border);
+}
+
+.promptmeter-btn-ignore:hover {
+    background: var(--btn-secondary-hover);
+}
+
+/* ---------------------------------------------------------------------------
+   Focus, motion and numerals.
+
+   Three gaps that were the same in the popup, the card and the dashboard:
+
+   FOCUS      Nothing defined a focus style, and several controls set outline:none
+              or sit on a coloured fill, so tabbing through the UI showed nothing at
+              all. :focus-visible keeps the ring for keyboard users without putting
+              it back on every mouse click.
+   MOTION     Every transition ran regardless of the viewer's setting. A prompt tool
+              that animates on each keystroke is exactly the case the reduced-motion
+              preference exists for.
+   NUMERALS   Figures that update in place (token counts, scores, carbon) shifted
+              width as their digits changed, because the default numerals are
+              proportional. Tabular numerals hold the column still.
+   --------------------------------------------------------------------------- */
+
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-btn);
+}
+
+/* The ring is drawn outside the element, so a control flush against a panel edge
+   still shows it in full. */
+:where(button, a):focus-visible {
+    position: relative;
+    z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Card corrections.
+   --------------------------------------------------------------------------- */
+
+/* The card sets a 16px blur on a fully opaque background, so the filter costs a
+   compositor layer on every ChatGPT repaint and shows nothing. It only earns its
+   keep behind a translucent surface. */
+.promptmeter-opt-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Figures that change on each keystroke hold their width. */
+.promptmeter-metric {
+    font-variant-numeric: tabular-nums;
+}
+
+/* The card is injected into a page whose stylesheet it does not control, so the
+   button box model is stated rather than inherited. Without this, a host rule on
+   `button` can change the padding under the card's own. */
+.promptmeter-opt-btn {
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 0;
+}
+
+/* The diff scrolls when the composer is tall; a thin scrollbar keeps it from
+   looking like a second panel. */
+.promptmeter-opt-diff {
+    scrollbar-width: thin;
+}
+
+/* Respect the viewer's motion setting for the card's own entrance, which the
+   shared block covers, and for the composer-anchored transform. */
+@media (prefers-reduced-motion: reduce) {
+    .promptmeter-opt-card,
+    .promptmeter-opt-card.visible,
+    .promptmeter-opt-card.promptmeter-anchored,
+    .promptmeter-opt-card.promptmeter-anchored.visible {
+        transition: opacity 0.01ms;
+    }
+}
