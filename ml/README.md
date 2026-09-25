@@ -186,14 +186,179 @@ on their own.
 
 | File | Role |
 | :--- | :--- |
-| `dataset/phrases.csv` | 512 labeled phrases |
+| `dataset/phrases.csv` | 621 labeled phrases, human-written — **the only training data that ships** |
 | `dataset/expand.py` | Corpus generator — **an experiment that did not pay off**; see above |
 | `train.py` | Trains, evaluates, exports |
 | `metrics.json` | Full generated report |
+| `generate_synthetic.py` | Synthetic corpus pipeline — generate, validate, report |
+| `evaluate_synthetic.py` | Compares original vs original+synthetic; never writes the model |
+| `test_generate_synthetic.py` | Self-check for the validator |
+| `dataset/manual_batches/*.jsonl` | Hand-authored batches, input to the pipeline |
+| `dataset/synthetic_10000.csv` | **Generated** — the validated synthetic corpus |
+| `dataset/review_queue.csv` | **Generated** — rows flagged as ambiguous, for a human |
+| `dataset/quality_report.json` | **Generated** — counts, duplicates, validation results |
+| `eval_synthetic.json` | **Generated** — the A/B comparison |
 | `requirements.txt` | `scikit-learn>=1.3` |
 | `../utils/ml-model.js` | **Generated** — the exported model |
 | `../utils/ml-classifier.js` | Runtime inference in JavaScript |
 | `../tests/ml-parity.json` | **Generated** — reference predictions for the parity test |
+
+## Synthetic data
+
+`generate_synthetic.py` produces new labeled phrases and validates them;
+`evaluate_synthetic.py` decides whether they are worth training on. Neither script
+touches `phrases.csv`, `metrics.json` or the exported model. **The shipped model is
+still trained on the 621 human-written rows alone** — see *The verdict* below for why.
+
+### Running it
+
+```bash
+python generate_synthetic.py --provider manual      # no API key needed
+python test_generate_synthetic.py                   # self-check for the validator
+python evaluate_synthetic.py --repeats 25           # does it help?
+```
+
+### Configuring a generation provider
+
+There is no API key in this environment, so the corpus that exists was authored by hand
+into `dataset/manual_batches/*.jsonl` and fed through the `manual` provider. To generate
+at scale, set one variable and pick the matching provider:
+
+```bash
+pip install anthropic
+export ANTHROPIC_API_KEY=sk-ant-...
+python generate_synthetic.py --provider anthropic --model claude-opus-5 \
+    --target 10000 --batch-size 25 --verify
+```
+
+or, for any OpenAI-compatible endpoint:
+
+```bash
+export OPENAI_API_KEY=...
+python generate_synthetic.py --provider openai --model gpt-4o --target 10000
+```
+
+`--target` is a goal, not a promise. The run generates until each label reaches its
+share, appending every row to `dataset/.synthetic_raw.jsonl` as it arrives, so a run
+killed by a rate limit resumes where it stopped rather than re-paying for what it has.
+Expect to lose roughly 10–20% of raw rows to the duplicate checks at scale; the
+shortfall is printed and recorded in `quality_report.json`.
+
+`--verify` is the expensive option and the one that matters. The generator is *told* the
+label before it writes the text, so its label is an instruction, not a judgement.
+`--verify` asks a fresh call to label each span with the label withheld and sends every
+disagreement to `review_queue.csv`. Without it, nothing in the pipeline has independently
+checked that a row means what its label says — the heuristic flags below are a
+substitute, not an equivalent.
+
+### What the validator rejects, and what it merely flags
+
+Rejected outright, counted by reason in `quality_report.json`:
+
+- unknown label, empty text, under 8 or over 320 characters
+- exact duplicates, after casefolding and stripping punctuation
+- anything already in `phrases.csv` — re-adding shipped rows as "new data" would
+  inflate the corpus with nothing in it
+- near-duplicates: cosine similarity ≥ 0.85 over character 3–5 grams, compared across
+  the **whole** corpus rather than per batch, because the same sentence arriving in two
+  distant batches is exactly the case a per-batch check cannot see. Characters rather
+  than words: *explain recursion simply* and *explain recursion simple* share no word
+  bigram and are the same example.
+
+Flagged for human review, kept out of the accepted set but not thrown away:
+
+- a removable label (`FILLER`/`REDUNDANT`/`REPETITIVE`) on text containing a URL, code,
+  or an explicit constraint such as a word count or a version pin
+- `REPETITIVE` with neither context nor any word repeated inside the span itself
+- `IMPORTANT` on what is only a greeting
+- with `--verify`, any row the blind second pass labeled differently
+
+The flags are deliberately **one-sided**: they fire on a removable label attached to
+load-bearing text, and never on the reverse. A row that teaches the model to delete a
+constraint is the expensive mistake here; a row that teaches it to keep a pleasantry
+costs a few tokens.
+
+### The REPETITIVE problem, and what the CSV cannot represent
+
+`REPETITIVE` means *restates something the prompt already said*. That is a property of a
+span **and its context**, and the schema is one row per span. Two spans with identical
+text are correctly labeled differently depending on what came before them, so the CSV as
+it stands cannot express the label it claims to hold.
+
+The existing corpus quietly sidesteps this by only containing the self-contained kind —
+*explain recursion, explain recursion again* — where the repetition is visible inside the
+span. Those are learnable. The other kind (*and again, no external dependencies*, which
+is only repetitive because the prompt said it earlier) is not learnable from the span
+alone, and the classifier will guess.
+
+**Backward-compatible solution, implemented in the generator, not yet in training.**
+`synthetic_10000.csv` carries a fourth column, `context`, holding the earlier text the
+span restates. It is backward-compatible in both directions: `train.py`'s
+`load_dataset()` reads by key and ignores unknown columns, so the new file loads
+unchanged, and `phrases.csv` without the column loads unchanged too.
+
+Training on it is **deliberately not done**, and this is the reason:
+`utils/ml-classifier.js` is handed one span at a time and has no earlier text to give the
+model. A model trained on `context + text` would score better here and be a different
+model from the one the extension can run. Using the column would require the content
+script to supply preceding spans at inference time — a real change to
+`utils/condense.js`, not a training flag — and that should be measured before it is
+built. Until then the column is recorded so the data is not lost, and
+`evaluate_synthetic.py` documents that it reads it and does not use it.
+
+### The verdict
+
+1,007 rows were authored and validated (of 1,024 raw; 11 rejected, 6 flagged for
+review). That is **1,007, not the 10,000 requested** — see *Known limitations*.
+
+`evaluate_synthetic.py` holds out a stratified 25% of the human rows, drops synthetic
+rows too similar to any test row, searches hyperparameters separately for each arm, and
+repeats the whole comparison over 25 different splits:
+
+| | Arm A: original | Arm B: + synthetic | Δ (mean of 25 splits) |
+| :--- | ---: | ---: | ---: |
+| Training rows | 465 | 1,468 | |
+| Four-class accuracy | 0.808 | 0.833 | **+0.029** (σ 0.020) |
+| KEEP/DROP accuracy | 0.904 | 0.910 | +0.009 (σ 0.022) |
+| IMPORTANT wrongly deleted | 7/41 | 9/41 | −0.026 (σ 0.057) |
+
+Arm B retuned itself to `bigram_min_df=3, C=16.0` — with three times the data it wants a
+higher bigram floor and a looser fit. Without that retune (`--no-search`) the four-class
+gain shrinks to +0.016 and the harm metric moves the *wrong* way, so most of the
+measured benefit comes from letting the larger corpus pick its own settings.
+
+**The model was not promoted.** Four-class accuracy improves by more than the
+split-to-split spread, and four-class accuracy is not what the optimizer consumes. The
+number that governs behaviour is KEEP/DROP, and +0.009 against σ 0.022 — with arm B
+ahead in 14 of 25 splits — is a coin flip, not a result. The harm metric is worse in 9
+of 25 splits. `promote` therefore requires the KEEP/DROP gain to exceed the spread, and
+it does not.
+
+That threshold is blunt on purpose. The 25 splits are re-draws from the same 621 rows,
+so they are nowhere near independent, and the standard error computed as if they were
+would understate the uncertainty substantially.
+
+### Known limitations
+
+- **1,007 rows, not 10,000.** No LLM API is configured here, so every row was written
+  by hand through the `manual` provider. The pipeline generates the rest once a key is
+  set; it has not been run at that scale, and nothing in this repository should be read
+  as a claim that 10,000 rows exist.
+- **No blind verification has been run.** `--verify` needs an API provider. Every
+  accepted label currently rests on the author plus the one-sided heuristic flags.
+  `quality_report.json` records `agreementRate: null` rather than implying a check that
+  did not happen.
+- **The review queue has not been cleared.** Six rows sit in `review_queue.csv` awaiting
+  a human; they are excluded from the accepted set, so this affects recall of the
+  corpus, not its correctness.
+- **1,007 hand-written rows cannot cover the axes claimed.** The domain, register and
+  difficulty lists in `generate_synthetic.py` describe what the pipeline samples at
+  scale. At this size the coverage of, say, multilingual-influenced English is thin.
+- **The test set is 156 rows, 41 of them IMPORTANT.** One row changing side moves the
+  harm metric by 2.4 points. That is why the verdict averages over splits, and why the
+  promotion threshold is conservative.
+
+---
 
 ---
 

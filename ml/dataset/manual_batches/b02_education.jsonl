@@ -1,0 +1,128 @@
+{"text": "teach me ml", "label": "IMPORTANT"}
+{"text": "my board exam is on the twelfth so cover only the deleted syllabus topics", "label": "IMPORTANT"}
+{"text": "explain photosynthesis like I am twelve years old", "label": "IMPORTANT"}
+{"text": "give me five practice questions with worked solutions", "label": "IMPORTANT"}
+{"text": "I have forty minutes, what should I revise first", "label": "IMPORTANT"}
+{"text": "the syllabus stops at chapter seven, skip anything after that", "label": "IMPORTANT"}
+{"text": "derive the quadratic formula by completing the square", "label": "IMPORTANT"}
+{"text": "my teacher wants the answer in si units", "label": "IMPORTANT"}
+{"text": "summarise the causes of world war one in a table", "label": "IMPORTANT"}
+{"text": "I learn better with diagrams than with paragraphs", "label": "IMPORTANT"}
+{"text": "what is the difference between mitosis and meiosis", "label": "IMPORTANT"}
+{"text": "the exam is open book so focus on application not memorisation", "label": "IMPORTANT"}
+{"text": "check my proof and point out the first wrong step", "label": "IMPORTANT"}
+{"text": "explain it in hindi and english side by side", "label": "IMPORTANT"}
+{"text": "we were never taught calculus so avoid derivatives", "label": "IMPORTANT"}
+{"text": "make flashcards for the twenty most confusing terms", "label": "IMPORTANT"}
+{"text": "how do i cite a website in apa seventh edition", "label": "IMPORTANT"}
+{"text": "break bayes theorem down with a medical testing example", "label": "IMPORTANT"}
+{"text": "the essay is graded on structure more than content", "label": "IMPORTANT"}
+{"text": "I am dyslexic so short lines help a lot", "label": "IMPORTANT"}
+{"text": "quiz me one question at a time and wait for my answer", "label": "IMPORTANT"}
+{"text": "translate this sentence and explain why the case changes", "label": "IMPORTANT"}
+{"text": "our professor marks down any use of passive voice", "label": "IMPORTANT"}
+{"text": "explain big o notation without any code", "label": "IMPORTANT"}
+{"text": "I am preparing for gate not for placements", "label": "IMPORTANT"}
+{"text": "show the intermediate steps, not just the final answer", "label": "IMPORTANT"}
+{"text": "compare the french and russian revolutions on three axes", "label": "IMPORTANT"}
+{"text": "the lab report needs a hypothesis section", "label": "IMPORTANT"}
+{"text": "I keep mixing up affect and effect, help", "label": "IMPORTANT"}
+{"text": "plan a six week schedule for learning spanish to a2", "label": "IMPORTANT"}
+{"text": "explain why the answer key says b and not d", "label": "IMPORTANT"}
+{"text": "give me a mnemonic for the cranial nerves", "label": "IMPORTANT"}
+{"text": "tmrw is my exam and i am panicking", "label": "FILLER"}
+{"text": "my parents will kill me if i fail this one", "label": "FILLER"}
+{"text": "i have been awake for nineteen hours straight", "label": "FILLER"}
+{"text": "school has been really rough this term", "label": "FILLER"}
+{"text": "everyone in my class already understands this", "label": "FILLER"}
+{"text": "i wish i had started studying earlier", "label": "FILLER"}
+{"text": "the lecturer just reads off the slides", "label": "FILLER"}
+{"text": "sorry my english is not very good", "label": "FILLER"}
+{"text": "hope you are having a nice day teacher", "label": "FILLER"}
+{"text": "my hostel wifi keeps dropping every ten minutes", "label": "FILLER"}
+{"text": "i am going to fail, i can feel it", "label": "FILLER"}
+{"text": "my roommate kept playing loud music all night", "label": "FILLER"}
+{"text": "thanks a lot in advance seriously", "label": "FILLER"}
+{"text": "this is my third attempt at this paper", "label": "FILLER"}
+{"text": "i hate this subject so much", "label": "FILLER"}
+{"text": "the library closes in an hour ugh", "label": "FILLER"}
+{"text": "just woke up from a two hour nap", "label": "FILLER"}
+{"text": "my friend said you explain better than youtube", "label": "FILLER"}
+{"text": "i have zero motivation left honestly", "label": "FILLER"}
+{"text": "we had a power cut the whole evening", "label": "FILLER"}
+{"text": "ok cool thanks bye", "label": "FILLER"}
+{"text": "i am eating dinner while typing this", "label": "FILLER"}
+{"text": "our school is quite small so we have no lab", "label": "FILLER"}
+{"text": "i always panic in the exam hall", "label": "FILLER"}
+{"text": "nice to meet you by the way", "label": "FILLER"}
+{"text": "my handwriting is terrible, everyone says so", "label": "FILLER"}
+{"text": "it is raining and i cannot go to college", "label": "FILLER"}
+{"text": "sorry i keep asking so many questions", "label": "FILLER"}
+{"text": "last year was so much easier than this", "label": "FILLER"}
+{"text": "i am doing this at the last minute as usual", "label": "FILLER"}
+{"text": "you probably get asked this all the time", "label": "FILLER"}
+{"text": "that is all, over and out", "label": "FILLER"}
+{"text": "could you kindly be able to possibly explain to me", "label": "REDUNDANT"}
+{"text": "I am writing to you in order to ask you a question", "label": "REDUNDANT"}
+{"text": "the basic fundamental underlying principles behind the basics", "label": "REDUNDANT"}
+{"text": "as everybody knows and is commonly known by all", "label": "REDUNDANT"}
+{"text": "help me to understand and comprehend the understanding of", "label": "REDUNDANT"}
+{"text": "in simple easy terms that are simple to understand", "label": "REDUNDANT"}
+{"text": "my question that I want to ask is the following question", "label": "REDUNDANT"}
+{"text": "explain it in such a way so that I can understand it", "label": "REDUNDANT"}
+{"text": "it would be really great and very nice if you could", "label": "REDUNDANT"}
+{"text": "I need to learn and study and revise the material", "label": "REDUNDANT"}
+{"text": "the topic which I am asking about is on the subject of", "label": "REDUNDANT"}
+{"text": "going into more depth and greater detail in depth", "label": "REDUNDANT"}
+{"text": "a short brief concise quick summary in brief", "label": "REDUNDANT"}
+{"text": "if it is not too much trouble and not a bother", "label": "REDUNDANT"}
+{"text": "I hope that you will hopefully be able to assist", "label": "REDUNDANT"}
+{"text": "give examples and also give some more examples as well", "label": "REDUNDANT"}
+{"text": "the point that I am trying to make is my point", "label": "REDUNDANT"}
+{"text": "completely and utterly confused and lost entirely", "label": "REDUNDANT"}
+{"text": "in terms of with respect to regarding about", "label": "REDUNDANT"}
+{"text": "so that I am able to be in a position to answer", "label": "REDUNDANT"}
+{"text": "teach and instruct and educate me on this", "label": "REDUNDANT"}
+{"text": "the final conclusion at the very end concludes", "label": "REDUNDANT"}
+{"text": "very extremely highly important and significant", "label": "REDUNDANT"}
+{"text": "I request you to please kindly request", "label": "REDUNDANT"}
+{"text": "step by step in a stepwise manner step wise", "label": "REDUNDANT"}
+{"text": "what exactly precisely specifically is it", "label": "REDUNDANT"}
+{"text": "any and all of whatever help you can give", "label": "REDUNDANT"}
+{"text": "to be perfectly honest and completely truthful with you", "label": "REDUNDANT"}
+{"text": "an actual real genuine authentic example", "label": "REDUNDANT"}
+{"text": "I am currently presently at the moment studying", "label": "REDUNDANT"}
+{"text": "make it clear and clearly understandable with clarity", "label": "REDUNDANT"}
+{"text": "over and above in addition to besides that also", "label": "REDUNDANT"}
+{"text": "and remember it is for a class nine student", "label": "REPETITIVE", "context": "I am in class nine and need this explained at my level."}
+{"text": "short, keep it short, i said short", "label": "REPETITIVE"}
+{"text": "again, the exam is on monday", "label": "REPETITIVE", "context": "My exam is on monday morning."}
+{"text": "examples, give examples, i need examples", "label": "REPETITIVE"}
+{"text": "as i said before, no formulas", "label": "REPETITIVE", "context": "Explain it without any formulas please."}
+{"text": "hindi, in hindi, please answer in hindi", "label": "REPETITIVE"}
+{"text": "just repeating that it is for a school project", "label": "REPETITIVE", "context": "This is for my school science project."}
+{"text": "simple words, use simple words, words that are simple", "label": "REPETITIVE"}
+{"text": "i said chemistry, chemistry not physics, chemistry", "label": "REPETITIVE"}
+{"text": "restating that i have only one day left", "label": "REPETITIVE", "context": "I have exactly one day before the test."}
+{"text": "diagram, draw a diagram, with a diagram", "label": "REPETITIVE"}
+{"text": "and again it is the cbse syllabus", "label": "REPETITIVE", "context": "I follow the cbse syllabus."}
+{"text": "explain slowly, go slow, slowly please", "label": "REPETITIVE"}
+{"text": "mentioning again that i am a beginner", "label": "REPETITIVE", "context": "I am a total beginner at this subject."}
+{"text": "practice questions, more practice questions, practice", "label": "REPETITIVE"}
+{"text": "to say it once more, no plagiarism", "label": "REPETITIVE", "context": "The essay has to be original with no plagiarism."}
+{"text": "important, this is important, very important point", "label": "REPETITIVE"}
+{"text": "as noted the word limit is five hundred", "label": "REPETITIVE", "context": "The essay has a five hundred word limit."}
+{"text": "revise, help me revise, revision please", "label": "REPETITIVE"}
+{"text": "saying again that it is an online test", "label": "REPETITIVE", "context": "The test is conducted online with a timer."}
+{"text": "bullet points, in bullets, bulleted list", "label": "REPETITIVE"}
+{"text": "once more, the topic is thermodynamics", "label": "REPETITIVE", "context": "The chapter is thermodynamics."}
+{"text": "easy, make it easy, easily understandable", "label": "REPETITIVE"}
+{"text": "repeating that my medium is english", "label": "REPETITIVE", "context": "I study in an english medium school."}
+{"text": "summary, just a summary, summarise it", "label": "REPETITIVE"}
+{"text": "i already said i want mcqs, mcqs only", "label": "REPETITIVE"}
+{"text": "again no youtube links", "label": "REPETITIVE", "context": "Do not give me youtube links, I want text."}
+{"text": "explain, please explain, explanation needed", "label": "REPETITIVE"}
+{"text": "stating again that it is a group assignment", "label": "REPETITIVE", "context": "This is a group assignment with four members."}
+{"text": "notes, make notes, notes format", "label": "REPETITIVE"}
+{"text": "as i told you the marks are for ten", "label": "REPETITIVE", "context": "This question carries ten marks."}
+{"text": "fast, quickly, i need it fast", "label": "REPETITIVE"}

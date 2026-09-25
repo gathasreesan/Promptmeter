@@ -1,0 +1,7 @@
+text,label,source,context,flags
+"again, no external dependencies",REPETITIVE,synthetic-review,"Write it with the standard library only, no external dependencies.",removable-label-on-explicit-constraint
+"again, 250 words for the abstract",REPETITIVE,synthetic-review,The abstract is capped at 250 words.,removable-label-on-explicit-constraint
+"critique it, criticise it, give me criticism",REPETITIVE,synthetic-review,,repetitive-with-nothing-to-repeat
+"clear, clarity, make it clearer",REPETITIVE,synthetic-review,,repetitive-with-nothing-to-repeat
+i repeat it is postgres not mysql,REPETITIVE,synthetic-review,,repetitive-with-nothing-to-repeat
+saying it again there is no lift in the building,REPETITIVE,synthetic-review,,repetitive-with-nothing-to-repeat
