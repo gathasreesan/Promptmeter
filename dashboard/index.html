@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptMeter Coach Dashboard</title>
+    <!-- Import Google Fonts: Sora and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Use local bundled output styling -->
+    <link rel="stylesheet" href="dist/bundle.css">
+    <style>
+        /* Only layout here. Colours come from the token blocks in bundle.css so the
+           page cannot disagree with the active theme. */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+    </style>
+    <!-- Runs before first paint so the page never flashes light before React mounts.
+         External because MV3 extension pages run under script-src 'self'. -->
+    <script src="../utils/theme-boot.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <!-- Load local bundled JavaScript -->
+    <script src="dist/bundle.js"></script>
+</body>
+</html>

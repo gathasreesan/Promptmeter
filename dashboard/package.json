@@ -1,0 +1,17 @@
+{
+  "name": "promptmeter-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --minify --loader:.js=jsx --loader:.jsx=jsx --outfile=dist/bundle.js",
+    "watch": "esbuild src/index.js --bundle --loader:.js=jsx --loader:.jsx=jsx --outfile=dist/bundle.js --watch --sourcemap"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "chart.js": "^4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}
