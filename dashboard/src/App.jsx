@@ -28,12 +28,12 @@ const readChartTokens = () => {
     const token = (name, fallback) => (styles.getPropertyValue(name) || fallback).trim();
 
     return {
-        primary: token('--color-primary', '#2E7D32'),
+        primary: token('--color-primary', '#1c5d20'),
         carbon: token('--color-carbon', '#EF6C00'),
         carbonFill: token('--chart-carbon-fill', 'rgba(239, 108, 0, 0.25)'),
-        border: token('--border-color', '#DCE8DD'),
-        textSecondary: token('--text-secondary', '#55605A'),
-        textMuted: token('--text-muted', '#7A857E')
+        border: token('--border-color', '#E3E8E4'),
+        textSecondary: token('--text-secondary', '#5A6470'),
+        textMuted: token('--text-muted', '#6E7781')
     };
 };
 

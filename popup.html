@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html class="pm-tokens">
 
 <head>
     <meta charset="UTF-8">
     <title>PromptMeter</title>
-    <!-- Same faces as the dashboard, so the two surfaces do not disagree. The local
-         stack after them carries the popup if the request is slow or offline. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Tokens first: style.css reads them and defines none of its own. No webfont is
+         fetched -- the extension has to work with no connection after install. -->
+    <link rel="stylesheet" href="utils/tokens.css">
     <link rel="stylesheet" href="style.css">
     <!-- Stamps the saved theme before first paint. External because MV3 extension pages
          run under script-src 'self', which blocks inline scripts. -->
