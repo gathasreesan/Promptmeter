@@ -185,6 +185,120 @@ finally:
         if value is not None:
             os.environ[key] = value
 
+
+# --- LMSYS extraction, against the documented schema -------------------------------
+# Field names taken from the public dataset card (readable without accepting the gate):
+#   conversation_id, model, conversation[{content, role}], turn, language,
+#   openai_moderation[{categories{...}, category_scores{...}, flagged}], redacted
+#
+# The live dataset cannot be reached without a token, so the reader is exercised against
+# a faked stream in exactly that shape. This does not prove the download works; it proves
+# the extraction does, which is the half that contains the logic.
+def fake_lmsys_stream(rows):
+    import datasets
+    original = datasets.load_dataset
+    datasets.load_dataset = lambda *a, **k: iter(rows)
+    return original
+
+
+def moderation(flagged=False):
+    return {"categories": {"harassment": flagged, "hate": False, "violence": False},
+            "category_scores": {"harassment": 0.9 if flagged else 0.0},
+            "flagged": flagged}
+
+
+LMSYS_ROWS = [
+    {   # ordinary row: first user turn is taken, the assistant reply is not
+        "conversation_id": "a1", "model": "vicuna-13b", "turn": 2, "language": "English",
+        "redacted": False,
+        "conversation": [
+            {"role": "user", "content": "Explain recursion simply"},
+            {"role": "assistant", "content": "Recursion is when a function..."},
+            {"role": "user", "content": "yes go on"},
+        ],
+        "openai_moderation": [moderation(), moderation(), moderation()],
+    },
+    {   # a system turn first: the USER turn must still be found
+        "conversation_id": "a2", "model": "koala-13b", "turn": 1, "language": "Spanish",
+        "redacted": True,
+        "conversation": [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Explica la recursividad"},
+        ],
+        "openai_moderation": [moderation(), moderation()],
+    },
+    {   # flagged by the dataset's own moderation: dropped
+        "conversation_id": "a3", "model": "x", "turn": 1, "language": "English",
+        "redacted": False,
+        "conversation": [{"role": "user", "content": "something harassing"}],
+        "openai_moderation": [moderation(flagged=True)],
+    },
+    {   # assistant only: nothing to take
+        "conversation_id": "a4", "model": "x", "turn": 1, "language": "English",
+        "redacted": False,
+        "conversation": [{"role": "assistant", "content": "hello"}],
+        "openai_moderation": [moderation()],
+    },
+    {   # empty user content
+        "conversation_id": "a5", "model": "x", "turn": 1, "language": "English",
+        "redacted": False,
+        "conversation": [{"role": "user", "content": "   "}],
+        "openai_moderation": [moderation()],
+    },
+    {   # moderation list shorter than the conversation: must not throw
+        "conversation_id": "a6", "model": "x", "turn": 1, "language": "German",
+        "redacted": False,
+        "conversation": [{"role": "user", "content": "Erklaere mir Rekursion"}],
+        "openai_moderation": [],
+    },
+]
+
+os.environ["HF_TOKEN"] = "fake-token-for-the-test"
+try:
+    import datasets
+    restore = fake_lmsys_stream(LMSYS_ROWS)
+    try:
+        rows = list(ingest.read_lmsys())
+    finally:
+        datasets.load_dataset = restore
+
+    prompts = [r[0] for r in rows]
+    check("LMSYS takes the first user turn", "Explain recursion simply" in prompts)
+    check("LMSYS ignores later user turns", "yes go on" not in prompts)
+    check("LMSYS ignores assistant turns",
+          not any("Recursion is when" in p for p in prompts))
+    check("LMSYS skips past a system turn", "Explica la recursividad" in prompts)
+    check("LMSYS drops a moderation-flagged turn",
+          "something harassing" not in prompts)
+    check("LMSYS drops a conversation with no user turn", len(prompts) == 3, prompts)
+    check("LMSYS drops an empty user turn", all(p.strip() for p in prompts))
+    check("LMSYS survives a short moderation list",
+          "Erklaere mir Rekursion" in prompts)
+
+    by_prompt = {r[0]: r for r in rows}
+    english = by_prompt["Explain recursion simply"]
+    spanish = by_prompt["Explica la recursividad"]
+    check("LMSYS labels the source", english[2] == "lmsys")
+    check("LMSYS offers no rewrite", english[1] is None and english[4] is None)
+    check("LMSYS carries the language column", english[5]["language"] == "English")
+    check("LMSYS carries another language", spanish[5]["language"] == "Spanish")
+    check("LMSYS carries the redaction flag", spanish[5]["redacted"] is True)
+
+    record = ingest.make_record(english[0], english[1], english[2], english[3],
+                                english[4], english[5])
+    check("an LMSYS record keeps its language", record["language"] == "English")
+    check("an LMSYS record keeps source_redacted", record["source_redacted"] is False)
+    check("an LMSYS record still invents no quality label",
+          record["quality_label"] is None)
+finally:
+    os.environ.pop("HF_TOKEN", None)
+
+# A BPO record has no language column, and absent must stay absent rather than
+# becoming a guess.
+bpo_record = ingest.make_record("Write a poem", "Write a haiku", "bpo", "train", "model", {})
+check("a BPO record has no invented language", bpo_record["language"] is None)
+check("a BPO record has no invented redaction flag", bpo_record["source_redacted"] is None)
+
 # --- length gates -----------------------------------------------------------------
 check("the floor is below the ceiling", ingest.MIN_CHARS < ingest.MAX_CHARS)
 check("the floor rejects a bare word", len("hi") < ingest.MIN_CHARS)
