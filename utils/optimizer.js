@@ -1112,6 +1112,96 @@ const PromptMeterOptimizer = {
         return known / words.length >= 0.34;
     },
 
+    // How confident a finding is, so the card can say which of its changes are facts and
+    // which are opinions. Three tiers, because two is not enough: a misspelling and a
+    // missing output format are both "issues" and a user should treat them completely
+    // differently.
+    //
+    //   error       The text is wrong by a rule that does not depend on context.
+    //               A dictionary misspelling, subject-verb disagreement, "a apple".
+    //   suggestion  Probably right, but the context could make it wrong. Confusables
+    //               and word choice read intent, and intent is not always readable.
+    //   improvement The text was not wrong. It is shorter, tidier or clearer now.
+    //               Capitalisation, punctuation, removed padding, merged clauses.
+    //
+    // Anything unlisted falls to "suggestion": an unclassified finding is one nobody has
+    // thought about yet, and defaulting it to "error" would overstate what is known.
+    SEVERITY_BY_TYPE: {
+        spelling: 'error',
+        agreement: 'error',
+        'verb-form': 'error',
+        'noun-form': 'error',
+        'pronoun-case': 'error',
+        article: 'error',
+        contraction: 'error',
+
+        'word-choice': 'suggestion',
+        confusable: 'suggestion',
+        phrasing: 'suggestion',
+
+        capitalization: 'improvement',
+        punctuation: 'improvement',
+        redundancy: 'improvement',
+        structure: 'improvement',
+        complexity: 'improvement'
+    },
+
+    SEVERITY_ORDER: { error: 0, suggestion: 1, improvement: 2 },
+
+    /**
+     * Tags findings with a severity and merges duplicates.
+     *
+     * Categories are detected independently -- the typo tables, the open-ended
+     * corrector, the grammar engine and the quality rules all run without knowing about
+     * each other -- so the same problem can be reported twice under different wording.
+     * Merging here rather than in each detector keeps them independent, which is the
+     * point: a detector that has to know what the others found cannot be reasoned about
+     * on its own.
+     *
+     * Order is by severity, then by first appearance, so the card leads with what is
+     * definitely wrong.
+     *
+     * @param {Array} findings - Raw findings, each { type, label }.
+     * @returns {Array} Tagged, de-duplicated findings sorted most-certain first.
+     */
+    classifyFindings: function (findings) {
+        const merged = new Map();
+
+        (findings || []).forEach((finding, index) => {
+            if (!finding || !finding.label) return;
+
+            const severity = this.SEVERITY_BY_TYPE[finding.type] || 'suggestion';
+            // Keyed on the label rather than the object: two detectors reporting
+            // '"teh" corrected to "the"' found one problem, however they phrased their
+            // own type.
+            const key = finding.label.toLowerCase();
+
+            const existing = merged.get(key);
+            if (existing) {
+                // Keep the more certain reading of the same finding.
+                if (this.SEVERITY_ORDER[severity] < this.SEVERITY_ORDER[existing.severity]) {
+                    existing.severity = severity;
+                    existing.type = finding.type;
+                }
+                existing.count += 1;
+                return;
+            }
+
+            merged.set(key, {
+                type: finding.type,
+                label: finding.label,
+                severity: severity,
+                count: 1,
+                order: index
+            });
+        });
+
+        return [...merged.values()].sort((a, b) => (
+            this.SEVERITY_ORDER[a.severity] - this.SEVERITY_ORDER[b.severity] ||
+            a.order - b.order
+        ));
+    },
+
     qualityRules: [
         {
             id: 'missing-output-format',
@@ -1546,7 +1636,9 @@ const PromptMeterOptimizer = {
         const countWords = str => (str || '').trim().split(/\s+/).filter(Boolean).length;
         return {
             text: text,
-            grammar: grammar,
+            // Tagged with a severity and de-duplicated, so the card can separate what
+            // is definitely wrong from what is merely tidier.
+            grammar: this.classifyFindings(grammar),
             // Advice rather than edits: these describe a prompt that is too big to answer
             // in one turn, which no rewrite of the wording can fix.
             scope: this.scopeIssues(prompt || ''),

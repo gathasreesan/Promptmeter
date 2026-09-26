@@ -397,3 +397,32 @@
 .promptmeter-metric-saved + .promptmeter-metric::before {
     content: none;
 }
+
+/* A rewrite that costs tokens. Same chip as the saving, in the error wash, because the
+   user may reasonably decline it -- a correct spelling is longer than a wrong one. */
+.promptmeter-metric-cost {
+    color: var(--color-error);
+    font-weight: 600;
+    background: var(--wash-error);
+    border-radius: var(--radius-pill);
+    padding: 1px 6px;
+}
+
+.promptmeter-metric-cost + .promptmeter-metric::before { content: none; }
+
+/* Severity marker on each correction. A dot rather than a word: the row is 11px and a
+   label like "context-dependent" would wrap it. The colour is the whole signal, so the
+   title attribute carries the meaning for anyone who cannot use colour. */
+.promptmeter-severity {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: middle;
+    flex: 0 0 auto;
+}
+
+.promptmeter-severity-error { background: var(--color-error); }
+.promptmeter-severity-suggestion { background: var(--color-warning); }
+.promptmeter-severity-improvement { background: var(--text-disabled); }

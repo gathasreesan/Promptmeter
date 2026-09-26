@@ -126,7 +126,12 @@ const PromptMeterTokenizer = {
     stats: function (original, optimized) {
         const before = this.countTokens(original);
         const after = this.countTokens(optimized);
-        const saved = Math.max(0, before - after);
+        // NOT clamped at zero. A rewrite can legitimately cost tokens -- correcting
+        // "Explan" to "Explain" and "fnite" to "finite" adds characters, and expanding
+        // an abbreviation adds words. Reporting that as "0 saved, 0%" tells the user
+        // the change was free when it was not, and hides the one case where they
+        // might reasonably decline it. Callers must handle a negative.
+        const saved = before - after;
 
         return {
             originalTokens: before,
