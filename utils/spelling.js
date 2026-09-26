@@ -293,7 +293,16 @@ const PM_WORDS = [
     'vue vite webpack babel eslint jest pytest mocha nginx apache flask axios lodash',
     'scipy matplotlib jupyter notebook colab pandas seaborn plotly numpy sklearn',
     'cron daemon thread threads process mutex lock semaphore socket port host proxy',
-    'schema schemas migration migrations orm crud auth admin token payload header'
+    'schema schemas migration migrations orm crud auth admin token payload header',
+    // Added after the LMSYS sample: real prompts use these constantly and the
+    // corrector was treating them as typos. "a tech company" became "a teach
+    // company" in the middle of a user's own quoted passage.
+    'tech backend frontend repo repos cli db devops plugin plugins runtime sdk',
+    'startup sysadmin webhook workflow workflows smartphone wifi emails blogs',
+    'ecommerce crypto blockchain fintech saas ux ui llm tokenizer inference',
+    'finetune pipeline pipelines graphql cronjob latency throughput scalable',
+    'dashboard dashboards analytics metadata namespace middleware microservice',
+    'microservices chatbot embedding embeddings prompt prompts dataset datasets'
 ].join(' ').split(/\s+/).filter(Boolean);
 
 const PromptMeterSpelling = {

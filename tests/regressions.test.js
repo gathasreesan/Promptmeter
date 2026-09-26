@@ -252,5 +252,45 @@ Object.keys(TABLES).forEach((name) => {
     }
 });
 
+// ---------------------------------------------------------------------------
+// Found by the 31,499-row LMSYS + BPO corpus. All three corrupted real user text.
+// ---------------------------------------------------------------------------
+
+// A comma between digits is a thousands separator and a colon between digits is a
+// clock time. The "add a space after punctuation" rule did not know that, so every
+// prompt containing a number or a time was being rewritten.
+equals('the budget is 1,000,000 dollars exactly', 'The budget is 1,000,000 dollars exactly');
+equals('meeting at 14:30 sharp today', 'Meeting at 14:30 sharp today');
+keeps('the video starts at [00:00:01] exactly', '[00:00:01]');
+keeps('a total of 25,000 users signed up', '25,000');
+// ...but a missing space after punctuation is still repaired.
+keeps('explain this,then show me the code', ', then');
+
+// A capital "A" mid-sentence is a label, not an article.
+keeps('Class A ordinary shares were issued', 'Class A ordinary');
+keeps('Type A employees only', 'Type A employees');
+keeps('Plan A involves waiting', 'Plan A involves');
+// ...and a real article is still corrected.
+keeps('a apple fell from the tree', 'An apple');
+keeps('The tree fell. A apple rolled away.', 'An apple');
+
+// "tech" was two edits from "teach" and absent from the dictionary, so it was
+// "corrected" inside a passage the user had quoted verbatim.
+keeps('she got a job at a tech company', 'tech company');
+keeps('I work in tech', 'in tech');
+keeps('the backend team owns the pipeline', 'backend');
+keeps('our devops workflow needs a webhook', 'devops');
+
+// A protected span must count as WORD, not as a word boundary. PM_PROTECT swaps code,
+// names and quoted text for U+E000..U+E001, which are not \w, so a plain (?!\w) guard
+// read a masked span as whitespace and let a dictionary key match straight into it:
+// "w/NAME_1" masked to "w/<span>" and came back as "withNAME_1". Same class as the
+// "ty" inside "types" bug, arriving through masking instead.
+keeps('write a story w/NAME_1 and NAME_2 together', 'w/NAME_1');
+// ...while the expansion still works where it should.
+keeps('meet me w/ the team tomorrow', 'with the team');
+keeps('a room w/o windows is dark', 'without windows');
+keeps('plz help me w/ this', 'with this');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

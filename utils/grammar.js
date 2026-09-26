@@ -535,8 +535,20 @@ const PromptMeterGrammar = {
 
         // "a apple" -> "an apple". The exceptions are words whose spelling and sound
         // disagree: "a user" and "a European" start with a consonant sound.
-        out = out.replace(/\b([Aa])\s+([aeiou]\w+)/g, (match, article, word) => {
+        out = out.replace(/\b([Aa])\s+([aeiou]\w+)/g, (match, article, word, offset, whole) => {
             if (/^(?:user|useful|unique|union|united|universal|university|unicode|utility|european|one|once)/i.test(word)) return match;
+
+            // A capital "A" in the middle of a sentence is a label, not an article.
+            // "Class A ordinary shares" was becoming "Class An ordinary shares", and so
+            // would "Type A employees", "Annex A explains" and "Plan A outlines".
+            // Sentence position is read off the text before the match rather than
+            // guessed, so a genuine sentence-opening "A apple fell" is still corrected.
+            if (article === 'A') {
+                const before = whole.slice(0, offset).replace(/\s+$/, '');
+                const opensSentence = before === '' || /[.!?\n:;>\])("'‘“[]$/.test(before);
+                if (!opensSentence) return match;
+            }
+
             issues.push({ type: 'article', label: `"a ${word}" should be "an ${word}"` });
             return `${article}n ${word}`;
         });

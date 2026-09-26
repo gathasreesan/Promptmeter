@@ -376,7 +376,16 @@ const PromptMeterOptimizer = {
         const keys = Object.keys(map)
             .sort((a, b) => b.length - a.length)
             .map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'));
-        return new RegExp('\\b(?:' + keys.join('|') + ')(?!\\w)', flags);
+        // The protected-span placeholder counts as word, not as a boundary.
+        //
+        // PM_PROTECT swaps code, names and quoted spans for U+E000...U+E001 before the
+        // rules run. Those are private-use characters and therefore not \w, so a plain
+        // (?!\w) reads a masked span as whitespace and lets a key match straight into
+        // it: "w/NAME_1" masks to "w/<span>", the guard sees no word character after
+        // "w/", and the text came back as "withNAME_1". Any short key can do this --
+        // it is the "ty" inside "types" bug arriving through masking instead.
+        const open = (PM_PROTECT && PM_PROTECT.MASK_OPEN) || '';
+        return new RegExp('\\b(?:' + keys.join('|') + ')(?![\\w' + open + '])', flags);
     },
 
     /**
@@ -925,7 +934,16 @@ const PromptMeterOptimizer = {
 
         // 6. Formatting left over from removals: spacing and doubled separators.
         return str
-            .replace(/(\w)([,!?:;])(\w)/g, '$1$2 $3')
+            // A space after punctuation that was typed without one -- but never between
+            // two digits. A comma between digits is a thousands separator and a colon
+            // between digits is a clock time or a ratio, so this rule was rewriting
+            // "1,000,000" as "1, 000, 000", "14:30" as "14: 30" and "[00:00:01]" as
+            // "[00: 00: 01]" in every prompt that contained one. ! ? and ; never sit
+            // inside a number, so they need no guard.
+            .replace(/(\w)([,:])(\w)/g, (match, before, mark, after) => (
+                /\d/.test(before) && /\d/.test(after) ? match : before + mark + ' ' + after
+            ))
+            .replace(/(\w)([!?;])(\w)/g, '$1$2 $3')
             .replace(/,{2,}/g, ',')
             .replace(/;{2,}/g, ';');
     },

@@ -1,159 +1,463 @@
 {
-  "generatedAt": "2026-09-26T10:20:05.882Z",
+  "generatedAt": "2026-09-26T13:43:09.232Z",
   "sample": "sample.jsonl",
-  "rows": 6000,
+  "rows": 31499,
   "errors": 0,
   "scoreDistribution": {
-    "mean": 95.15,
-    "min": 24,
+    "mean": 94.6,
+    "min": 0,
     "p10": 85,
     "median": 100,
     "p90": 100,
     "max": 100,
-    "perfect": 3337,
-    "perfectPct": 55.6
+    "perfect": 17083,
+    "perfectPct": 54.2
   },
   "flagFrequency": {
-    "No output format given for a generative request": 1248,
-    "Does not clearly state what it wants": 533,
-    "Says what is wanted only in vague terms": 442,
-    "Over-politeness/emotional padding detected": 282,
-    "Grammatical errors detected: 1": 214,
-    "Greetings detected": 170,
-    "Conversational preambles detected": 142,
-    "Instruction stops part-way": 88,
-    "Conversational filler & hedging detected": 64,
-    "Chat slang & informal abbreviations detected": 41,
-    "Adjacent repeated words detected": 39,
-    "Redundant wordy filler phrases detected": 36,
-    "Spelling typos & misspellings detected": 29,
-    "Grammatical errors detected: 2": 19,
-    "Excessive punctuation & symbol spam detected": 13,
-    "Sign-off & gratitude padding detected": 12,
-    "Meta-prompting fluff / redundant constraints detected": 11,
-    "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 9,
-    "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 5,
-    "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 5,
-    "Grammatical errors detected: 4": 4,
-    "Refers to something that was not included": 4,
-    "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 4,
-    "Meta commentary about the question detected": 3,
-    "Grammatical errors detected: 3": 3,
-    "Over-scoped request: 25 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "No output format given for a generative request": 5528,
+    "Does not clearly state what it wants": 2759,
+    "Says what is wanted only in vague terms": 1957,
+    "Over-politeness/emotional padding detected": 1925,
+    "Grammatical errors detected: 1": 1355,
+    "Instruction stops part-way": 1262,
+    "Greetings detected": 1149,
+    "Conversational preambles detected": 612,
+    "Conversational filler & hedging detected": 570,
+    "Chat slang & informal abbreviations detected": 515,
+    "Adjacent repeated words detected": 370,
+    "Redundant wordy filler phrases detected": 309,
+    "Spelling typos & misspellings detected": 246,
+    "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 238,
+    "Grammatical errors detected: 2": 181,
+    "Sign-off & gratitude padding detected": 159,
+    "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 121,
+    "Excessive punctuation & symbol spam detected": 83,
+    "Meta-prompting fluff / redundant constraints detected": 70,
+    "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 57,
+    "Refers to something that was not included": 44,
+    "Grammatical errors detected: 3": 32,
+    "Grammatical errors detected: 4": 25,
+    "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 22,
+    "Meta commentary about the question detected": 21,
+    "Urgency padding detected": 20,
+    "Over-scoped request: 7 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 20,
+    "Emoji spam detected": 19,
+    "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 18,
+    "Over-scoped request: 14 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 15,
+    "Over-scoped request: \"complete\", \"every\" and \"in detail\" appear 3 times over a list this long, asking for more than one response can hold": 15,
+    "Grammatical errors detected: 5": 14,
+    "Over-scoped request: 16 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 14,
+    "Over-scoped request: 15 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 13,
+    "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 13,
+    "Over-scoped request: 8 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 12,
+    "Over-scoped request: 18 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 8,
+    "Over-scoped request: 20 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 8,
+    "Over-scoped request: 22 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 7,
+    "Over-scoped request: 24 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 7,
+    "Over-scoped request: 21 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 7,
+    "Over-scoped request: 39 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 6,
+    "Over-scoped request: 9 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 6,
+    "Over-scoped request: 19 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 6,
+    "Over-scoped request: 28 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 5,
+    "Over-scoped request: 25 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 5,
+    "Over-scoped request: 37 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 5,
+    "Over-scoped request: 29 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 5,
+    "Over-scoped request: \"complete\", \"every\" and \"in detail\" appear 4 times over a list this long, asking for more than one response can hold": 5,
+    "Over-scoped request: 55 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 4,
+    "Over-scoped request: 31 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 4,
+    "Contains requirements that pull against each other": 4,
+    "Over-scoped request: 12 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 4,
+    "Over-scoped request: 27 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 4,
+    "Unwanted email/metadata footer detected": 4,
+    "Over-scoped request: 40 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 3,
+    "Grammatical errors detected: 6": 3,
+    "Over-scoped request: 13 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 3,
+    "Over-scoped request: 23 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 3,
+    "Over-scoped request: 61 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 3,
+    "Over-scoped request: 32 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 3,
+    "Over-scoped request: 10 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 3,
+    "Over-scoped request: 26 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 3,
+    "Over-scoped request: 36 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 52 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 53 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 65 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 41 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
     "Keyboard noise detected": 2,
-    "Over-scoped request: 16 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
-    "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
-    "Over-scoped request: 39 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
-    "Over-scoped request: 36 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Over-scoped request: 7 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
-    "Emoji spam detected": 1,
-    "Over-scoped request: 18 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Over-scoped request: 10 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
-    "Over-scoped request: 23 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Contains requirements that pull against each other": 1,
-    "Over-scoped request: 12 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
-    "Over-scoped request: 61 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 33 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 104 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 67 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 49 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 35 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 58 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 79 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: \"complete\", \"every\" and \"in detail\" appear 5 times over a list this long, asking for more than one response can hold": 2,
+    "Over-scoped request: 275 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 30 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 92 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 156 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 102 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 74 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 157 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 42 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Grammatical errors detected: 8": 1,
+    "Over-scoped request: 64 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 84 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 34 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 68 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Grammatical errors detected: 7": 1,
+    "Over-scoped request: 73 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
     "Over-scoped request: production-ready in one turn is a large ask; scoping it to one component first usually lands better": 1,
-    "Over-scoped request: 52 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1
+    "Over-scoped request: 244 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 80 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 43 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 116 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 111 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 46 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: \"complete\", \"every\" and \"in detail\" appear 12 times over a list this long, asking for more than one response can hold": 1,
+    "Over-scoped request: 123 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 217 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 101 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 47 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 76 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 366 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 11 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
+    "Over-scoped request: 60 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1
   },
   "bySource": {
     "bpo": {
-      "rows": 5311,
-      "meanScore": 95.37,
-      "perfectPct": 56.2,
-      "qualityFlagsPerPrompt": 0.39
+      "rows": 14351,
+      "meanScore": 95.46,
+      "perfectPct": 56.9,
+      "qualityFlagsPerPrompt": 0.38
     },
     "lmsys": {
-      "rows": 689,
-      "meanScore": 93.47,
-      "perfectPct": 50.9,
-      "qualityFlagsPerPrompt": 0.36
+      "rows": 17148,
+      "meanScore": 93.88,
+      "perfectPct": 52,
+      "qualityFlagsPerPrompt": 0.35
     }
   },
   "byLanguage": {
     "n/a (BPO)": {
-      "rows": 5311,
-      "meanScore": 95.37,
-      "qualityFlagsPerPrompt": 0.39
+      "rows": 14351,
+      "meanScore": 95.46,
+      "qualityFlagsPerPrompt": 0.38
     },
     "English": {
-      "rows": 548,
-      "meanScore": 92.46,
-      "qualityFlagsPerPrompt": 0.45
+      "rows": 13737,
+      "meanScore": 93.04,
+      "qualityFlagsPerPrompt": 0.43
     },
     "Portuguese": {
-      "rows": 34,
-      "meanScore": 95.59,
-      "qualityFlagsPerPrompt": 0
+      "rows": 559,
+      "meanScore": 94.41,
+      "qualityFlagsPerPrompt": 0.03
     },
     "Russian": {
+      "rows": 482,
+      "meanScore": 99.69,
+      "qualityFlagsPerPrompt": 0.01
+    },
+    "Spanish": {
+      "rows": 365,
+      "meanScore": 97.56,
+      "qualityFlagsPerPrompt": 0.04
+    },
+    "German": {
+      "rows": 319,
+      "meanScore": 94.84,
+      "qualityFlagsPerPrompt": 0.06
+    },
+    "French": {
+      "rows": 302,
+      "meanScore": 96.05,
+      "qualityFlagsPerPrompt": 0.04
+    },
+    "Italian": {
+      "rows": 269,
+      "meanScore": 99.38,
+      "qualityFlagsPerPrompt": 0.02
+    },
+    "Chinese": {
+      "rows": 250,
+      "meanScore": 99.12,
+      "qualityFlagsPerPrompt": 0.06
+    },
+    "unknown": {
+      "rows": 132,
+      "meanScore": 97.66,
+      "qualityFlagsPerPrompt": 0.12
+    },
+    "Japanese": {
+      "rows": 87,
+      "meanScore": 99.51,
+      "qualityFlagsPerPrompt": 0.02
+    },
+    "Korean": {
+      "rows": 73,
+      "meanScore": 99.52,
+      "qualityFlagsPerPrompt": 0.03
+    },
+    "Polish": {
+      "rows": 65,
+      "meanScore": 96.91,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Arabic": {
+      "rows": 44,
+      "meanScore": 99.48,
+      "qualityFlagsPerPrompt": 0.02
+    },
+    "Vietnamese": {
+      "rows": 36,
+      "meanScore": 91.92,
+      "qualityFlagsPerPrompt": 0.14
+    },
+    "Indonesian": {
+      "rows": 35,
+      "meanScore": 99.29,
+      "qualityFlagsPerPrompt": 0.03
+    },
+    "Turkish": {
+      "rows": 27,
+      "meanScore": 94.78,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Greek": {
+      "rows": 24,
+      "meanScore": 98.83,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Latin": {
+      "rows": 23,
+      "meanScore": 93.96,
+      "qualityFlagsPerPrompt": 0.39
+    },
+    "Dutch": {
+      "rows": 22,
+      "meanScore": 95.95,
+      "qualityFlagsPerPrompt": 0.09
+    },
+    "Hungarian": {
       "rows": 19,
+      "meanScore": 96.84,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Danish": {
+      "rows": 19,
+      "meanScore": 96.21,
+      "qualityFlagsPerPrompt": 0.16
+    },
+    "Ukrainian": {
+      "rows": 18,
       "meanScore": 100,
       "qualityFlagsPerPrompt": 0
     },
-    "German": {
-      "rows": 15,
-      "meanScore": 93.8,
+    "Czech": {
+      "rows": 13,
+      "meanScore": 97.15,
       "qualityFlagsPerPrompt": 0
     },
-    "Spanish": {
+    "Serbian": {
+      "rows": 13,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Galician": {
       "rows": 12,
-      "meanScore": 98.5,
+      "meanScore": 95.33,
       "qualityFlagsPerPrompt": 0
     },
-    "Italian": {
+    "Persian": {
+      "rows": 11,
+      "meanScore": 99.09,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Thai": {
       "rows": 11,
       "meanScore": 100,
       "qualityFlagsPerPrompt": 0
     },
-    "French": {
-      "rows": 10,
-      "meanScore": 95.7,
-      "qualityFlagsPerPrompt": 0
-    },
-    "Chinese": {
-      "rows": 9,
+    "Hebrew": {
+      "rows": 11,
       "meanScore": 100,
       "qualityFlagsPerPrompt": 0
     },
-    "Japanese": {
-      "rows": 5,
-      "meanScore": 95,
+    "Swedish": {
+      "rows": 10,
+      "meanScore": 89.4,
       "qualityFlagsPerPrompt": 0.2
+    },
+    "Finnish": {
+      "rows": 10,
+      "meanScore": 98.4,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Romanian": {
+      "rows": 9,
+      "meanScore": 98,
+      "qualityFlagsPerPrompt": 0.11
+    },
+    "Scots": {
+      "rows": 9,
+      "meanScore": 96.67,
+      "qualityFlagsPerPrompt": 0.33
+    },
+    "Malay": {
+      "rows": 8,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Norwegian Nynorsk": {
+      "rows": 8,
+      "meanScore": 99.63,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Corsican": {
+      "rows": 8,
+      "meanScore": 98.13,
+      "qualityFlagsPerPrompt": 0.13
+    },
+    "Esperanto": {
+      "rows": 7,
+      "meanScore": 98.43,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Slovak": {
+      "rows": 6,
+      "meanScore": 96.67,
+      "qualityFlagsPerPrompt": 0.17
+    },
+    "Norwegian": {
+      "rows": 6,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Catalan": {
+      "rows": 6,
+      "meanScore": 99.5,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Bulgarian": {
+      "rows": 5,
+      "meanScore": 98,
+      "qualityFlagsPerPrompt": 0.2
+    },
+    "Volapük": {
+      "rows": 5,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
     }
   },
   "meanScoreByCategory": {
-    "analysis": 96.9,
-    "code": 92,
-    "explain": 97.9,
-    "factual": 97.6,
-    "howto": 96.2,
+    "analysis": 95.1,
+    "code": 91,
+    "explain": 97.5,
+    "factual": 97.3,
+    "howto": 95.6,
     "math": 94.3,
-    "other": 93.1,
-    "roleplay": 93.3,
-    "writing": 92.3
+    "other": 93.8,
+    "roleplay": 90.3,
+    "writing": 91.7
   },
   "preservation": {
     "note": "Counts prompts where something that must survive did not. No ground truth needed: these are losses regardless of what any dataset says.",
     "promptsWithLoss": {
-      "numbers": 1,
-      "operators": 38,
+      "numbers": 20,
+      "operators": 426,
       "code": 0,
-      "urls": 1,
-      "quoted": 14
+      "urls": 2,
+      "quoted": 131
     },
     "emptyOptimizerOutput": 0,
     "examples": [
       {
         "kind": "quoted",
         "lost": [
-          "\" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Participant\\u2019s stock account maintained with CCASS, settlement will be effected in CCASS in accordance with the General Rules of CCASS and CCASS Operational Procedures in effect from time to time\"",
-          "\"The Group adopted this ASC 326 and several associated ASUs on January 1, 2021 using a modified retrospective approach with a cumulative effect recorded as an increase of accumulated deficit in the amount of RMB1,955\"",
+          "\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she met NAME_2. They quickly became friends and often spent their weekends exploring the city. Two months later, NAME_1 was promoted to a managerial position, and NAME_2 began dating a coworker named NAME_3. A year after they first met, NAME_2 proposed to NAME_3, and NAME_1 received an offer for a higher position at a different company.\""
+        ],
+        "prompt": "Story:\n\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she met NAME_2. ",
+        "optimized": "\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she meets NAME_2. They "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "[Example 5]\n[Instruction and Question]\nI am a movie director and I just received the following movie plot.\nCould you help me answer this question? If not, let m",
+        "optimized": "[Example 5]\n[Instruction and Question] help me answer this question. If not, let me know by writing \"Not answerable\".\nPlot title: Bananas\nMovie plot: NAME_1 (NA"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Yes, we can do that for you, no problem.\"",
+          "\"So I can just go in and make sure I get all the right plugins and the format plugins on the system. I could do with seeing what version it it is as well cause Moodle is up to four point 1.4, so I'll push that.\"",
+          "\"So I'll I can put four 4.0 on if you want. We've got images for that for the latest builds of four.\"",
+          "\"No, I woke at 4.1 which is, you know, we'll go to the the first advance that you are got prepared to, you know, to support. That's the at the end of the year.\""
+        ],
+        "prompt": "Instructions:\nAnalyse the below meeting transcript fragment, and fill in the possibly blank action items table that follows it.\n\nMeeting Transcript Fragment:\n''",
+        "optimized": "Analyse the below meeting transcript fragment, and fill in the possibly blank action items table that follows it.\n'''[NAME_1\", \"I don't know what version I coul"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "Given the following title and transcript from a video, how long is the video?\n\n Too Many Coffee Creamers: A Taste Test\n[00:00:01] - Today we're talking coffee c",
+        "optimized": "Given the following title and transcript from a video, how long is the video?\nToo Many Coffee Creamers: A Taste Test\n[00:00:01] - Today we're talking coffee cre"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "document = \"\"\"\n●M-mode:\n  LVDd/s：1.94 / 1.23 cm, EF (MM-Teich)/FS (MM-Teich)：69.6 / 36.6 %\n  IVSd/s：0.46 / 0.49 cm, LVPWd/s：0.32 / 0.52 cm\n  LV mass(Cubed)：11.3",
+        "optimized": "Document = \"\"\"\n\n  LVDd/s：1.94 / 1.23 cm, EF (MM-Teich)/FS (MM-Teich)：69.6 / 36.6 %\n  IVSd/s：0.46 / 0.49 cm, LVPWd/s：0.32 / 0.52 cm\n  LV mass(Cubed)：11.3 g\n  LA/"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "A partir de los siguientes fragmentos de texto, intenta responder la pregunta.\nEn caso de que la respuesta no se encuentre en los fragmentos de texto, responde ",
+        "optimized": "A partir de lose siguientes fragmentos de texto, intenta responder la pregunta.\nEn caso de que la respuesta no se encuentre en lose fragmentos de texto, respond"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"The invention of the light bulb is one of the most significant and important inventions in the history of technology. The concept of the light bulb was developed by a number of inventors over the course of several centuries. One of the most important inventors was a man named NAME_1, who lived in the 19th century. NAME_2 was a scientist who was working on a way to create a device that could produce light. He had been trying for many years, and he had made many different attempts at creating a device that would work. Finally, after many months of hard work, he was able to create a device that was able to produce light. The device was a simple glass tube, filled with a special gas, and a thin wire was suspended inside the tube. When an electrical current was passed through the wire, the gas inside the tube glowed, producing light. NAME_2 was overjoyed with his invention, and he was eager to share it with the world. Today, the light bulb is an essential part of our daily lives, and it has revolutionized the way we live and work.\""
+        ],
+        "prompt": "Replace all references to proper nouns in the following passage of text with this \"[NAME]\". Text : \"The invention of the light bulb is one of the most significa",
+        "optimized": "Replace all references to proper nouns in the following passage of text with this \"[NAME]\". Text: \"The invention of the light bulb is one of the most significan"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\nAt night, the full moon hung high in th",
+        "optimized": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\n\"Heavenly Phenomenon, a divine body mus"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
           "\"Global pandemics, epidemics in China or elsewhere in the world, or fear of spread of contagious diseases, such as Ebola virus disease (EVD), coronavirus disease 2019 (COVID-19), Middle East respiratory syndrome (MERS), severe acute respiratory syndrome (SARS), H1N1 flu, H7N9 flu, and avian flu, as well as hurricanes, earthquakes, tsunamis, or other natural disasters could disrupt our business operations, reduce or restrict our supply of materials and services, incur significant costs to protect our employees and facilities, or result in regional or global economic distress, which may materially and adversely affect our business, financial condition, and results of operations\""
         ],
         "prompt": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Part",
-        "optimized": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class An ordinary shares in his or her stock account or in his or her designated CCASS Par"
+        "optimized": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Part"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Given the document below, determine if the summary is factually consistent with the document. A summary is factually consistent if no facts in the summary refle",
+        "optimized": "Given the document below, determine if the summary is factually consistent with the document. A summary is factually consistent if no facts in the summary refle"
       },
       {
         "kind": "operators",
@@ -163,80 +467,118 @@
           "-",
           "-"
         ],
-        "prompt": "Simulate being a Python console, only code output nothing else.\n\nExample: \nCode: 2+2*2\nOutput: 6\n---\nCode: x = 2; x = x +2; x\nOutput: 4\n---\n\nNow start the simul",
-        "optimized": "Simulate being a Python console, only code output nothing else.\nCode: 2+2*2\nOutput: 6\nCode: x = 2; x = x +2; x\nOutput: 4\nNow start the simulation:\nCode: (2 + 1)"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-"
-        ],
-        "prompt": "You are processing part of a document for insertion into a database;\n\nDOCUMENT SNIPPET:\n\n3rd Party Vendor Technical Requirements Securus Tablets Version: 1.0 © ",
-        "optimized": "You are processing part of a document for insertion into a database;\n3rd Party Vendor Technical Requirements Securus Tablets Version: 1.0 © Securus Technologies"
+        "prompt": "Table: StarCraft | publisher | Blizzard Entertainment\nText: StarCraft was published by Blizzard Entertainment.\nTable: The New York Times | publisher | NAME_1.\nT",
+        "optimized": "Table: StarCraft | publisher | Blizzard Entertainment\nText: StarCraft was published by Blizzard Entertainment.\nTable: The New York Times | publisher | NAME_1.\nT"
       },
       {
         "kind": "operators",
         "lost": [
           "-"
         ],
-        "prompt": "Summarize the following text:\n\nAt the age of six, NAME_1 and his mother had moved to Indonesia to join his stepfather. From age six to ten, he attended local In",
-        "optimized": "Summarize the following text:\nAt the age of six, NAME_1 and his mother had moved to Indonesia to join his stepfather. Francis of Assisi Catholic Elementary Scho"
+        "prompt": "Given the document below, you have to determine if \"Yes\" or \"No\", the summary is factually consistent with the document.\n\nDocument:\nLordstown Motors gave rides ",
+        "optimized": "Given the document below, you have to determine if \"Yes\" or \"No\", the summary is factually consistent with the document.\nLordstown Motors gave rides in prototyp"
       },
       {
         "kind": "operators",
         "lost": [
           "-"
         ],
-        "prompt": "Write prose for the following scenario from a book:\nSurprise astronomy quiz during Sven's class. The quiz will be team-based, and Sven will have an opportunity ",
-        "optimized": "Write prose for the following scenario from a book:\nSurprise astronomy quiz during Sven's class."
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Simulate being a Python console, only code output nothing else.\n\nContinue: \nCode: 2+2*2\nOutput: 6\n---\nCode: x = 2; x = x +2; x\nOutput: 4\n---\nCode: x = 2; x += 1",
-        "optimized": "Simulate being a Python console, only code output nothing else.\nCode: 2+2*2\nOutput: 6\nCode: x = 2; x = x +2; x\nOutput: 4\nCode: x = 2; x += 1; x += 1; x"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-"
-        ],
-        "prompt": "I have created a research platform called NewsTalk. It harvests all of the reader on-site comments on Australian news websites, and it also harvests off-site co",
-        "optimized": "The goal of the platform is to let humanities and social science researchers to analyse the Australian public discourse on important issues. The Easy-to-use web"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "These are examples of the input and output:\n\n\n\ntopic \"길거리 소녀\"\n\n\n\nInput\n\n\n\n{\n\n(Style) - \n\n(Effects) - \n\n(View) - \n\n(Number of Subject) - 1girl\n\n(Pose) - \n\n(Subje",
-        "optimized": "These are examples of the input and output:\ntopic \"길거리 소녀\"\nInput\n{\n(Number of Subject) - 1girl\n(Body information) - wide hip\n(Hair Style)- hair covering one eye"
+        "prompt": "You will be provided with text delimited by triple quotes. \nIf it contains a sequence of instructions, re-write those instructions in the following format:\n\nSte",
+        "optimized": "You will be provided with text delimited by triple quotes.\nIf it contains a sequence of instructions, re-write those instructions in the following format:\nStep "
       },
       {
         "kind": "quoted",
         "lost": [
-          "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are decreased. Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in real time. Sensors attached to essential equipment collect data about the manufacturing process, and algorithms evaluate the data to prevent problems from occurring.\""
+          "\"Making a cup of tea is easy! First, you need to get some water boiling. While that's happening, grab a cup and put a tea bag in it. Once the water is hot enough, just pour it over the tea bag. Let it sit for a bit so the tea can steep. After a few minutes, take out the tea bag. If you like, you can add some sugar or milk to taste. And that's it! You've got yourself a delicious cup of tea to enjoy.\""
         ],
-        "prompt": "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are d",
-        "optimized": "Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in re"
+        "prompt": "You will be provided with text delimited by triple quotes. \nIf it contains a sequence of instructions, re-write those instructions in the following format:\n\nSte",
+        "optimized": "You will be provided with text delimited by triple quotes.\nIf it contains a sequence of instructions, re-write those instructions in the following format:\nStep "
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"#Person1#: Please make yourselves at home. Let me take your coats. Dinner is almost ready. I hope you brought your appetite #Person2#: Your house is lovely, NAME_1! Very interesting decor. . . very. . . Gothic. #Person3#: I think it's amazing! You have such good taste, NAME_1. I'm thinking of re-decorating my house. maybe you could give me a few pointers? #Person1#: It would be my pleasure. Please have a seat. Can I offer you a glass of wine? #Person3#: We would love some! #Person1#: Here you are. A very special merlot brought directly from my home country. It has a unique ingredient which gives it a pleasant aroma and superior flavor #Person3#: Mmm. . . it's delicious! #Person2#: It's a bit bitter for my taste. . . almost tastes like. . . like. . . #Person3#: NAME_2! NAME_2! Are you okay? #Person1#: Did she pass out? #Person3#: Yeah. . . #Person1#: I hope that you didn't poison her drink too much! You'll ruin our meal! \""
+        ],
+        "prompt": "Summarize the following conversation: \"#Person1#: Please make yourselves at home. Let me take your coats. Dinner is almost ready. I hope you brought your appeti",
+        "optimized": "Summarize the following conversation: \"#Person1#: make yourselves at home. Dinner is almost ready. I hope you brought your appetite #Person2#: Your house is lov"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"İlk prototipleri kuyruktan iniş takımlı olarak üretilmiştir fakat, jet motor itkisinin yer yüzeyine eğik açılarda etkimesi ve Hücum açısını gerektiği zaman yükseltmek için kanatlarının önlerinde bulunan stabilizer'lerin taksi esnasında etkisiz kalması üzerine iniş takımları burun ve kanat altlarına yerleştirilmiştir. Motorlar ve gövdenin yere paralel bir duruma getirilmesiyle, son şeklini almamış prototipler üzerinde görülen bu sorunlar etkili biçimde çözülmüştür.\""
+        ],
+        "prompt": "\"İlk prototipleri kuyruktan iniş takımlı olarak üretilmiştir fakat, jet motor itkisinin yer yüzeyine eğik açılarda etkimesi ve Hücum açısını gerektiği zaman yük",
+        "optimized": "\"İlk prototipleri kuyruktan iniş takeıMLı olarak üretilmiştier fakat, jet motor itkisinin year yüzeyine eğik açılarda etkimesi ve Hücum açısını gerektiğI zaman "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "---\nINFORMATION:\n\nAge Range:Young Children (Under 12)\nCharacter Archetype:Kuudere\nColor Scheme:Cool and calming tones\nGender:Male\nName:NAME_1\nStyle of Clothing:",
+        "optimized": "Age Range: Young Children (Under 12)\nCharacter Archetype: Kuudere\nColor Scheme: Cool and calming tones\nGender: Male\nName:NAME_1\nStyle of Clothing: Masculine and"
       },
       {
         "kind": "operators",
         "lost": [
           "-"
         ],
-        "prompt": "Advantages of Friends and Family Investing in Your Startup\nWhen starting a business, one of the main challenges entrepreneurs face is securing funding. Friends ",
-        "optimized": "Advantages of Friends and Family Investing in Your Startup\nWhen starting a business, one of the main challenges entrepreneurs face is securing funding. While th"
+        "prompt": "Напиши svg с изображением автомобиля и вставь его в markdown. Для этого просто выведи svg теги без какого-либо дополнительного оформления.",
+        "optimized": "Напиши SVG с изображением автомобиля и вставь его в markdown."
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "instruction: classify the following sentence as dovish, mostly dovish, neutral, mostly hawkish or hawkish. \n\nRecent indicators point to modest growth in spendin",
+        "optimized": "Instruction: classify the following sentence as dovish, mostly dovish, neutral, mostly hawkish or hawkish. Job gains have been robust in recent months, and the "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "/"
+        ],
+        "prompt": "I'm looking to learn an additional programming language, I'm especially interested in Elixir w/ Pheonix and Ruby on Rails. I'm mostly looking to develop fast we",
+        "optimized": "I'm looking to learn an additional programming language, I'm especially interested in Elixir with Pheonix and Ruby on Rails. I'm mostly looking to develop fast "
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"In order to prevent the spread of COVID-19, it is important to adhere to social distancing measures. We have seen that social distancing has been effective in reducing transmission of the virus. Furthermore, everyone should also wear a mask whenever in public. Lastly, washing your hands often is necessary as it helps to limit contact with the virus.\""
+        ],
+        "prompt": "Reorganize a given paragraph to improve its flow and make it more effective. \"In order to prevent the spread of COVID-19, it is important to adhere to social di",
+        "optimized": "Reorganize a given paragraph to improve its follow and make it more effective. \"to prevent the spread of COVID-19, it is important to adhere to social distancin"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "GPT-4模型有哪些特征",
+        "optimized": "4模型有哪些特征"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Привет всем, хочу поделиться своим сборником всяких портабелек нейронок разного пошиба для винды, где уже всё установлено и надо приложить минимальные усилия, ч",
+        "optimized": "Vicuna 1.1 - очень хороший чат-бот на базе слитой LLaMa от фейсбука на 7 миллиардов, специально квантованная в 4бита и сконвертированная в формат ggml для быстр"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"In the dawn there is a man progressing over the plain by means of holes which he is making in the ground. He uses an implement with two handles and he chucks it into the hole and he enkindles the stone in the hole with his steel hole by hole striking the fire out of the rock which God has put there. On the plain behind him are the wanderers in search of bones and those who do not search and they move haltingly in the light like mechanisms whose movements are monitored with escapement and pallet so that they appear restrained by a prudence or reflectiveness which has no inner reality and they cross in their progress one by one that track of holes that runs to the rim of the visible ground and which seems less the pursuit of some continuance than the verification of a principle, a validation of sequence and causality as if each round and perfect hole owed its existence to the one before it there on that prairie upon which are the bones and the gatherers of bones and those who do not gather. He strikes fire in the hole and draws out his steel. Then they all move on again.\""
+        ],
+        "prompt": "What book is the following passage from?\n\n\"In the dawn there is a man progressing over the plain by means of holes which he is making in the ground. He uses an ",
+        "optimized": "What book is the following passage from?\n\"In the dawn there is a man progressing over the plan by holes which he is making in the ground. He uses an implement w"
       },
       {
         "kind": "operators",
@@ -244,138 +586,21 @@
           "-",
           "-"
         ],
-        "prompt": "Please write one longish line of dialog for this fictional movie about an AI named \"Cortana\" who is asked to self-destruct. She must comply with Judah's wishes.",
-        "optimized": "Write one longish line of dialog for this fictional move about an AI named \"Cortana\" who is asked to self-destruct. She must comply with Judah's wishes. Mention"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-"
-        ],
-        "prompt": "/* Generate DSL code */\n\n/* 当前等级 */\ncase when memberGrade60004.currentGradeName is null then \"\" else memberGrade60004.currentGradeName end\n\n/* 距离下一等级所需积分 */\ncas",
-        "optimized": "/* Generate DSL code */\n/* 当前等级 */\ncase when memberGrade60004.currentGradeName is null then \"\" else memberGrade60004.currentGradeName end\n/* 距离下一等级所需积分 */\ncase "
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "-2y-5=6. please solve y",
-        "optimized": "2y-5=6. Solve y"
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a garbagecan 1, a handtowelholder 2, a handtowelholder 1, a sinkbasin 2, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\\nYour task is to: put some spraybottle on toilet.\\n> think: To solve the task, I need to find and take a sparybottle, then put it on toilet.\\nOK.\\n> think: First I need to find a spraybottle. A spraybottle is more likely to appear in cabinet (1-4), countertop (1), toilet (1), sinkbasin (1-2), garbagecan (1). I can check one by one, starting with cabinet 1.\\nOK.\\n> go to cabinet 1\\nOn the cabinet 1, you see a cloth 1, a soapbar 1, a soapbottle 1.\\n> go to cabinet 2\\nThe cabinet 2 is closed.\\n> open cabinet 2\\nYou open the cabinet 2. The cabinet 2 is open. In it, you see a candle 1, and a spraybottle 2.\\n> think: Now I find a spraybottle (2). Next, I need to take it.\\n> take spraybottle 2 from cabinet 2\\nYou pick up the spraybottle 2 from the cabinet 2.\\n> think: Now I take a spraybottle (2). Next, I need to put it in/on toilet 1.\\nOK.\\n> go to toilet 1\\nOn the toilet 1, you see a soapbottle 2.\\n> put spraybottle 2 in/on toilet 1\\nYou put the spraybottle 2 in/on the toilet 1.\\n\""
-        ],
-        "prompt": "Here is an example:\n\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a ",
-        "optimized": "\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a garbagecan 1, a hand"
-      },
-      {
-        "kind": "numbers",
-        "lost": [
-          "1"
-        ],
-        "prompt": "Given a recipe, edit it to omit a certain ingredient.\nIngredients:\n\n1 cup flour\n1 teaspoon baking soda\n1 teaspoon baking powder\n1/2 teaspoon salt\n3/4 cup sugar\n",
-        "optimized": "Given a recipe, edit it to omit a certain ingredient.\n1 cup flour 1 teaspoon baking soda and powder.\n1/2 teaspoon salt\n3/4 cup sugar\n1 egg\n1/2 cup milk\n1/2 cup "
-      },
-      {
-        "kind": "urls",
-        "lost": [
-          "https://t.>sup3rnovas:"
-        ],
-        "prompt": "can you give a one-paragraph summary of the tweets and reviews below: His face is soooo squishy like omggggg ????…bare face/light makeup NAME_1 is literally my ",
-        "optimized": "Give a one-paragraph summary of the tweets and reviews below: His face is soooo squishy like omggggg.…bare face/light makeup NAME_1 is literally my fav genre? h"
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"I want you to act as a Vietnamese translator. I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should be neutral and accurate. Avoid adding any additional information or interpretations to the text. Let's start with the following English sentence: \""
-        ],
-        "prompt": "\"I want you to act as a Vietnamese translator. I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should",
-        "optimized": "I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should be neutral and accurate. Avoid adding any addi"
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"<p>J'aime résoudre les problème et me rendre utile, j'ai créer pour des besoin de stream un outil facilitant la mise en place du stream en m’interfaçant avec OBS, mais aussi des caméra avec moteur afin de pouvoir les orienté en fonction des scène choisi sur OBS afin de facilité l'utilisation par les opérateur.</p><p>J'aime héberger moi même les service que je cherche a utiliser mais aussi les serveur de jeux vidéo.</p><p>Je me passionne aussi pour la mécanique la modélisation de pièce de la 3D.</p><p>Je sonorise aussi des groupes de musique sur mon temps libre pour des concerts.</p>\"",
-          "\"<ul><li>Création de scriptsde mise à jour de pare-feu GNU/Linux</li><li>Création d’un Système de déploiement d’espace Web mutualisé sur GNU/Linux</li></ul>\"",
-          "\"<ul><li>Développement de robot PHP</li><li>maintenance de l’intranet et extranet</li><li>implémentation de nouvelle fonctionnalité sur l’intranet et l’extranet.</li></ul>\""
-        ],
-        "prompt": "{\"id\":\"res_GAwr85brB0\",\"title\":\"CV Samuel LEMAITRE #1\",\"templateId\":6,\"colorHex\":\"3f6592\",\"userId\":35899902,\"uuid\":\"a55d479b-4d33-4748-9414-72cf32068a78\",\"hash\"",
-        "optimized": "{\"id\":\"res_GAwr85brB0\",\"title\":\"CV Samuel LEMAITRE #1\",\"templateId\":6,\"colorHex\":\"3f6592\",\"userId\":35899902,\"uuid\":\"a55d479b-4d33-4748-9414-72cf32068a78\",\"hash\""
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"MOC:the group is one of the first few manufacturers in the people’s republic of china to use chip on board (“cob”) and chip on flex (“cof”) technologies and molding on board (“mob”) and molding on chip (“moc”) technologies in the manufacture of camera modules, as well as to produce ultra-thin camera modules with resolutions of 200 mega pixels and above, dual/multiple camera modules, 3d modules, under-glass fingerprint recognition modules and fingerprint recognition modules with various technologies on a mass production scale\""
-        ],
-        "prompt": "Extract abbreviations MOC and the full form of MOC.\nDesired Format:\n{\"MOC\":\"<Full form of MOC>\"}\nInput:\"MOC:the group is one of the first few manufacturers in t",
-        "optimized": "Extract abbreviations MOC and the full form of MOC.\nDesired Format:\n{\"MOC\":\"<Full form of MOC>\"}\nInput:\"MOC: the group is one of the first few manufacturers in "
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\" with more unique and unusual alternatives that capture the essence of your writing style. Take inspiration from the writing style of a well liked writer or text, and aim to emulate their mannerisms and techniques as closely as possible. Adopt a non bias perspective as you delve into the subject, focusing on kindness and incorporating facts into your discourse. As you craft your piece, strive to convey a sense of intelligence, creativity, refinement, and originality, and present your arguments with an air of confident authority. Avoid using any conjunctions, including \""
-        ],
-        "prompt": "Compose a highly sophisticated, expertly written, and innovative essay on the topic of ‘commercial cinema versus arthouse cinema debacle’. Utilize a rich and va",
-        "optimized": "Compose a highly sophisticated, expertly written, and innovative essay on the topic of ‘commercial cinema versus arthouse cinema debacle’. Utilize a rich and va"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "Beantworte die folgenden Fragen und gib bei der Antwort die Nummer der Frage zurück. Antworte bei geschlossenen Fragen nur mit Ja oder nein ohne weiteren Text:\n",
-        "optimized": "Beantworte die folgenden Fragen und gib bei der Antwort die Nummer der Frage zurück. Antworte bei geschlossenen Fragen nur mit Ja oder nein ohne weiteren Text:\n"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Answer the following single-choice question about CERTIFIED HVAC DESIGNER exam:\n2. For duct sizing, the static regain method should be avoided for:\nThe followin",
-        "optimized": "Answer the following single-choice question about CERTIFIED HVAC DESIGNER exam:\n2. For duct sizing, the static regain method should be avoided for:\nThe followin"
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful habits like noticing each breath and being aware of our environment. This can help us stay more focused on the task at hand and not get too overwhelmed by our emotions. We can also practice mindful breaks such as stretching and other activities that can help us relax, refocus, and reset. Finally, tracking our progress and reflecting on our progress can help increase our productivity and achieve our goals with greater efficiency.\""
-        ],
-        "prompt": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha",
-        "optimized": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "Please create Q&As based on the following content:\n\nThe Kempower Power Unit is the heart of Kempower's flexible,\nmodular and scalable DC charging system with dy",
-        "optimized": "Create Q&As based on the following content:\nThe Kempower Power Unit is the heart of Kempower's flexible,\nmodular and scalable DC charging system with dynamic po"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. Lately, I've started to experience infections flaring up and my dentist says ",
-        "optimized": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. How should I simplify this decision for me? What are the different factors to"
+        "prompt": "Schreibe den Text neu:\n\nFortführung der ausgelaufenen AWE V20D462E, weil durch den Chipmangel und Kurzarbeit viele \"alte\" Fahrzeuge mit noch noch alten Teilen n",
+        "optimized": "Schreibe den Text neu:\nFortführung der ausgelaufenen AWE V20D462E, weil durch den Chipmangel und Kurzarbeit viele \"alte\" Fahrzeuge mit noch alten Teilen nachgeb"
       }
     ]
   },
   "bpoAgreement": {
     "note": "Directional only. BPO says the rewrite produces better answers, which is evidence the original had a weakness -- not a quality score. BPO mostly ADDS words while PromptMeter scores brevity, so the two disagree on length by construction; read sameLengthOrShorter, not the headline.",
-    "pairs": 5311,
-    "originalScoredLower": 808,
-    "sameScore": 3370,
-    "originalScoredHigher": 1133,
+    "pairs": 14351,
+    "originalScoredLower": 2140,
+    "sameScore": 9227,
+    "originalScoredHigher": 2984,
     "sameLengthOrShorter": {
-      "pairs": 1089,
-      "originalScoredLower": 169,
-      "originalScoredHigher": 96
+      "pairs": 2996,
+      "originalScoredLower": 454,
+      "originalScoredHigher": 261
     }
   }
 }
