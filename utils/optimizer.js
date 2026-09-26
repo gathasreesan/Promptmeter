@@ -967,9 +967,174 @@ const PromptMeterOptimizer = {
      * @param {Array} history - The list of historical turns.
      * @returns {Object} Analysis report { score, flags }
      */
+    // ---------------------------------------------------------------------------
+    // PROMPT QUALITY RULES
+    //
+    // scoreRules above are about WASTE: padding, slang, typos, repetition -- things
+    // that cost tokens. These are about whether the prompt can be ANSWERED. Measured
+    // over 4,000 real prompts from the reference corpus, the waste rules alone left
+    // 86.6% of them on a perfect 100, because most real prompts are not padded, they
+    // are under-specified. A scorer that cannot see that is not measuring quality.
+    //
+    // Every rule here is a HEURISTIC, not a verified quality judgement. Each carries
+    // its definition in `metric` so the dashboard, the docs and this table cannot drift
+    // apart, and every one is written to stay silent unless it is fairly confident --
+    // a false flag on a good prompt teaches the user to ignore the panel.
+    //
+    // Deliberately NOT a rule: prompt length. A short prompt is not a bad prompt
+    // ("Explain recursion" is complete), and a long one is not a good one. Length is
+    // reported as information, never as score.
+    // ---------------------------------------------------------------------------
+    qualityRules: [
+        {
+            id: 'missing-output-format',
+            label: 'No output format given for a generative request',
+            metric: 'Fires when the prompt asks for something to be produced (write, '
+                + 'draft, create, generate, design, build, summarise) and nowhere states '
+                + 'a length, format, structure or medium. The model then guesses, and a '
+                + 'guess costs a whole extra turn to correct.',
+            per: 8, cap: 8,
+            test: function (text) {
+                const generative = /\b(?:write|draft|create|generate|design|build|compose|make|produce|summari[sz]e|rewrite)\b/i;
+                if (!generative.test(text)) return 0;
+                // Any statement of shape counts, however informal.
+                const shape = /\b(?:\d+\s*(?:words?|characters?|lines?|pages?|paragraphs?|sentences?|bullets?|slides?|items?|steps?)|in\s+(?:json|xml|yaml|csv|markdown|html|a\s+table|bullet|point\s+form|list)|as\s+a\s+(?:table|list|json|essay|email|poem|script|summary)|format|structure|tone|style|short|brief|concise|detailed|step[\s-]by[\s-]step|outline)\b/i;
+                return shape.test(text) ? 0 : 1;
+            }
+        },
+        {
+            id: 'dangling-reference',
+            label: 'Refers to something that was not included',
+            metric: 'Fires when the prompt points at material ("the code below", "this '
+                + 'file", "the attached document", "the error above") and the prompt '
+                + 'contains no code block, no quoted span, no URL and no data payload. '
+                + 'The reference has nothing to resolve against.',
+            per: 12, cap: 12,
+            test: function (text) {
+                const points = /\b(?:the\s+(?:code|file|text|error|document|data|table|list|passage|article|image|screenshot)\s+(?:below|above|here|attached|provided|following)|(?:below|above|attached|following)\s*[:.]|this\s+(?:code|file|error|document|snippet|function|script)|my\s+(?:code|script|function|file|error))\b/i;
+                if (!points.test(text)) return 0;
+                const hasMaterial = /```|`[^`\n]+`|https?:\/\/|"[^"\n]{10,}"|\n\s*[\[{]|\n\s*\w[\w \t]{0,30}:\s*\S|\n\s*[-*•]\s+\S|\d{2,}/.test(text);
+                return hasMaterial ? 0 : 1;
+            }
+        },
+        {
+            id: 'contradiction',
+            label: 'Contains requirements that pull against each other',
+            metric: 'Fires on an explicit pair of opposing requirements in one prompt '
+                + '("detailed but brief", "simple yet comprehensive", "short and '
+                + 'thorough"). The model has to pick one silently, and which one it '
+                + 'picks is not the user’s choice.',
+            per: 10, cap: 10,
+            test: function (text) {
+                const SHORT = 'brief|short|concise|succinct|quick|simple|minimal|summary';
+                const LONG = 'detailed|comprehensive|thorough|exhaustive|in[\\s-]depth|complete|elaborate|extensive';
+                const joiner = '(?:\\s+(?:but|yet|while|although|though|and)\\s+(?:also\\s+|still\\s+)?)';
+                const a = new RegExp('\\b(?:' + SHORT + ')' + joiner + '(?:' + LONG + ')\\b', 'i');
+                const b = new RegExp('\\b(?:' + LONG + ')' + joiner + '(?:' + SHORT + ')\\b', 'i');
+                return (a.test(text) || b.test(text)) ? 1 : 0;
+            }
+        },
+        {
+            id: 'vague-specification',
+            label: 'Says what is wanted only in vague terms',
+            metric: 'Counts unquantified quality words ("good", "better", "nice", '
+                + '"proper", "a few", "some", "etc") that carry the entire '
+                + 'specification. Capped, and only counted when the prompt offers no '
+                + 'concrete constraint anywhere, so a prompt that says "a good summary '
+                + 'in 200 words" is not penalised.',
+            per: 4, cap: 12,
+            test: function (text) {
+                // Quoted and fenced spans are the user's material, not their
+                // specification: "Translate to French: \"good morning\"" is precise, and
+                // counting the "good" inside it as vagueness penalised a good prompt.
+                const prose = text
+                    .replace(/```[\s\S]*?```/g, ' ')
+                    .replace(/`[^`\n]+`/g, ' ')
+                    .replace(/"[^"\n]*"/g, ' ')
+                    .replace(/'[^'\n]{6,}'/g, ' ');
+                const concrete = /\b\d+\b|\bmust\b|\bonly\b|\bno\s+\w+|\bexactly\b|\bat\s+(?:least|most)\b/i;
+                if (concrete.test(prose)) return 0;
+                const vague = prose.match(/\b(?:good|better|best|nice|proper|properly|decent|a\s+few|some|several|etc\.?|and\s+so\s+on|stuff|things)\b/gi);
+                return vague ? vague.length : 0;
+            }
+        },
+        {
+            id: 'no-clear-request',
+            label: 'Does not clearly state what it wants',
+            metric: 'Fires when the prompt contains no question mark, no imperative '
+                + 'opening verb and no "I want / I need / can you" construction. Such a '
+                + 'prompt is a statement of facts, and the model has to infer the task.',
+            per: 15, cap: 15,
+            test: function (text) {
+                if (text.indexOf('?') !== -1) return 0;
+                // The verb list is the whole rule, so it is long on purpose. Every verb
+                // missing from it is a correctly-phrased imperative prompt marked as
+                // having no clear request -- "Determine the volume of a cube", "Produce
+                // a slogan", "Predict the survival rate" were all flagged before these
+                // were added, which is the most damaging kind of false positive: it
+                // tells someone their good prompt is bad.
+                const imperative = /(?:^|[.!?\n]\s*)\s*(?:please\s+)?(?:write|explain|give|list|show|tell|make|create|find|help|describe|compare|summari[sz]e|translate|fix|debug|generate|build|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|add|remove|check|teach|outline|draw|plan|rank|sort|name|define|identify|classify|extract|implement|refactor|optimi[sz]e|improve|continue|answer|do|let|act|pretend|imagine|consider|assume|output|return|print|provide|prepare|format|edit|correct|update|categori[sz]e|determine|produce|predict|read|compute|estimate|evaluate|choose|select|pick|arrange|organi[sz]e|state|match|label|group|split|merge|combine|replace|insert|delete|count|measure|construct|develop|propose|brainstorm|turn|transform|apply|use|run|execute|install|configure|deploy|test|verify|validate|ensure|avoid|include|exclude|start|begin|finish|complete|simplify|expand|shorten|paraphrase|proofread|guide|demonstrate|illustrate|prove|derive|simulate|model|forecast|detect|segment|annotate|tag|assess|critique|interpret|justify|argue|discuss|elaborate|clarify|reword|restate|compose|craft|invent|devise|sketch|map|trace|walk\s+me|come\s+up\s+with|put\s+together|take\s+(?:a\s+look|this))\b/i;
+                if (imperative.test(text)) return 0;
+                const stated = /\b(?:i\s+(?:want|need|would\s+like|am\s+looking\s+for)|can\s+you|could\s+you|would\s+you|how\s+(?:do|can|should)|what|why|when|where|which|who)\b/i;
+                return stated.test(text) ? 0 : 1;
+            }
+        },
+        {
+            id: 'truncated-instruction',
+            label: 'Instruction stops part-way',
+            metric: 'Fires when the prompt ends on a conjunction, preposition, colon or '
+                + 'comma with nothing after it ("summarise this and", "the steps are:"). '
+                + 'Usually a prompt sent before it was finished.',
+            per: 10, cap: 10,
+            test: function (text) {
+                return /(?:\b(?:and|or|but|with|for|to|of|in|on|about|such\s+as|like|including|e\.g\.|i\.e\.)\s*[:,]?\s*|[:,])$/i
+                    .test(text.trim()) ? 1 : 0;
+            }
+        }
+    ],
+
+    /**
+     * Runs the quality heuristics over a prompt.
+     *
+     * Kept separate from scoreRules because the two answer different questions and the
+     * UI shows them differently: waste is something the optimizer can fix on the user's
+     * behalf, whereas a missing output format is something only the user can supply.
+     *
+     * @param {string} text - Prose-only text (masked and stripped by the caller).
+     * @returns {Array} [{ id, label, metric, penalty, count }]
+     */
+    qualityIssues: function (text) {
+        if (typeof text !== 'string' || text.trim() === '') return [];
+
+        const findings = [];
+        for (const rule of this.qualityRules) {
+            let count = 0;
+            try {
+                count = rule.test.call(this, text) || 0;
+            } catch (err) {
+                // A broken heuristic must not take the whole score down with it.
+                continue;
+            }
+            if (count > 0) {
+                findings.push({
+                    id: rule.id,
+                    label: rule.label,
+                    metric: rule.metric,
+                    count: count,
+                    penalty: Math.min(rule.cap, count * rule.per)
+                });
+            }
+        }
+        return findings;
+    },
+
     analyzePrompt: function (prompt, history = []) {
+        // An absent prompt has no score. It used to return 100, which read on the
+        // dashboard as a perfect prompt and pulled the running average up every time
+        // the box was empty -- the one input that cannot be good was scoring best.
+        // null is not 0 either: zero is a judgement, and there is nothing to judge.
         if (typeof prompt !== 'string' || prompt.trim() === "") {
-            return { score: 100, flags: [] };
+            return { score: null, flags: [], quality: [], scored: false };
         }
 
         const cleanPrompt = prompt.trim();
@@ -980,7 +1145,9 @@ const PromptMeterOptimizer = {
         // passage are not the user's padding and must not cost them points.
         const scorable = PM_PROTECT ? PM_PROTECT.strip(PM_PROTECT.mask(cleanPrompt).masked) : cleanPrompt;
         if (scorable.length === 0) {
-            return { score: 100, flags: [] };
+            // Nothing but code or quoted material. There is no prose to charge for, so
+            // the waste rules have nothing to say and the score stays clean.
+            return { score: 100, flags: [], quality: [], scored: true };
         }
 
         for (const rule of this.scoreRules) {
@@ -1004,6 +1171,24 @@ const PromptMeterOptimizer = {
             flags.push(`Grammatical errors detected: ${grammarIssues.length} (-${deduction} pts)`);
         }
 
+        // Prompt quality. The rules above charge for waste -- padding, slang, typos --
+        // which is what the optimizer can strip on the user's behalf. These ask a
+        // different question: can the prompt be answered at all? A missing output
+        // format or a reference to code that was never pasted is not something any
+        // rewrite can fix, so the findings are returned separately for the UI to show
+        // as advice rather than folded into the flag list as though they were edits.
+        // Given the WHOLE prompt, not the stripped prose. The waste rules read `scorable`
+        // so that politeness inside a pasted code sample is not charged to the user, but
+        // these rules ask whether the material a prompt refers to is actually present --
+        // and on the stripped text it never is. "Fix the code below:" followed by a real
+        // code block was being flagged both for a dangling reference and for stopping
+        // mid-instruction, because the block had been removed before the rules ran.
+        const qualityFindings = this.qualityIssues(cleanPrompt);
+        for (const finding of qualityFindings) {
+            score -= finding.penalty;
+            flags.push(`${finding.label} (-${finding.penalty} pts)`);
+        }
+
         // Scope. Unlike every rule above this does not mean the prompt is badly written;
         // it means the prompt is too large to be answered once. A 100/100 score on a
         // request for forty subsystems would be telling the user something false.
@@ -1022,7 +1207,14 @@ const PromptMeterOptimizer = {
                 : "Duplicate prompt detected (-10 pts)");
         }
 
-        return { score: Math.max(0, Math.min(100, score)), flags: flags };
+        return {
+            score: Math.max(0, Math.min(100, score)),
+            flags: flags,
+            // Structured, with each rule's definition attached, so the dashboard can
+            // explain a deduction instead of only naming it.
+            quality: qualityFindings,
+            scored: true
+        };
     },
 
     // --- Scope analysis --------------------------------------------------------------
@@ -1329,7 +1521,11 @@ const PromptMeterOptimizer = {
         optimized = this.applyRules(optimized, this.adjectiveStacks);
         optimized = optimized
             .replace(/[ \t]+/g, ' ')
-            .replace(/\b(\w{1,6})\s+\1\b/gi, '$1')
+            // (?!\d) keeps numbers out of it. The rule removes an accidentally
+            // doubled word ("the the"), but two identical numbers side by side are
+            // usually one value: "around 1 1/2 years old" collapsed to "1/2", and
+            // "2 2 cups" to "2 cups". A repeated word is a typo; a repeated digit is data.
+            .replace(/\b(?!\d)(\w{1,6})\s+\1\b/gi, '$1')
             .replace(/\s+([,.?!;:])/g, '$1')
             .replace(/([!?])\1+/g, '$1')
             .trim();
@@ -1351,7 +1547,7 @@ const PromptMeterOptimizer = {
         // already masked, so "return return" inside a snippet can no longer be hit.
         optimized = optimized
             .replace(/^\s*(?:and|so|or|but|then)\s+/gi, '')
-            .replace(/\b(\w{1,6})\s+\1\b/gi, '$1')
+            .replace(/\b(?!\d)(\w{1,6})\s+\1\b/gi, '$1')
             .replace(/^[.,:;\-\u2013\u2014\s]+/, '')
             .replace(/[ \t]+/g, ' ')
             .replace(/,(?:\s*,)+/g, ',')

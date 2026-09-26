@@ -102,9 +102,17 @@ const PromptMeterStorage = {
         const sum = (field) => history.reduce((total, turn) => total + (turn[field] || 0), 0);
         const round = (value) => parseFloat(value.toFixed(4));
 
-        // An unscored turn counts as a perfect 100 so old records don't drag the average down
+        // An unscored turn counts as a perfect 100 so old records don't drag the average
+        // down. The test is `typeof === 'number'`, not `!== undefined`: analyzePrompt
+        // now returns null for a prompt with nothing in it, and null passes an
+        // undefined check, then adds as 0 -- an empty prompt would have pulled the
+        // average down by a full hundred points per turn.
         const efficiencyTotal = history.reduce(
-            (total, turn) => total + (turn.efficiencyScore !== undefined ? turn.efficiencyScore : 100),
+            (total, turn) => total + (
+                typeof turn.efficiencyScore === 'number' && isFinite(turn.efficiencyScore)
+                    ? turn.efficiencyScore
+                    : 100
+            ),
             0
         );
 

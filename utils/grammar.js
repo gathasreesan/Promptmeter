@@ -429,7 +429,9 @@ const PromptMeterGrammar = {
         });
 
         // Singular subject with a plural verb.
-        out = out.replace(/\b(he|she|it|this|that)\s+(have|are|were|do|don't|aren't|weren't|haven't)\b/gi,
+        // Same modal guard as the rule below: "could it have been" is correct English,
+        // and without this it became "could it has been".
+        out = out.replace(/(?<!\b(?:can|could|will|would|shall|should|may|might|must|to|do|does|did|don't|doesn't|didn't)\s)\b(he|she|it|this|that)\s+(have|are|were|do|don't|aren't|weren't|haven't)\b/gi,
             (match, subject, verb) => {
                 const singular = {
                     have: 'has', are: 'is', were: 'was', do: 'does',
@@ -442,7 +444,13 @@ const PromptMeterGrammar = {
 
         // "he go" -> "he goes". Restricted to known verbs, and skipping the ones whose
         // past tense is spelled like the base ("she read the book" is already correct).
-        out = out.replace(/\b(he|she|it)\s+([a-z]+)\b/gi, (match, subject, word) => {
+        //
+        // The lookbehind is the guard that stops it breaking questions. In "What could
+        // it be?" the verb belongs to the modal, not to the pronoun -- a modal always
+        // takes the bare infinitive -- so conjugating it produced "What could it is".
+        // Inverted questions put the subject between the modal and its verb, which is
+        // the one place this rule cannot read agreement off the pronoun alone.
+        out = out.replace(/(?<!\b(?:can|could|will|would|shall|should|may|might|must|to|do|does|did|don't|doesn't|didn't)\s)\b(he|she|it)\s+([a-z]+)\b/gi, (match, subject, word) => {
             const lower = word.toLowerCase();
             if (!this.VERBS.has(lower)) return match;
             if (this.AMBIGUOUS_PAST.has(lower)) return match;

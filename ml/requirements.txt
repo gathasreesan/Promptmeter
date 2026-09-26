@@ -1,1 +1,12 @@
+# Training the shipped phrase classifier (ml/train.py)
 scikit-learn>=1.3
+numpy>=1.24
+
+# Reference corpus ingestion (ml/ingest.py) and evaluation
+#   BPO needs nothing but the standard library to download; pyarrow is for the
+#   Parquet shards, and `datasets` is only used for the LMSYS streaming reader.
+pyarrow>=15
+datasets>=2.19
+
+# Optional: only needed to generate synthetic phrases through an API provider.
+#   pip install anthropic

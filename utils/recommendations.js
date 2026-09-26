@@ -25,7 +25,8 @@ const PromptMeterRecommendations = {
         }
 
         // 1. Audit: Low Average Prompt Efficiency (Filler words & Politeness)
-        const inefficientPrompts = history.filter(turn => turn.efficiencyScore !== undefined && turn.efficiencyScore < 85);
+        const inefficientPrompts = history.filter(turn =>
+            typeof turn.efficiencyScore === 'number' && turn.efficiencyScore < 85);
         if (inefficientPrompts.length > 0) {
             const avgScore = Math.round(
                 history.reduce((sum, item) => sum + (item.efficiencyScore || 100), 0) / history.length

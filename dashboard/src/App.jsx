@@ -440,8 +440,13 @@ const ComparisonBox = ({ item }) => {
 };
 
 const QueryRow = ({ item, onDelete }) => {
-    const rating = RATINGS.find(r => item.efficiencyScore >= r.min);
-    const scoreColor = item.efficiencyScore >= 90 ? COLOR.success : rating.color;
+    // RATINGS.find returns undefined for a turn with no score, and reading
+    // .color off it threw, taking the whole history list down with it. An
+    // unscored turn is shown at the bottom band rather than crashing the tab.
+    const score = typeof item.efficiencyScore === 'number' ? item.efficiencyScore : null;
+    const rating = (score !== null && RATINGS.find(r => score >= r.min))
+        || RATINGS[RATINGS.length - 1];
+    const scoreColor = score !== null && score >= 90 ? COLOR.success : rating.color;
 
     const [expanded, setExpanded] = useState(false);
     const hasComparison = Boolean(item.originalPrompt && item.originalPrompt !== item.prompt);
@@ -479,7 +484,7 @@ const QueryRow = ({ item, onDelete }) => {
                     className="score-pill"
                     style={{ '--pill-color': scoreColor, '--pill-bg': rating.washStrong }}
                 >
-                    {item.efficiencyScore}%
+                    {score === null ? '--' : score + '%'}
                 </span>
             </td>
             <td className="align-center">

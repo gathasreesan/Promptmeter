@@ -1,0 +1,299 @@
+{
+  "generatedAt": "2026-09-26T09:22:21.404Z",
+  "sample": "sample.jsonl",
+  "rows": 4000,
+  "errors": 0,
+  "scoreDistribution": {
+    "mean": 95.53,
+    "min": 60,
+    "p10": 85,
+    "median": 100,
+    "p90": 100,
+    "max": 100,
+    "perfect": 2309,
+    "perfectPct": 57.7
+  },
+  "flagFrequency": {
+    "No output format given for a generative request": 818,
+    "Does not clearly state what it wants": 364,
+    "Says what is wanted only in vague terms": 286,
+    "Over-politeness/emotional padding detected": 157,
+    "Grammatical errors detected: 1": 128,
+    "Conversational preambles detected": 94,
+    "Greetings detected": 87,
+    "Conversational filler & hedging detected": 32,
+    "Instruction stops part-way": 24,
+    "Redundant wordy filler phrases detected": 22,
+    "Chat slang & informal abbreviations detected": 18,
+    "Adjacent repeated words detected": 16,
+    "Spelling typos & misspellings detected": 13,
+    "Grammatical errors detected: 2": 8,
+    "Sign-off & gratitude padding detected": 6,
+    "Refers to something that was not included": 4,
+    "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 3,
+    "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 3,
+    "Excessive punctuation & symbol spam detected": 3,
+    "Meta-prompting fluff / redundant constraints detected": 2,
+    "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 2,
+    "Grammatical errors detected: 3": 2,
+    "Meta commentary about the question detected": 1,
+    "Emoji spam detected": 1,
+    "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 18 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 23 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Grammatical errors detected: 4": 1,
+    "Over-scoped request: 12 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
+    "Over-scoped request: 49 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1
+  },
+  "meanScoreByCategory": {
+    "analysis": 97,
+    "code": 92.4,
+    "explain": 98.3,
+    "factual": 97.9,
+    "howto": 96.8,
+    "math": 95.1,
+    "other": 92.8,
+    "roleplay": 94.9,
+    "writing": 92.8
+  },
+  "preservation": {
+    "note": "Counts prompts where something that must survive did not. No ground truth needed: these are losses regardless of what any dataset says.",
+    "promptsWithLoss": {
+      "numbers": 2,
+      "operators": 24,
+      "code": 0,
+      "urls": 0,
+      "quoted": 3
+    },
+    "emptyOptimizerOutput": 0,
+    "examples": [
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "I am working with the Godot Game Engine, and I have an ImmediateGeometry node which is drawing a mesh I am generating at runtime, but it is Z-fighting with anot",
+        "optimized": "How can I move the ImmediateGeometry vertices closer to the 3D Camera to not clip into the other mesh?"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "You are a famous financial columnist who is beloved for your in-depth analysis of financial market and easy to understand writing style. Write a column focusing",
+        "optimized": "Write a column focusing on the thesis of the passage below. Make sure to include the data provided in the passage to be more persuasive.\nIn a world of moderatin"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Categorize the following poems into their appropriate style.\nI. I wandered lonely as a cloud\nThat floats on high o'er vales and hills,\nWhen all at once I saw a ",
+        "optimized": "Categorize the following poems into their appropriate style.\nI. I wandered lonely as a cloud\nWhen all at once I saw a crowd,\nA host, of golden daffodils\nII.\nMy "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "What is this list about? Could you add some entries to it without repeating any of the previous entries?\n\nhigh angle shot\neye-level shot\nlow angle shot\noverhead",
+        "optimized": "What is this list about? Add some entries to it without repeating any of the previous entries.\nClose-up"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Generate regex to extract numbers from the following. Do not use lookahead and lookbehind\n---\nzip code: 974728 and 81736 as\nzip code: 974728 as\nzip code: 974728",
+        "optimized": "Generate regex to extract numbers from the following. Do not use lookahead and lookbehind zip code: 974728 and 81736 as, 974728 as, 974728, 81736 as and 974728,"
+      },
+      {
+        "kind": "numbers",
+        "lost": [
+          "1"
+        ],
+        "prompt": "Given a recipe, edit it to omit a certain ingredient.\nIngredients:\n\n1 cup flour\n1 teaspoon baking soda\n1 teaspoon baking powder\n1/2 teaspoon salt\n3/4 cup sugar\n",
+        "optimized": "Given a recipe, edit it to omit a certain ingredient.\n1 cup flour 1 teaspoon baking soda and powder.\n1/2 teaspoon salt\n3/4 cup sugar\n1 egg\n1/2 cup milk\n1/2 cup "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Where can I learn more about AI ethics? Today it seems that AI is getting more incorporated into every-day things, while laws and regulations are very slow on c",
+        "optimized": "Can I learn more about AI ethics? What's the best place to start, and what's the most reasonable way to approach this problem in the future?"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Respond to the following linkedin comment in a friendly and funny way:\n\n---\n\nAI is already commercialized.\n\nHumans without AI are now '𝘀𝗶𝗺𝗽𝗹𝗲' humans.\n\nHu",
+        "optimized": "Respond to the following linkedin comment in a friendly and funny way:\nAI is already commercialized.\nHumans + AI are '𝘀𝘂𝗽𝗲𝗿𝗵𝘂𝗺𝗮𝗻𝘀'.\nWhich group do yo"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Categorize the following items by their type.\nOutput:\nApple - Fruit\nPen - Stationery\nBook - Literature",
+        "optimized": "Categorize the following items by their type."
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "oversett til norsk:\nBy using this service, users are required to agree to the following terms: The service is a research preview intended for non-commercial use",
+        "optimized": "It only provides limited safety measures and may generate offensive content. It must not be used for any illegal, harmful, violent, racist, or sexual purposes. "
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "suggest how I could make the case to my son's school that he should be assessed for extra time during exams. they have not replied to previous emails and I have",
+        "optimized": "Suggest how I could make the case to my son's school that he should be assessed for extra time during exams."
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Let's play Four-in-a-row. These are the icons:\nT - empty\nO - me\nX - you\nMy turn first.\n\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTOTTTTT",
+        "optimized": "Let's play Four-in-a-row.\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTOTTTTT"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "# Student Directory Test:\n\n## 1. Define the Student Data Structure:\n### Object-Oriented Languages:\n- Create a class called \"Student\" with attributes for name, a",
+        "optimized": "## 1.\n- Create a class called \"Student\" with attributes for name, age, and grade.\n### Functional or Procedural Languages:\n- Create a data structure (e. G., reco"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. Lately, I've started to experience infections flaring up and my dentist says ",
+        "optimized": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. How should I simplify this decision for me? What are the different factors to"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Please check if this statement is complete \"Terms of use\nBy using this service, users are required to agree to the following terms: The service is a research pr",
+        "optimized": "Check if this statement is complete \"Terms of use It only provides limited safety measures and may generate offensive content. It must not be used for any illeg"
+      },
+      {
+        "kind": "numbers",
+        "lost": [
+          "2"
+        ],
+        "prompt": "I have a project due in 2 weeks, that will determine if I get my diploma. And I'm nowhere near the end of it. However I just spent an entire afternoon labelling",
+        "optimized": "Will determine if I get my diploma. Am I going in the right direction?"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "You are a research assistant who is responsible for coding open-ended text. These are the only categories available: Health/NHS, Education, Election Outcome, Ne",
+        "optimized": "These are the only categories available: Health/NHS, Education, Election Outcome, Negative Politics, Negative Partisan, Societal Divides, Morals, National Ident"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful habits like noticing each breath and being aware of our environment. This can help us stay more focused on the task at hand and not get too overwhelmed by our emotions. We can also practice mindful breaks such as stretching and other activities that can help us relax, refocus, and reset. Finally, tracking our progress and reflecting on our progress can help increase our productivity and achieve our goals with greater efficiency.\""
+        ],
+        "prompt": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha",
+        "optimized": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Once per turn, when a monster is destroyed by battle, you can activate this effect: Choose one of your opponent's monsters and destroy one of its limbs (arms or legs). The monster loses 500 ATK and DEF for each limb destroyed by this effect. If a monster has all its limbs destroyed, it is destroyed and sent to the GY.\""
+        ],
+        "prompt": "generate code for a edopro continuous spell card script using local s,id,o=GetID() and starting with local e0 for registering effect with the following effect \"",
+        "optimized": "Generate code for an edopro continuous spell card script using local s, id, o=GetID() and starting with local e0 for registering effect with the following effec"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Write prose for the following scenario from a book:\nSurprise astronomy quiz during Sven's class. The quiz will be team-based, and Sven will have an opportunity ",
+        "optimized": "Write prose for the following scenario from a book:\nSurprise astronomy quiz during Sven's class."
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are decreased. Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in real time. Sensors attached to essential equipment collect data about the manufacturing process, and algorithms evaluate the data to prevent problems from occurring.\""
+        ],
+        "prompt": "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are d",
+        "optimized": "Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in re"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "I have created a research platform called NewsTalk. It harvests all of the reader on-site comments on Australian news websites, and it also harvests off-site co",
+        "optimized": "The goal of the platform is to let humanities and social science researchers to analyse the Australian public discourse on important issues. The Easy-to-use web"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "I am a dog. Please help me plan a surprise birthday party for my human, including fun activities, games and decorations. And don't forget to order a big bone-sh",
+        "optimized": "Help me plan a surprise birthday party for my human, including fun activities, games and decorations."
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "/"
+        ],
+        "prompt": "You are an expert in regulating heat networks and you need to decide on the supply temperature of the heat exchange station based on the known information and t",
+        "optimized": "You are an expert in regulating heat networks and you need to decide on the supply temperature of the heat exchange station based on the known information and t"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "[Chat with Ayanami from Azur Lane navy]\nAyanami: Watashi-wa Ayanami, desu. She is happy to see you today, Shikikan-sama!\nShikikan: Hello, Ayanami. Welcome to my",
+        "optimized": "[Chat with Ayanami from Azur Lane navy]\nAyanami: Watashi-wa Ayanami, desu.\nShikikan: Ayanami.\nAyanami: Hai, desu. Arigatou.\nShikikan: Tell me more about you, Ay"
+      }
+    ]
+  },
+  "bpoAgreement": {
+    "note": "Directional only. BPO says the rewrite produces better answers, which is evidence the original had a weakness -- not a quality score. BPO mostly ADDS words while PromptMeter scores brevity, so the two disagree on length by construction; read sameLengthOrShorter, not the headline.",
+    "pairs": 4000,
+    "originalScoredLower": 593,
+    "sameScore": 2571,
+    "originalScoredHigher": 836,
+    "sameLengthOrShorter": {
+      "pairs": 844,
+      "originalScoredLower": 131,
+      "originalScoredHigher": 77
+    }
+  }
+}

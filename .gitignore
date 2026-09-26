@@ -23,3 +23,7 @@ __pycache__/
 
 # generation checkpoint, not a deliverable
 ml/dataset/.synthetic_raw.jsonl
+
+# Reference corpus: regenerate with ml/ingest.py rather than committing 29MB
+# of Parquet and the raw Hugging Face downloads beside it.
+ml/corpus/

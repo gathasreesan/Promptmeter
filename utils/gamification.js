@@ -20,7 +20,13 @@ const PromptMeterGamification = {
             if (!days[dateStr]) {
                 days[dateStr] = [];
             }
-            days[dateStr].push(item.efficiencyScore !== undefined ? item.efficiencyScore : 100);
+            // typeof, not !== undefined: an unscored turn now carries null, which
+            // passes an undefined check and then averages as zero.
+            days[dateStr].push(
+                typeof item.efficiencyScore === 'number' && isFinite(item.efficiencyScore)
+                    ? item.efficiencyScore
+                    : 100
+            );
         });
 
         const today = new Date();
