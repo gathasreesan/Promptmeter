@@ -83,7 +83,7 @@ const PromptMeterOptimizer = {
         "oyu": "you", "paramter": "parameter", "paremeter": "parameter", "pelase": "please",
         "plaese": "please", "pritn": "print", "prnit": "print", "quesiton": "question",
         "questoin": "question", "retrun": "return", "reutrn": "return", "satrt": "start",
-        "shoudl": "should", "starst": "start", "stat": "start", "strat": "start",
+        "shoudl": "should", "starst": "start", "strat": "start",
         "strign": "string", "taht": "that", "ther": "there", "thta": "that", "tihs": "this",
         "tuo": "to", "updat": "update", "waht": "what", "wan": "want", "watn": "want",
         "whta": "what", "wiht": "with", "witdh": "width", "wnat": "want", "wnt": "want",
@@ -1005,6 +1005,53 @@ const PromptMeterOptimizer = {
     // ---------------------------------------------------------------------------
     // Function words that appear in almost any English sentence. Used only to decide
     // whether the English-only rules below can read a prompt at all -- never to score.
+    // Imperative verbs that a prompt may repeat across a comma. Kept to a list rather
+    // than \w+ because the backreference alone would also collapse "the cat, the dog"
+    // into "the cat and dog", which is a different sentence.
+    REPEATABLE_VERBS: 'explain|describe|list|show|give|write|create|generate|summari[sz]e|'
+        + 'compare|define|outline|draft|suggest|recommend|analy[sz]e|review|translate|'
+        + 'calculate|solve|teach|tell|find|identify|name|discuss|elaborate|clarify|'
+        + 'illustrate|demonstrate|provide|include|add|build|design|make|do',
+
+    /**
+     * Collapses an imperative verb the prompt repeats across a comma or conjunction.
+     *
+     *     "Explain different types of finite automata, explain ML"
+     *       -> "Explain different types of finite automata and ML"
+     *
+     * condense.js already merges repeated sentence openings, but it cannot reach this:
+     * it only runs on prompts of 15 words or more, and its sentence splitter does not
+     * split on commas, so the two clauses above are one sentence to it. Short prompts
+     * are exactly where a repeated verb is most visible and most of the total length.
+     *
+     * The second clause must be short -- a handful of words with no internal punctuation
+     * -- because "Explain A, explain B in detail with examples and a table" is two real
+     * instructions, and merging them would silently attach the first one's object to the
+     * second one's qualifiers.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    mergeRepeatedVerbs: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+
+        const verbs = this.REPEATABLE_VERBS;
+        // verb + object , [and|also|then] + SAME verb + short object
+        const pattern = new RegExp(
+            '\\b(' + verbs + ')\\b([^,;.!?]{2,80}?)\\s*[,;]\\s*(?:and\\s+|also\\s+|then\\s+)?\\1\\b\\s+([^,;.!?]{1,40})(?=[.!?]|$)',
+            'gi'
+        );
+
+        return text.replace(pattern, (match, verb, first, second) => {
+            // Bail if either side is empty once trimmed -- a malformed match should
+            // leave the prompt exactly as the user wrote it.
+            const left = first.trim();
+            const right = second.trim();
+            if (!left || !right) return match;
+            return verb + ' ' + left + ' and ' + right;
+        });
+    },
+
     ENGLISH_MARKERS: new Set([
         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'to', 'of', 'and', 'or',
         'in', 'on', 'for', 'with', 'that', 'this', 'it', 'i', 'you', 'we', 'my', 'me',
@@ -1594,6 +1641,9 @@ const PromptMeterOptimizer = {
 
         // Stages 4-6: structural intent, meta-prompting fluff, concise wording
         optimized = this.transformStructuralIntent(optimized);
+        // Collapse a verb the prompt repeats across a comma before the phrase rules
+        // run, so the merged clause is what they see.
+        optimized = this.mergeRepeatedVerbs(optimized);
         optimized = this.applyRules(optimized, this.fluffReplacements);
         optimized = this.applyRules(optimized, this.concisePhrases);
 

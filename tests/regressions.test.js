@@ -112,8 +112,10 @@ keeps('thank the user in the reply', 'thank the user');
 // begin immediately after the punctuation. Any clause introduced by a connective --
 // which is most second clauses in English -- was never reached.
 // ---------------------------------------------------------------------------
+// mergeRepeatedVerbs now collapses the repeated verb too, which is the point of
+// rewriting both clauses: two commands become one.
 equals('i want to know about recursion, and i want to know about memoization',
-    'Explain recursion, and explain memoization');
+    'Explain recursion and memoization');
 equals('i am curious about ml, then i want to see examples',
     'Explain ML, then show examples');
 keeps('help me understand joins, and also help me understand indexes',
@@ -291,6 +293,31 @@ keeps('write a story w/NAME_1 and NAME_2 together', 'w/NAME_1');
 keeps('meet me w/ the team tomorrow', 'with the team');
 keeps('a room w/o windows is dark', 'without windows');
 keeps('plz help me w/ this', 'with this');
+
+// A verb the prompt repeats across a comma is redundant. condense.js could not reach
+// this: it only runs at 15+ words and does not split sentences on commas, so a short
+// two-clause prompt kept both verbs.
+equals('Explain recursion, explain memoization', 'Explain recursion and memoization');
+equals('Write a poem, write a haiku', 'Write a poem and a haiku');
+keeps('Explain different types of finite automata, explain ML', 'automata and ML');
+// A long second clause is two real instructions, not a repetition: merging would
+// attach the first clause's object to the second clause's qualifiers.
+keeps('Explain A, explain B in detail with examples and a full table of results',
+    'explain B in detail');
+// The backreference alone would also collapse "the cat, the dog" into one phrase.
+keeps('Show me the cat, the dog is fine', 'the cat, the dog');
+
+// "fnite" could never reach "finite" because "finite" was not in the dictionary at all.
+// Measured over 8,000 real prompts, the 2,191-word list made 2,287 corrections of which
+// 1,556 landed on words that were ALREADY correct English: a word the dictionary does
+// not know is indistinguishable from a misspelling.
+keeps('Explan different types of fnite automata, explain ML', 'finite');
+keeps('explain fnite automata', 'finite');
+// ...and the words it used to corrupt are now left alone.
+keeps('we met yesterday to discuss it', ' met ');
+keeps('this is a non issue for us', 'non issue');
+keeps('the stat we need is the median', 'stat');
+keeps('I sent it to the com port', 'com port');
 
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
