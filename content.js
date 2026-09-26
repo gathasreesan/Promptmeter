@@ -254,6 +254,15 @@ function hideOptimizationCard() {
 // pinned at a constant height. So the composer is measured live and the card is placed
 // directly above whatever it currently occupies, shrinking (and scrolling internally)
 // rather than ever overlapping it.
+// What each severity means, shown on hover. Kept beside the card rather than in
+// optimizer.js because it is presentation: the engine decides the tier, this
+// decides how to explain it.
+const SEVERITY_TITLE = {
+    error: 'Definitely wrong: a rule that does not depend on context',
+    suggestion: 'Probably right, but the context could make it wrong',
+    improvement: 'Was not wrong -- this is shorter or tidier'
+};
+
 const CARD_GAP = 12;         // Clearance between the card and the top of the composer
 const CARD_MIN_HEIGHT = 140; // Below this the card is unreadable; it scrolls instead
 const CARD_MAX_WIDTH = 580;
@@ -374,19 +383,21 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         ? `Counted with ${stats.encoding}`
         : 'Estimated -- no exact tokenizer is loaded';
 
-    // The carbon figure is always an estimate, and an older call site may not pass one.
+    // The carbon figure is always an estimate, and an older call site may not pass
+    // one. It is also a SAVING: when the rewrite costs tokens there is nothing
+    // saved, and printing "~0.000 g CO2" next to a longer prompt states a benefit
+    // that was not delivered. The row is dropped instead.
     const carbon = typeof carbonSaved === 'number' && isFinite(carbonSaved)
+        && carbonSaved > 0 && stats && stats.saved > 0
         ? carbonSaved : null;
 
-    const issues = grammarIssues || [];
-    // De-duplicated, because one rule can fire on several spans of the same prompt and
-    // the card is a summary rather than a list of every edit.
-    const issueLabels = [];
-    issues.forEach(issue => {
-        if (issueLabels.indexOf(issue.label) === -1) issueLabels.push(issue.label);
-    });
-    const shownIssues = issueLabels.slice(0, 4);
-    const hiddenCount = issueLabels.length - shownIssues.length;
+    // optimizeWithReport already de-duplicates these and tags each with a severity,
+    // sorted most-certain first, so the card shows what is definitely wrong before
+    // what is merely tidier.
+    const issues = (grammarIssues || []).filter(issue => issue && issue.label);
+    const shownIssues = issues.slice(0, 4);
+    const hiddenCount = issues.length - shownIssues.length;
+    const issueLabels = issues;
 
     card.innerHTML = `
         <div class="promptmeter-opt-header">
@@ -399,7 +410,10 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
                     <span class="promptmeter-count-to">${approx}${stats.optimizedTokens}</span>
                     <span class="promptmeter-count-unit">tokens</span>
                 </span>
-                <span class="promptmeter-metric promptmeter-metric-saved">−${stats.percent}%</span>` : ''}
+                <span class="promptmeter-metric ${stats.saved < 0 ? 'promptmeter-metric-cost' : 'promptmeter-metric-saved'}"
+                      title="${stats.saved < 0 ? 'This rewrite costs tokens' : 'Tokens saved'}">
+                    ${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.percent)}%
+                </span>` : ''}
                 ${carbon !== null
                     ? `<span class="promptmeter-metric" title="Estimated">~${carbon.toFixed(3)} g CO₂</span>`
                     : ''}
@@ -418,7 +432,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <ul class="promptmeter-scope-list"></ul>
         </div>
         <div class="promptmeter-opt-grammar" hidden>
-            <div class="promptmeter-grammar-title">Also corrected</div>
+            <div class="promptmeter-grammar-title">${(grammarIssues || []).some(i => i.severity === 'error') ? 'Errors corrected' : 'Also corrected'}</div>
             <ul class="promptmeter-grammar-list"></ul>
         </div>
         <div class="promptmeter-opt-actions">
@@ -463,9 +477,16 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     if (shownIssues.length > 0) {
         const panel = card.querySelector('.promptmeter-opt-grammar');
         const list = card.querySelector('.promptmeter-grammar-list');
-        shownIssues.forEach(label => {
+        shownIssues.forEach(issue => {
             const item = document.createElement('li');
-            item.textContent = label;
+            // A dot carrying the severity, then the text. The severity is a class
+            // rather than a word so the row stays one line at 11px.
+            const dot = document.createElement('span');
+            dot.className = 'promptmeter-severity promptmeter-severity-'
+                + (issue.severity || 'suggestion');
+            dot.title = SEVERITY_TITLE[issue.severity] || SEVERITY_TITLE.suggestion;
+            item.appendChild(dot);
+            item.appendChild(document.createTextNode(issue.label));
             list.appendChild(item);
         });
         if (hiddenCount > 0) {

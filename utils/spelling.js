@@ -1008,6 +1008,12 @@ const PM_WORDS = [
     // rare in a general frequency list to arrive with it, and every one of them sits
     // one edit from a common word -- "stat" from "start", "req" from "red".
     'calc cfg ctx cwd dirs envs func funcs idx imgs impl param params pkg pkgs prod req stat stats util vals'
+,
+
+    // The -er agent nouns, which a frequency list of ordinary prose does not carry but
+    // prompts are full of. Each sits one keyboard-neighbour substitution from a common
+    // word: "scheduler" from "scheduled", "stare" from "state", "parser" from "parse".
+    'analyser analyzer bundler compilers debugger decorator emitter emitters formatter formatters handler handlers interpreter iterator lexer linter listener listeners loader loaders logger loggers optimiser optimizer parser parsers profiler renderer resolver scheduler schedulers serializer stare stares tracer transpiler validator validators viva vivas wrapper wrappers'
 ].join(' ').split(/\s+/).filter(Boolean);
 
 const PromptMeterSpelling = {
@@ -1015,6 +1021,8 @@ const PromptMeterSpelling = {
     // Below this length a word carries too little signal: "th", "hw" and "ur" have dozens
     // of plausible expansions and no way to choose between them.
     MIN_LENGTH: 3,
+    // Words longer than this are served by the skeleton index alone.
+    MAX_DELETE_LENGTH: 12,
 
     // A truncation may be at most this many characters shorter than the intended word,
     // so "Monda" reaches "Monday" but "co" does not reach "considering".
@@ -1033,6 +1041,91 @@ const PromptMeterSpelling = {
      * @param {string} candidate
      * @returns {number}
      */
+    // QWERTY layout, used to tell a slipped finger from a different word.
+    //
+    // The corrector refuses same-length substitutions, and that refusal is what keeps it
+    // from turning "stack" into "stuck" or "heap" into "hope". But it also threw away the
+    // commonest typo there is: hitting the key next to the one you meant. "specisl" for
+    // "special" is an s where an a belongs, and s and a are touching.
+    //
+    // Adjacency is the discriminator the blanket rule was standing in for. a/s touch, so
+    // that substitution is a slip. a/u and e/o do not, so "stack"/"stuck" and
+    // "heap"/"hope" stay rejected exactly as before.
+    KEYBOARD_ROWS: ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'],
+
+    /**
+     * True when two letters sit next to each other on a QWERTY keyboard, counting
+     * horizontal and diagonal neighbours.
+     * @param {string} a - Single lowercase letter.
+     * @param {string} b - Single lowercase letter.
+     * @returns {boolean}
+     */
+    isNeighbourKey: function (a, b) {
+        const near = this.keyNeighbours.get(a);
+        return near ? near.has(b) : false;
+    },
+
+    /**
+     * True when two equal-length words differ by exactly one letter, and that letter is
+     * a keyboard neighbour of the one it replaced.
+     * @param {string} word
+     * @param {string} candidate
+     * @returns {boolean}
+     */
+    isNeighbourSubstitution: function (word, candidate) {
+        if (word.length !== candidate.length) return false;
+
+        let at = -1;
+        for (let i = 0; i < word.length; i++) {
+            if (word[i] === candidate[i]) continue;
+            if (at !== -1) return false;            // a second difference: not one slip
+            at = i;
+        }
+        if (at === -1) return false;                // identical
+
+        // The opening letter is excluded on purpose. It is the one position people do
+        // not slip on, and allowing it reopens the "every"/"very" family that the
+        // first-letter guard below exists to close.
+        //
+        // The FINAL letter is excluded for the opposite reason: it is where English
+        // keeps its inflections, so a change there is usually a different form of a
+        // word rather than a slipped finger. r and d are keyboard neighbours, which
+        // made "scheduler" into "scheduled" -- a real word turned into another real
+        // word with a different meaning and no typo anywhere in sight.
+        if (at === 0 || at === word.length - 1) return false;
+
+        return this.isNeighbourKey(word[at], candidate[at]);
+    },
+
+    /**
+     * Every string formed by deleting one character, plus the word itself.
+     *
+     * This is what makes a consonant typo findable at all. Candidates used to come only
+     * from the consonant-skeleton index, which groups words that differ purely in
+     * vowels -- so any typo that ADDED, DROPPED or CHANGED a consonant landed in a
+     * different bucket and was never compared. "exaple" reduces to "xpl" and "example"
+     * to "xmpl"; the two never met, and the fix had to be hard-coded into the typo table
+     * word by word.
+     *
+     * Two words within one edit always share at least one delete-1 variant, so indexing
+     * the dictionary this way finds insertions, deletions and substitutions in one
+     * lookup. It is the standard symmetric-delete arrangement.
+     *
+     * @param {string} word - Lowercased word.
+     * @returns {Array} The word and its single-deletion variants.
+     */
+    deleteVariants: function (word) {
+        const out = [word];
+        // Long words are left to the skeleton index. Their variants multiply the index
+        // for little gain, and a typo in a fifteen-letter word is rarely a single slip.
+        if (word.length > this.MAX_DELETE_LENGTH) return out;
+
+        for (let i = 0; i < word.length; i++) {
+            out.push(word.slice(0, i) + word.slice(i + 1));
+        }
+        return out;
+    },
+
     budget: function (word, candidate) {
         const longest = Math.max(word.length, candidate.length);
         return Math.min(this.MAX_DISTANCE, Math.max(1, Math.floor(longest / 3)));
@@ -1140,6 +1233,24 @@ const PromptMeterSpelling = {
      * @param {string} candidate - The proposed correction.
      * @returns {boolean}
      */
+    /**
+     * The single character `longer` has that `shorter` does not.
+     * @param {string} longer
+     * @param {string} shorter - Known to be a subsequence of `longer`.
+     * @returns {Object|null} { character, index } in `longer`, or null when they
+     *          differ by more than one character.
+     */
+    extraCharacter: function (longer, shorter) {
+        if (longer.length !== shorter.length + 1) return null;
+        for (let i = 0; i < shorter.length; i++) {
+            if (longer[i] !== shorter[i]) {
+                return { character: longer[i], index: i };
+            }
+        }
+        // They match all the way along, so the extra character is the last one.
+        return { character: longer[longer.length - 1], index: longer.length - 1 };
+    },
+
     isPlausibleEdit: function (word, candidate) {
         // The first letter must survive. People drop letters out of the middle of a word,
         // not off the front, so a correction that changes the opening character is far
@@ -1152,7 +1263,12 @@ const PromptMeterSpelling = {
 
         // A transposition reorders letters, so its ends may legitimately differ: "teh" and
         // "the" is the classic case.
-        if (word.length === candidate.length) return this.isTransposition(word, candidate);
+        // Same length: either the letters were reordered, or one key was missed for
+        // the key beside it. Anything else at equal length is a different word.
+        if (word.length === candidate.length) {
+            return this.isTransposition(word, candidate) ||
+                this.isNeighbourSubstitution(word, candidate);
+        }
 
         // A longer typo may not lose its trailing letter. Sweeping words that end in a
         // silent -e turned up "huge" becoming "hug", "site" becoming "sit", "cute"
@@ -1171,9 +1287,28 @@ const PromptMeterSpelling = {
             return false;
         }
 
-        return word.length < candidate.length
-            ? this.isSubsequence(word, candidate)
-            : this.isSubsequence(candidate, word);
+        if (word.length < candidate.length) {
+            return this.isSubsequence(word, candidate);
+        }
+
+        // The typo is LONGER, so reaching the candidate means deleting a letter from
+        // what the user typed. That is only a typo when the letter was doubled:
+        // "occassion" for "occasion", "tommorow" for "tomorow". Deleting a letter
+        // that was not a repeat generally turns one real word into another -- "viva"
+        // became "via" that way, which is the kind of correction that rewrites what
+        // somebody meant rather than what they mistyped.
+        if (!this.isSubsequence(candidate, word)) return false;
+
+        // Two shapes are typos; a third is a different word.
+        //   doubled letter   "occassion" -> "occasion", "tommorow" -> "tomorow"
+        //   spurious vowel   "compleate" -> "complete", "speach" -> "speech"
+        // Dropping a lone CONSONANT is the one that rewrites meaning: "viva" became
+        // "via" that way, and nothing about that is a slipped key.
+        const extra = this.extraCharacter(word, candidate);
+        if (extra === null) return false;
+        return /[aeiou]/.test(extra.character) ||
+            word[extra.index - 1] === extra.character ||
+            word[extra.index + 1] === extra.character;
     },
 
     /**
@@ -1220,6 +1355,19 @@ const PromptMeterSpelling = {
             (this.skeletonIndex.get(this.skeleton(word)) || [])
                 .filter(candidate => this.isPlausibleEdit(word, candidate))
         );
+
+        // The delete index finds what the skeleton index structurally cannot: a typo
+        // that added, dropped or changed a CONSONANT lands in a different skeleton
+        // bucket and was never a candidate at all. Both sources feed the same
+        // ranking and the same guards, so this widens recall without loosening a
+        // single precision test.
+        this.deleteVariants(word).forEach(variant => {
+            const bucket = this.deleteIndex.get(variant);
+            if (!bucket) return;
+            bucket.forEach(candidate => {
+                if (this.isPlausibleEdit(word, candidate)) candidates.add(candidate);
+            });
+        });
         truncated.forEach(candidate => candidates.add(candidate));
 
         // Closest fit wins; equal fits are separated by frequency, which is what the
@@ -1339,8 +1487,32 @@ const PromptMeterSpelling = {
 };
 
 // Index the dictionary once, at load time rather than per keystroke.
+// Keyboard neighbours, computed once from the row layout rather than written out:
+// a hand-typed adjacency table is forty lines of chances to get one pair wrong.
+PromptMeterSpelling.keyNeighbours = (function () {
+    const rows = PromptMeterSpelling.KEYBOARD_ROWS;
+    const map = new Map();
+    rows.forEach((row, r) => {
+        for (let c = 0; c < row.length; c++) {
+            const near = new Set();
+            for (let dr = -1; dr <= 1; dr++) {
+                const other = rows[r + dr];
+                if (!other) continue;
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const ch = other[c + dc];
+                    if (ch) near.add(ch);
+                }
+            }
+            map.set(row[c], near);
+        }
+    });
+    return map;
+}());
+
 PromptMeterSpelling.rank = new Map();
 PromptMeterSpelling.skeletonIndex = new Map();
+PromptMeterSpelling.deleteIndex = new Map();
 PromptMeterSpelling.cache = new Map();
 
 PM_WORDS.forEach((word, index) => {
@@ -1354,6 +1526,16 @@ PM_WORDS.forEach((word, index) => {
     }
     PromptMeterSpelling.skeletonIndex.get(key).push(word);
 
+    // Symmetric-delete index: the word and each of its single-deletion variants all
+    // point back at it, so a typo one edit away shares at least one of them.
+    PromptMeterSpelling.deleteVariants(word).forEach(variant => {
+        let bucket = PromptMeterSpelling.deleteIndex.get(variant);
+        if (!bucket) {
+            bucket = [];
+            PromptMeterSpelling.deleteIndex.set(variant, bucket);
+        }
+        bucket.push(word);
+    });
 });
 
 // Export for global (content script) and bundler environments

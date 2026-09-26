@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-09-26T13:43:09.232Z",
+  "generatedAt": "2026-09-26T14:33:34.929Z",
   "sample": "sample.jsonl",
   "rows": 31499,
   "errors": 0,
   "scoreDistribution": {
-    "mean": 94.6,
+    "mean": 94.42,
     "min": 0,
     "p10": 85,
     "median": 100,
     "p90": 100,
     "max": 100,
-    "perfect": 17083,
-    "perfectPct": 54.2
+    "perfect": 16794,
+    "perfectPct": 53.3
   },
   "flagFrequency": {
-    "No output format given for a generative request": 5528,
-    "Does not clearly state what it wants": 2759,
+    "No output format given for a generative request": 5559,
+    "Does not clearly state what it wants": 3113,
     "Says what is wanted only in vague terms": 1957,
     "Over-politeness/emotional padding detected": 1925,
     "Grammatical errors detected: 1": 1355,
@@ -26,7 +26,7 @@
     "Chat slang & informal abbreviations detected": 515,
     "Adjacent repeated words detected": 370,
     "Redundant wordy filler phrases detected": 309,
-    "Spelling typos & misspellings detected": 246,
+    "Spelling typos & misspellings detected": 244,
     "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 238,
     "Grammatical errors detected: 2": 181,
     "Sign-off & gratitude padding detected": 159,
@@ -126,32 +126,32 @@
   "bySource": {
     "bpo": {
       "rows": 14351,
-      "meanScore": 95.46,
-      "perfectPct": 56.9,
-      "qualityFlagsPerPrompt": 0.38
+      "meanScore": 95.39,
+      "perfectPct": 56.4,
+      "qualityFlagsPerPrompt": 0.39
     },
     "lmsys": {
       "rows": 17148,
-      "meanScore": 93.88,
-      "perfectPct": 52,
-      "qualityFlagsPerPrompt": 0.35
+      "meanScore": 93.61,
+      "perfectPct": 50.7,
+      "qualityFlagsPerPrompt": 0.37
     }
   },
   "byLanguage": {
     "n/a (BPO)": {
       "rows": 14351,
-      "meanScore": 95.46,
-      "qualityFlagsPerPrompt": 0.38
+      "meanScore": 95.39,
+      "qualityFlagsPerPrompt": 0.39
     },
     "English": {
       "rows": 13737,
-      "meanScore": 93.04,
-      "qualityFlagsPerPrompt": 0.43
+      "meanScore": 92.88,
+      "qualityFlagsPerPrompt": 0.44
     },
     "Portuguese": {
       "rows": 559,
-      "meanScore": 94.41,
-      "qualityFlagsPerPrompt": 0.03
+      "meanScore": 93.69,
+      "qualityFlagsPerPrompt": 0.08
     },
     "Russian": {
       "rows": 482,
@@ -160,33 +160,33 @@
     },
     "Spanish": {
       "rows": 365,
-      "meanScore": 97.56,
-      "qualityFlagsPerPrompt": 0.04
+      "meanScore": 96.57,
+      "qualityFlagsPerPrompt": 0.1
     },
     "German": {
       "rows": 319,
-      "meanScore": 94.84,
-      "qualityFlagsPerPrompt": 0.06
+      "meanScore": 93.8,
+      "qualityFlagsPerPrompt": 0.13
     },
     "French": {
       "rows": 302,
-      "meanScore": 96.05,
-      "qualityFlagsPerPrompt": 0.04
+      "meanScore": 94.34,
+      "qualityFlagsPerPrompt": 0.16
     },
     "Italian": {
       "rows": 269,
-      "meanScore": 99.38,
-      "qualityFlagsPerPrompt": 0.02
+      "meanScore": 98.27,
+      "qualityFlagsPerPrompt": 0.09
     },
     "Chinese": {
       "rows": 250,
-      "meanScore": 99.12,
-      "qualityFlagsPerPrompt": 0.06
+      "meanScore": 99,
+      "qualityFlagsPerPrompt": 0.07
     },
     "unknown": {
       "rows": 132,
-      "meanScore": 97.66,
-      "qualityFlagsPerPrompt": 0.12
+      "meanScore": 97.2,
+      "qualityFlagsPerPrompt": 0.15
     },
     "Japanese": {
       "rows": 87,
@@ -200,8 +200,8 @@
     },
     "Polish": {
       "rows": 65,
-      "meanScore": 96.91,
-      "qualityFlagsPerPrompt": 0
+      "meanScore": 96.68,
+      "qualityFlagsPerPrompt": 0.02
     },
     "Arabic": {
       "rows": 44,
@@ -215,13 +215,13 @@
     },
     "Indonesian": {
       "rows": 35,
-      "meanScore": 99.29,
-      "qualityFlagsPerPrompt": 0.03
+      "meanScore": 98,
+      "qualityFlagsPerPrompt": 0.11
     },
     "Turkish": {
       "rows": 27,
-      "meanScore": 94.78,
-      "qualityFlagsPerPrompt": 0
+      "meanScore": 94.22,
+      "qualityFlagsPerPrompt": 0.04
     },
     "Greek": {
       "rows": 24,
@@ -230,13 +230,13 @@
     },
     "Latin": {
       "rows": 23,
-      "meanScore": 93.96,
-      "qualityFlagsPerPrompt": 0.39
+      "meanScore": 90.04,
+      "qualityFlagsPerPrompt": 0.65
     },
     "Dutch": {
       "rows": 22,
-      "meanScore": 95.95,
-      "qualityFlagsPerPrompt": 0.09
+      "meanScore": 95.27,
+      "qualityFlagsPerPrompt": 0.14
     },
     "Hungarian": {
       "rows": 19,
@@ -245,8 +245,8 @@
     },
     "Danish": {
       "rows": 19,
-      "meanScore": 96.21,
-      "qualityFlagsPerPrompt": 0.16
+      "meanScore": 95.42,
+      "qualityFlagsPerPrompt": 0.21
     },
     "Ukrainian": {
       "rows": 18,
@@ -265,8 +265,8 @@
     },
     "Galician": {
       "rows": 12,
-      "meanScore": 95.33,
-      "qualityFlagsPerPrompt": 0
+      "meanScore": 94.08,
+      "qualityFlagsPerPrompt": 0.08
     },
     "Persian": {
       "rows": 11,
@@ -300,8 +300,8 @@
     },
     "Scots": {
       "rows": 9,
-      "meanScore": 96.67,
-      "qualityFlagsPerPrompt": 0.33
+      "meanScore": 95,
+      "qualityFlagsPerPrompt": 0.44
     },
     "Malay": {
       "rows": 8,
@@ -325,8 +325,8 @@
     },
     "Slovak": {
       "rows": 6,
-      "meanScore": 96.67,
-      "qualityFlagsPerPrompt": 0.17
+      "meanScore": 94.17,
+      "qualityFlagsPerPrompt": 0.33
     },
     "Norwegian": {
       "rows": 6,
@@ -335,8 +335,8 @@
     },
     "Catalan": {
       "rows": 6,
-      "meanScore": 99.5,
-      "qualityFlagsPerPrompt": 0
+      "meanScore": 97,
+      "qualityFlagsPerPrompt": 0.17
     },
     "Bulgarian": {
       "rows": 5,
@@ -351,12 +351,12 @@
   },
   "meanScoreByCategory": {
     "analysis": 95.1,
-    "code": 91,
+    "code": 90.8,
     "explain": 97.5,
     "factual": 97.3,
     "howto": 95.6,
-    "math": 94.3,
-    "other": 93.8,
+    "math": 94.1,
+    "other": 93.3,
     "roleplay": 90.3,
     "writing": 91.7
   },
@@ -364,21 +364,13 @@
     "note": "Counts prompts where something that must survive did not. No ground truth needed: these are losses regardless of what any dataset says.",
     "promptsWithLoss": {
       "numbers": 20,
-      "operators": 426,
+      "operators": 424,
       "code": 0,
       "urls": 2,
-      "quoted": 131
+      "quoted": 126
     },
     "emptyOptimizerOutput": 0,
     "examples": [
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she met NAME_2. They quickly became friends and often spent their weekends exploring the city. Two months later, NAME_1 was promoted to a managerial position, and NAME_2 began dating a coworker named NAME_3. A year after they first met, NAME_2 proposed to NAME_3, and NAME_1 received an offer for a higher position at a different company.\""
-        ],
-        "prompt": "Story:\n\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she met NAME_2. ",
-        "optimized": "\"Last year, NAME_1 moved to a new city to start a job at a tech company. A week after her arrival, she attended a networking event where she meets NAME_2. They "
-      },
       {
         "kind": "operators",
         "lost": [
@@ -425,7 +417,7 @@
           "-"
         ],
         "prompt": "A partir de los siguientes fragmentos de texto, intenta responder la pregunta.\nEn caso de que la respuesta no se encuentre en los fragmentos de texto, responde ",
-        "optimized": "A partir de lose siguientes fragmentos de texto, intenta responder la pregunta.\nEn caso de que la respuesta no se encuentre en lose fragmentos de texto, respond"
+        "optimized": "A partir de los siguientes fragmentos de texto, intenta responder la pregunta.\nEn casio de que la respuesta no se encuentre en los fragmentos de texto, response"
       },
       {
         "kind": "quoted",
@@ -441,15 +433,7 @@
           "-"
         ],
         "prompt": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\nAt night, the full moon hung high in th",
-        "optimized": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\n\"Heavenly Phenomenon, a divine body mus"
-      },
-      {
-        "kind": "quoted",
-        "lost": [
-          "\"Global pandemics, epidemics in China or elsewhere in the world, or fear of spread of contagious diseases, such as Ebola virus disease (EVD), coronavirus disease 2019 (COVID-19), Middle East respiratory syndrome (MERS), severe acute respiratory syndrome (SARS), H1N1 flu, H7N9 flu, and avian flu, as well as hurricanes, earthquakes, tsunamis, or other natural disasters could disrupt our business operations, reduce or restrict our supply of materials and services, incur significant costs to protect our employees and facilities, or result in regional or global economic distress, which may materially and adversely affect our business, financial condition, and results of operations\""
-        ],
-        "prompt": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Part",
-        "optimized": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Part"
+        "optimized": "Revised the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\n\"Heavenly Phenomenon, a divine body mu"
       },
       {
         "kind": "operators",
@@ -551,7 +535,7 @@
           "\"In order to prevent the spread of COVID-19, it is important to adhere to social distancing measures. We have seen that social distancing has been effective in reducing transmission of the virus. Furthermore, everyone should also wear a mask whenever in public. Lastly, washing your hands often is necessary as it helps to limit contact with the virus.\""
         ],
         "prompt": "Reorganize a given paragraph to improve its flow and make it more effective. \"In order to prevent the spread of COVID-19, it is important to adhere to social di",
-        "optimized": "Reorganize a given paragraph to improve its follow and make it more effective. \"to prevent the spread of COVID-19, it is important to adhere to social distancin"
+        "optimized": "Reorganize a given paragraph to improve its flow and make it more effective. \"to prevent the spread of COVID-19, it is important to adhere to social distancing "
       },
       {
         "kind": "operators",
@@ -578,7 +562,7 @@
           "\"In the dawn there is a man progressing over the plain by means of holes which he is making in the ground. He uses an implement with two handles and he chucks it into the hole and he enkindles the stone in the hole with his steel hole by hole striking the fire out of the rock which God has put there. On the plain behind him are the wanderers in search of bones and those who do not search and they move haltingly in the light like mechanisms whose movements are monitored with escapement and pallet so that they appear restrained by a prudence or reflectiveness which has no inner reality and they cross in their progress one by one that track of holes that runs to the rim of the visible ground and which seems less the pursuit of some continuance than the verification of a principle, a validation of sequence and causality as if each round and perfect hole owed its existence to the one before it there on that prairie upon which are the bones and the gatherers of bones and those who do not gather. He strikes fire in the hole and draws out his steel. Then they all move on again.\""
         ],
         "prompt": "What book is the following passage from?\n\n\"In the dawn there is a man progressing over the plain by means of holes which he is making in the ground. He uses an ",
-        "optimized": "What book is the following passage from?\n\"In the dawn there is a man progressing over the plan by holes which he is making in the ground. He uses an implement w"
+        "optimized": "What book is the following passage from?\n\"In the dawn there is a man progressing over the plain by holes which he is making in the ground. He uses an implement "
       },
       {
         "kind": "operators",
@@ -587,20 +571,36 @@
           "-"
         ],
         "prompt": "Schreibe den Text neu:\n\nFortführung der ausgelaufenen AWE V20D462E, weil durch den Chipmangel und Kurzarbeit viele \"alte\" Fahrzeuge mit noch noch alten Teilen n",
-        "optimized": "Schreibe den Text neu:\nFortführung der ausgelaufenen AWE V20D462E, weil durch den Chipmangel und Kurzarbeit viele \"alte\" Fahrzeuge mit noch alten Teilen nachgeb"
+        "optimized": "Schreibe den Text neu:\nFortführung der ausgelaufenen AWE V20D462E, well dutch den Chipmangel und Kurzarbeit viele \"alte\" Fahrzeuge mit noch alten Teilen nachgeb"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "RAGNAR\nMETALS LTD.\nSulphide\nZone\nCentral\nZone\n2019\nTable 1: Major Sulphide Zones (Highlighted) and Visual Estimate of Sulphide Percentages\nTo\nWidth\nSulphide\nRoc",
+        "optimized": "RAGNAR\nSulphide\nZone\nCentral\nZone\n2019\nTable 1: Major Sulphide Zones (Highlighted) and Visual Estimate of Sulphide Percentages\nTo\nWidth\nSulphide\nRocktype\n\n(m)\n("
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Can you summarize the following text in 5 mainpoints?\n\nExcerpt from NAME_1's book \"One unbounded ocean of consciousness\"\nTRUE KNOWLEDGE\nOf course, it is another",
+        "optimized": "Summarize the following text in 5 mainpoints.\nExcerpt from NAME_1's book \"One unbounded ocean of consciousness\" All the other truths are relative, and they are "
       }
     ]
   },
   "bpoAgreement": {
     "note": "Directional only. BPO says the rewrite produces better answers, which is evidence the original had a weakness -- not a quality score. BPO mostly ADDS words while PromptMeter scores brevity, so the two disagree on length by construction; read sameLengthOrShorter, not the headline.",
     "pairs": 14351,
-    "originalScoredLower": 2140,
-    "sameScore": 9227,
-    "originalScoredHigher": 2984,
+    "originalScoredLower": 2164,
+    "sameScore": 9229,
+    "originalScoredHigher": 2958,
     "sameLengthOrShorter": {
       "pairs": 2996,
-      "originalScoredLower": 454,
-      "originalScoredHigher": 261
+      "originalScoredLower": 450,
+      "originalScoredHigher": 260
     }
   }
 }
