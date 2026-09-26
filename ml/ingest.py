@@ -74,7 +74,7 @@ LMSYS_ID = "lmsys/lmsys-chat-1m"
 MIN_CHARS = 8
 MAX_CHARS = 8000
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ def estimate_tokens(text):
     return max(1, round((round(words * 1.33) + char_estimate) / 2))
 
 
-def make_record(prompt, optimized, source, split, optimized_origin):
+def make_record(prompt, optimized, source, split, optimized_origin, meta=None):
     """
     One corpus row.
 
@@ -202,6 +202,7 @@ def make_record(prompt, optimized, source, split, optimized_origin):
     because a human edit and a model edit are not the same evidence and a later
     evaluation has to be able to separate them.
     """
+    meta = meta or {}
     return {
         "id": fingerprint(prompt),
         "prompt": prompt,
@@ -209,6 +210,15 @@ def make_record(prompt, optimized, source, split, optimized_origin):
         "optimized_origin": optimized_origin,
         "source": source,
         "split": split,
+        # LMSYS ships a `language` column. Taking it rather than guessing from the text
+        # matters because the quality rules are English-only, and a fair reading of how
+        # the scorer behaves on other languages needs to know which rows those are.
+        # BPO has no such column, so this is None there rather than a guess.
+        "language": meta.get("language"),
+        # True when the SOURCE dataset says it already removed personal data. Not a
+        # claim that this pipeline found none -- the two are different facts and
+        # collapsing them would overstate what is known.
+        "source_redacted": meta.get("redacted"),
         "task_category": categorise(prompt),
         "char_length": len(prompt),
         "word_count": len(prompt.split()),
@@ -276,7 +286,10 @@ def read_bpo(limit=None):
             if not prompt:
                 continue
 
-            yield prompt, optimized or None, "bpo", split, ("model" if optimized else None)
+            # Six-tuple like read_lmsys, with an empty metadata dict: BPO carries no
+            # language or redaction column, and absent is not the same as unknown.
+            yield (prompt, optimized or None, "bpo", split,
+                   ("model" if optimized else None), {})
             produced += 1
 
 
@@ -335,16 +348,32 @@ def read_lmsys(limit=None):
             return
 
         conversation = row.get("conversation") or []
-        first = next((turn for turn in conversation
+        # The first USER turn, by index, so the matching moderation entry can be found.
+        index = next((i for i, turn in enumerate(conversation)
                       if (turn.get("role") or "").lower() == "user"), None)
-        if not first:
+        if index is None:
             continue
 
-        prompt = (first.get("content") or "").strip()
+        prompt = (conversation[index].get("content") or "").strip()
         if not prompt:
             continue
 
-        yield prompt, None, "lmsys", "train", None
+        # LMSYS ships per-turn OpenAI moderation results. Using the dataset's own
+        # labels to drop flagged turns is better than any keyword rule this file could
+        # write, and it keeps material nobody wants in a reference corpus out of it.
+        # A missing or differently-shaped entry means "not flagged": the corpus should
+        # degrade to keeping a row, not crash on a schema that moved.
+        moderation = row.get("openai_moderation") or []
+        if index < len(moderation):
+            entry = moderation[index] or {}
+            categories = entry.get("categories") if isinstance(entry, dict) else None
+            if isinstance(categories, dict) and any(bool(v) for v in categories.values()):
+                continue
+
+        yield prompt, None, "lmsys", "train", None, {
+            "language": row.get("language"),
+            "redacted": row.get("redacted"),
+        }
         produced += 1
 
 
@@ -388,7 +417,7 @@ def ingest(source, limit, batch_size, resume):
         [s for s in state["shards"] if s.startswith(source)])
 
     print("Reading %s ..." % source)
-    for prompt, optimized, src, split, origin in reader(limit):
+    for prompt, optimized, src, split, origin, meta in reader(limit):
         if not prompt.strip():
             rejected["empty"] += 1
             continue
@@ -411,7 +440,7 @@ def ingest(source, limit, batch_size, resume):
             optimized, more = redact(optimized)
             redactions += more
 
-        batch.append(make_record(prompt, optimized, src, split, origin))
+        batch.append(make_record(prompt, optimized, src, split, origin, meta))
 
         if len(batch) >= batch_size:
             path = write_shard(batch, source, shard_index)

@@ -422,6 +422,24 @@ store, in that order. With no token it prints what to do and exits cleanly rathe
 failing part-way through a download. LMSYS is read with `streaming=True`, so
 `--limit 2000` costs one shard rather than the several GB of the full dataset.
 
+**What is verified, and what is not.** The LMSYS field names are taken from its public
+dataset card, which is readable without accepting the gate:
+
+    conversation_id, model, conversation[{content, role}], turn, language,
+    openai_moderation[{categories{...}, category_scores{...}, flagged}], redacted
+    -- 1,000,000 rows, 2.6 GB, one train split
+
+`test_ingest.py` exercises the reader against a faked stream in exactly that shape:
+first user turn taken, later user turns and assistant turns ignored, a leading system
+turn skipped past, a moderation-flagged turn dropped, a short moderation list survived.
+That proves the extraction, which is the half holding the logic. It does **not** prove
+the download, because the live dataset has never been reached from here. Until somebody
+runs it with a token, treat the LMSYS path as tested-in-principle only.
+
+Rows the dataset's own OpenAI moderation marks in any category are skipped. Using its
+labels beats any keyword rule this pipeline could write, and keeps material nobody wants
+in a reference corpus out of it.
+
 ### Corpus schema
 
 One Parquet shard per batch, with a checkpoint so an interrupted run resumes.
@@ -432,6 +450,8 @@ One Parquet shard per batch, with a checkpoint so an interrupted run resumes.
 | `prompt`, `optimized_prompt` | the pair, or `null` when there is no rewrite |
 | `optimized_origin` | **who** rewrote it: `model` for BPO, `null` otherwise |
 | `source`, `split` | provenance |
+| `language` | LMSYS ships this; `null` for BPO, which has no such column |
+| `source_redacted` | the SOURCE dataset says it removed personal data — not a claim this pipeline found none |
 | `task_category` | code / math / writing / analysis / roleplay / explain / howto / factual / other |
 | `char_length`, `word_count`, `token_estimate` | descriptive only |
 | `has_code`, `has_math`, `has_url`, `is_multiline` | what the row contains |
