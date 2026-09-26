@@ -744,8 +744,14 @@ const PromptMeterOptimizer = {
     connectiveRepairs: [
         // A conjunction left immediately before a preposition lost its clause
         [/\b(?:because|since|as|and|but|so|where|when|which|that|who|if)\s+(about|for|of|in|on|with|to|from|by)\b/gi, '$1'],
-        // A conjunction left dangling at a clause or sentence end
-        [/\s*\b(?:because|since|and|but|so|where|when|which|that|who|if|although|however)\s*([,.;!?])/gi, '$1'],
+        // A conjunction left dangling at a clause or sentence end.
+        //
+        // The lookahead is load-bearing: ! and ? open operators as well as ending
+        // sentences. Without it "explain C++ and C# using == and !=" matched "and"
+        // followed by the ! of !=, and the conjunction between two operators was
+        // deleted -- "using ==!=". Real sentence punctuation is followed by a space
+        // or the end of the text; an operator is followed by = or more symbol.
+        [/\s*\b(?:because|since|and|but|so|where|when|which|that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
         // Two coordinators in a row
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed
@@ -1213,7 +1219,10 @@ const PromptMeterOptimizer = {
                 + 'guess costs a whole extra turn to correct.',
             per: 8, cap: 8,
             test: function (text) {
-                const generative = /\b(?:write|draft|create|generate|design|build|compose|make|produce|summari[sz]e|rewrite)\b/i;
+                // A generative verb whose object is a bare pronoun is not a request
+                // for a document: "make it better" asks for a change, not an artefact,
+                // and asking it to name a format is noise.
+                const generative = /\b(?:write|draft|create|generate|design|build|compose|make|produce|summari[sz]e|rewrite)\s+(?!it\b|this\b|that\b|them\b)/i;
                 if (!generative.test(text)) return 0;
                 // Any statement of shape counts, however informal.
                 const shape = /\b(?:\d+\s*(?:words?|characters?|lines?|pages?|paragraphs?|sentences?|bullets?|slides?|items?|steps?)|in\s+(?:json|xml|yaml|csv|markdown|html|a\s+table|bullet|point\s+form|list)|as\s+a\s+(?:table|list|json|essay|email|poem|script|summary)|format|structure|tone|style|short|brief|concise|detailed|step[\s-]by[\s-]step|outline)\b/i;
@@ -1758,7 +1767,10 @@ const PromptMeterOptimizer = {
             // usually one value: "around 1 1/2 years old" collapsed to "1/2", and
             // "2 2 cups" to "2 cups". A repeated word is a typo; a repeated digit is data.
             .replace(/\b(?!\d)(\w{1,6})\s+\1\b/gi, '$1')
-            .replace(/\s+([,.?!;:])/g, '$1')
+            // Closing the space before punctuation, except where that punctuation is
+            // part of an operator. ! and ? open != and ?=, and : opens a ternary or a
+            // time, so "a != b" was being closed up into "a!= b".
+            .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             .replace(/([!?])\1+/g, '$1')
             .trim();
 
@@ -1786,7 +1798,7 @@ const PromptMeterOptimizer = {
             // A removed sentence can leave its full stop beside the previous one.
             // Exactly two collapse; three are left alone, because that is an ellipsis.
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
-            .replace(/\s+([,.?!;:])/g, '$1')
+            .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             // A clause rewrite that fires at a sentence boundary consumes the space
             // after the full stop, because the anchor ends in \s*. Without this,
             // "i want to learn ml. i want to learn dl" closes up as

@@ -34,6 +34,7 @@
         "utils/headroom.js",
         "utils/storage.js",
         "utils/optimizer.js",
+        "utils/analysis.js",
         "utils/recommendations.js",
         "utils/gamification.js",
         "content.js"
