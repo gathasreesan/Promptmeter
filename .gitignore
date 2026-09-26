@@ -27,3 +27,8 @@ ml/dataset/.synthetic_raw.jsonl
 # Reference corpus: regenerate with ml/ingest.py rather than committing 29MB
 # of Parquet and the raw Hugging Face downloads beside it.
 ml/corpus/
+
+# A zipped copy of dashboard/node_modules. The live directory is already ignored
+# above and rebuilds with `npm install`, so the archive is a 6.9MB duplicate of
+# something reproducible. Ignored rather than deleted: it is not mine to remove.
+dashboard/node_modules.zip

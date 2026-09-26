@@ -40,17 +40,22 @@
     --color-secondary: #4CAF50;
     --color-mint: #81C784;
     --color-sage: #A5D6A7;
-    --color-success: #43A047;
+    /* Darkened from #43A047, which was 3.30:1 as text on a card -- below AA. */
+    --color-success: #36823A;
     --color-warning: #F9A825;
     --color-error: #D32F2F;
     --color-info: #1976D2;
-    --color-carbon: #EF6C00;
+    /* Darkened from #EF6C00. It was 3.08:1 on a card, and the popup paints the
+       carbon figure in it at 20px -- the largest number on that surface. */
+    --color-carbon: #BA5400;
     --color-streak: #FBBF24;
 
     /* Text. Contrast against --bg-card is AA or better at every step. */
     --text-primary: #14181A;
     --text-secondary: #5A6470;
-    --text-muted: #6E7781;
+    /* Darkened from #6E7781: that cleared AA on a white card but fell to 4.29:1 on
+       --bg-primary and 4.09:1 on --bg-secondary, and captions sit on all three. */
+    --text-muted: #646C75;
     --text-disabled: #A9B1BA;
     --on-accent: #FFFFFF;
 
