@@ -489,7 +489,8 @@ def export_jsonl(path, limit=None, seed=13):
     for name in shards:
         table = pq.read_table(os.path.join(CORPUS_DIR, name), columns=[
             "id", "prompt", "optimized_prompt", "optimized_origin", "source",
-            "task_category", "token_estimate", "has_code", "has_math"])
+            "task_category", "token_estimate", "has_code", "has_math",
+            "language", "source_redacted"])
         rows.extend(table.to_pylist())
 
     random.Random(seed).shuffle(rows)

@@ -1,237 +1,187 @@
 {
-  "generatedAt": "2026-09-26T09:39:18.966Z",
+  "generatedAt": "2026-09-26T10:20:05.882Z",
   "sample": "sample.jsonl",
-  "rows": 4000,
+  "rows": 6000,
   "errors": 0,
   "scoreDistribution": {
-    "mean": 95.53,
-    "min": 60,
+    "mean": 95.15,
+    "min": 24,
     "p10": 85,
     "median": 100,
     "p90": 100,
     "max": 100,
-    "perfect": 2309,
-    "perfectPct": 57.7
+    "perfect": 3337,
+    "perfectPct": 55.6
   },
   "flagFrequency": {
-    "No output format given for a generative request": 818,
-    "Does not clearly state what it wants": 364,
-    "Says what is wanted only in vague terms": 286,
-    "Over-politeness/emotional padding detected": 157,
-    "Grammatical errors detected: 1": 128,
-    "Conversational preambles detected": 94,
-    "Greetings detected": 87,
-    "Conversational filler & hedging detected": 32,
-    "Instruction stops part-way": 24,
-    "Redundant wordy filler phrases detected": 22,
-    "Chat slang & informal abbreviations detected": 18,
-    "Adjacent repeated words detected": 16,
-    "Spelling typos & misspellings detected": 13,
-    "Grammatical errors detected: 2": 8,
-    "Sign-off & gratitude padding detected": 6,
+    "No output format given for a generative request": 1248,
+    "Does not clearly state what it wants": 533,
+    "Says what is wanted only in vague terms": 442,
+    "Over-politeness/emotional padding detected": 282,
+    "Grammatical errors detected: 1": 214,
+    "Greetings detected": 170,
+    "Conversational preambles detected": 142,
+    "Instruction stops part-way": 88,
+    "Conversational filler & hedging detected": 64,
+    "Chat slang & informal abbreviations detected": 41,
+    "Adjacent repeated words detected": 39,
+    "Redundant wordy filler phrases detected": 36,
+    "Spelling typos & misspellings detected": 29,
+    "Grammatical errors detected: 2": 19,
+    "Excessive punctuation & symbol spam detected": 13,
+    "Sign-off & gratitude padding detected": 12,
+    "Meta-prompting fluff / redundant constraints detected": 11,
+    "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 9,
+    "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 5,
+    "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 5,
+    "Grammatical errors detected: 4": 4,
     "Refers to something that was not included": 4,
-    "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 3,
-    "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 3,
-    "Excessive punctuation & symbol spam detected": 3,
-    "Meta-prompting fluff / redundant constraints detected": 2,
-    "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 2,
-    "Grammatical errors detected: 3": 2,
-    "Meta commentary about the question detected": 1,
+    "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 4,
+    "Meta commentary about the question detected": 3,
+    "Grammatical errors detected: 3": 3,
+    "Over-scoped request: 25 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Keyboard noise detected": 2,
+    "Over-scoped request: 16 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 39 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 2,
+    "Over-scoped request: 36 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 7 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
     "Emoji spam detected": 1,
-    "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
     "Over-scoped request: 18 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: 10 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
     "Over-scoped request: 23 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Grammatical errors detected: 4": 1,
+    "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Contains requirements that pull against each other": 1,
     "Over-scoped request: 12 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1,
-    "Over-scoped request: 49 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
-    "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 1
+    "Over-scoped request: 61 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1,
+    "Over-scoped request: production-ready in one turn is a large ask; scoping it to one component first usually lands better": 1,
+    "Over-scoped request: 52 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 1
+  },
+  "bySource": {
+    "bpo": {
+      "rows": 5311,
+      "meanScore": 95.37,
+      "perfectPct": 56.2,
+      "qualityFlagsPerPrompt": 0.39
+    },
+    "lmsys": {
+      "rows": 689,
+      "meanScore": 93.47,
+      "perfectPct": 50.9,
+      "qualityFlagsPerPrompt": 0.36
+    }
+  },
+  "byLanguage": {
+    "n/a (BPO)": {
+      "rows": 5311,
+      "meanScore": 95.37,
+      "qualityFlagsPerPrompt": 0.39
+    },
+    "English": {
+      "rows": 548,
+      "meanScore": 92.46,
+      "qualityFlagsPerPrompt": 0.45
+    },
+    "Portuguese": {
+      "rows": 34,
+      "meanScore": 95.59,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Russian": {
+      "rows": 19,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "German": {
+      "rows": 15,
+      "meanScore": 93.8,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Spanish": {
+      "rows": 12,
+      "meanScore": 98.5,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Italian": {
+      "rows": 11,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "French": {
+      "rows": 10,
+      "meanScore": 95.7,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Chinese": {
+      "rows": 9,
+      "meanScore": 100,
+      "qualityFlagsPerPrompt": 0
+    },
+    "Japanese": {
+      "rows": 5,
+      "meanScore": 95,
+      "qualityFlagsPerPrompt": 0.2
+    }
   },
   "meanScoreByCategory": {
-    "analysis": 97,
-    "code": 92.4,
-    "explain": 98.3,
-    "factual": 97.9,
-    "howto": 96.8,
-    "math": 95.1,
-    "other": 92.8,
-    "roleplay": 94.9,
-    "writing": 92.8
+    "analysis": 96.9,
+    "code": 92,
+    "explain": 97.9,
+    "factual": 97.6,
+    "howto": 96.2,
+    "math": 94.3,
+    "other": 93.1,
+    "roleplay": 93.3,
+    "writing": 92.3
   },
   "preservation": {
     "note": "Counts prompts where something that must survive did not. No ground truth needed: these are losses regardless of what any dataset says.",
     "promptsWithLoss": {
-      "numbers": 2,
-      "operators": 24,
+      "numbers": 1,
+      "operators": 38,
       "code": 0,
-      "urls": 0,
-      "quoted": 3
+      "urls": 1,
+      "quoted": 14
     },
     "emptyOptimizerOutput": 0,
     "examples": [
       {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "I am working with the Godot Game Engine, and I have an ImmediateGeometry node which is drawing a mesh I am generating at runtime, but it is Z-fighting with anot",
-        "optimized": "How can I move the ImmediateGeometry vertices closer to the 3D Camera to not clip into the other mesh?"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "You are a famous financial columnist who is beloved for your in-depth analysis of financial market and easy to understand writing style. Write a column focusing",
-        "optimized": "Write a column focusing on the thesis of the passage below. Make sure to include the data provided in the passage to be more persuasive.\nIn a world of moderatin"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "Categorize the following poems into their appropriate style.\nI. I wandered lonely as a cloud\nThat floats on high o'er vales and hills,\nWhen all at once I saw a ",
-        "optimized": "Categorize the following poems into their appropriate style.\nI. I wandered lonely as a cloud\nWhen all at once I saw a crowd,\nA host, of golden daffodils\nII.\nMy "
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "What is this list about? Could you add some entries to it without repeating any of the previous entries?\n\nhigh angle shot\neye-level shot\nlow angle shot\noverhead",
-        "optimized": "What is this list about? Add some entries to it without repeating any of the previous entries.\nClose-up"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Generate regex to extract numbers from the following. Do not use lookahead and lookbehind\n---\nzip code: 974728 and 81736 as\nzip code: 974728 as\nzip code: 974728",
-        "optimized": "Generate regex to extract numbers from the following. Do not use lookahead and lookbehind zip code: 974728 and 81736 as, 974728 as, 974728, 81736 as and 974728,"
-      },
-      {
-        "kind": "numbers",
-        "lost": [
-          "1"
-        ],
-        "prompt": "Given a recipe, edit it to omit a certain ingredient.\nIngredients:\n\n1 cup flour\n1 teaspoon baking soda\n1 teaspoon baking powder\n1/2 teaspoon salt\n3/4 cup sugar\n",
-        "optimized": "Given a recipe, edit it to omit a certain ingredient.\n1 cup flour 1 teaspoon baking soda and powder.\n1/2 teaspoon salt\n3/4 cup sugar\n1 egg\n1/2 cup milk\n1/2 cup "
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "Where can I learn more about AI ethics? Today it seems that AI is getting more incorporated into every-day things, while laws and regulations are very slow on c",
-        "optimized": "Can I learn more about AI ethics? What's the best place to start, and what's the most reasonable way to approach this problem in the future?"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Respond to the following linkedin comment in a friendly and funny way:\n\n---\n\nAI is already commercialized.\n\nHumans without AI are now '𝘀𝗶𝗺𝗽𝗹𝗲' humans.\n\nHu",
-        "optimized": "Respond to the following linkedin comment in a friendly and funny way:\nAI is already commercialized.\nHumans + AI are '𝘀𝘂𝗽𝗲𝗿𝗵𝘂𝗺𝗮𝗻𝘀'.\nWhich group do yo"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Categorize the following items by their type.\nOutput:\nApple - Fruit\nPen - Stationery\nBook - Literature",
-        "optimized": "Categorize the following items by their type."
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "oversett til norsk:\nBy using this service, users are required to agree to the following terms: The service is a research preview intended for non-commercial use",
-        "optimized": "It only provides limited safety measures and may generate offensive content. It must not be used for any illegal, harmful, violent, racist, or sexual purposes. "
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-"
-        ],
-        "prompt": "suggest how I could make the case to my son's school that he should be assessed for extra time during exams. they have not replied to previous emails and I have",
-        "optimized": "Suggest how I could make the case to my son's school that he should be assessed for extra time during exams."
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-",
-          "-"
-        ],
-        "prompt": "Let's play Four-in-a-row. These are the icons:\nT - empty\nO - me\nX - you\nMy turn first.\n\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTOTTTTT",
-        "optimized": "Let's play Four-in-a-row.\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTTTTTTT\nTOTTTTT"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-",
-          "-"
-        ],
-        "prompt": "# Student Directory Test:\n\n## 1. Define the Student Data Structure:\n### Object-Oriented Languages:\n- Create a class called \"Student\" with attributes for name, a",
-        "optimized": "## 1.\n- Create a class called \"Student\" with attributes for name, age, and grade.\n### Functional or Procedural Languages:\n- Create a data structure (e. G., reco"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. Lately, I've started to experience infections flaring up and my dentist says ",
-        "optimized": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. How should I simplify this decision for me? What are the different factors to"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "Please check if this statement is complete \"Terms of use\nBy using this service, users are required to agree to the following terms: The service is a research pr",
-        "optimized": "Check if this statement is complete \"Terms of use It only provides limited safety measures and may generate offensive content. It must not be used for any illeg"
-      },
-      {
-        "kind": "numbers",
-        "lost": [
-          "2"
-        ],
-        "prompt": "I have a project due in 2 weeks, that will determine if I get my diploma. And I'm nowhere near the end of it. However I just spent an entire afternoon labelling",
-        "optimized": "Will determine if I get my diploma. Am I going in the right direction?"
-      },
-      {
-        "kind": "operators",
-        "lost": [
-          "-"
-        ],
-        "prompt": "You are a research assistant who is responsible for coding open-ended text. These are the only categories available: Health/NHS, Education, Election Outcome, Ne",
-        "optimized": "These are the only categories available: Health/NHS, Education, Election Outcome, Negative Politics, Negative Partisan, Societal Divides, Morals, National Ident"
-      },
-      {
         "kind": "quoted",
         "lost": [
-          "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful habits like noticing each breath and being aware of our environment. This can help us stay more focused on the task at hand and not get too overwhelmed by our emotions. We can also practice mindful breaks such as stretching and other activities that can help us relax, refocus, and reset. Finally, tracking our progress and reflecting on our progress can help increase our productivity and achieve our goals with greater efficiency.\""
+          "\" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Participant\\u2019s stock account maintained with CCASS, settlement will be effected in CCASS in accordance with the General Rules of CCASS and CCASS Operational Procedures in effect from time to time\"",
+          "\"The Group adopted this ASC 326 and several associated ASUs on January 1, 2021 using a modified retrospective approach with a cumulative effect recorded as an increase of accumulated deficit in the amount of RMB1,955\"",
+          "\"Global pandemics, epidemics in China or elsewhere in the world, or fear of spread of contagious diseases, such as Ebola virus disease (EVD), coronavirus disease 2019 (COVID-19), Middle East respiratory syndrome (MERS), severe acute respiratory syndrome (SARS), H1N1 flu, H7N9 flu, and avian flu, as well as hurricanes, earthquakes, tsunamis, or other natural disasters could disrupt our business operations, reduce or restrict our supply of materials and services, incur significant costs to protect our employees and facilities, or result in regional or global economic distress, which may materially and adversely affect our business, financial condition, and results of operations\""
         ],
-        "prompt": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha",
-        "optimized": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha"
+        "prompt": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class A ordinary shares in his or her stock account or in his or her designated CCASS Part",
+        "optimized": "{\"CCASS\": \" For an investor in Hong Kong who has deposited his or her Class An ordinary shares in his or her stock account or in his or her designated CCASS Par"
       },
       {
-        "kind": "quoted",
+        "kind": "operators",
         "lost": [
-          "\"Once per turn, when a monster is destroyed by battle, you can activate this effect: Choose one of your opponent's monsters and destroy one of its limbs (arms or legs). The monster loses 500 ATK and DEF for each limb destroyed by this effect. If a monster has all its limbs destroyed, it is destroyed and sent to the GY.\""
+          "-",
+          "-",
+          "-",
+          "-"
         ],
-        "prompt": "generate code for a edopro continuous spell card script using local s,id,o=GetID() and starting with local e0 for registering effect with the following effect \"",
-        "optimized": "Generate code for an edopro continuous spell card script using local s, id, o=GetID() and starting with local e0 for registering effect with the following effec"
+        "prompt": "Simulate being a Python console, only code output nothing else.\n\nExample: \nCode: 2+2*2\nOutput: 6\n---\nCode: x = 2; x = x +2; x\nOutput: 4\n---\n\nNow start the simul",
+        "optimized": "Simulate being a Python console, only code output nothing else.\nCode: 2+2*2\nOutput: 6\nCode: x = 2; x = x +2; x\nOutput: 4\nNow start the simulation:\nCode: (2 + 1)"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "You are processing part of a document for insertion into a database;\n\nDOCUMENT SNIPPET:\n\n3rd Party Vendor Technical Requirements Securus Tablets Version: 1.0 © ",
+        "optimized": "You are processing part of a document for insertion into a database;\n3rd Party Vendor Technical Requirements Securus Tablets Version: 1.0 © Securus Technologies"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Summarize the following text:\n\nAt the age of six, NAME_1 and his mother had moved to Indonesia to join his stepfather. From age six to ten, he attended local In",
+        "optimized": "Summarize the following text:\nAt the age of six, NAME_1 and his mother had moved to Indonesia to join his stepfather. Francis of Assisi Catholic Elementary Scho"
       },
       {
         "kind": "operators",
@@ -242,12 +192,15 @@
         "optimized": "Write prose for the following scenario from a book:\nSurprise astronomy quiz during Sven's class."
       },
       {
-        "kind": "quoted",
+        "kind": "operators",
         "lost": [
-          "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are decreased. Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in real time. Sensors attached to essential equipment collect data about the manufacturing process, and algorithms evaluate the data to prevent problems from occurring.\""
+          "-",
+          "-",
+          "-",
+          "-"
         ],
-        "prompt": "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are d",
-        "optimized": "Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in re"
+        "prompt": "Simulate being a Python console, only code output nothing else.\n\nContinue: \nCode: 2+2*2\nOutput: 6\n---\nCode: x = 2; x = x +2; x\nOutput: 4\n---\nCode: x = 2; x += 1",
+        "optimized": "Simulate being a Python console, only code output nothing else.\nCode: 2+2*2\nOutput: 6\nCode: x = 2; x = x +2; x\nOutput: 4\nCode: x = 2; x += 1; x += 1; x"
       },
       {
         "kind": "operators",
@@ -261,39 +214,168 @@
       {
         "kind": "operators",
         "lost": [
+          "-",
+          "-",
+          "-",
           "-"
         ],
-        "prompt": "I am a dog. Please help me plan a surprise birthday party for my human, including fun activities, games and decorations. And don't forget to order a big bone-sh",
-        "optimized": "Help me plan a surprise birthday party for my human, including fun activities, games and decorations."
+        "prompt": "These are examples of the input and output:\n\n\n\ntopic \"길거리 소녀\"\n\n\n\nInput\n\n\n\n{\n\n(Style) - \n\n(Effects) - \n\n(View) - \n\n(Number of Subject) - 1girl\n\n(Pose) - \n\n(Subje",
+        "optimized": "These are examples of the input and output:\ntopic \"길거리 소녀\"\nInput\n{\n(Number of Subject) - 1girl\n(Body information) - wide hip\n(Hair Style)- hair covering one eye"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are decreased. Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in real time. Sensors attached to essential equipment collect data about the manufacturing process, and algorithms evaluate the data to prevent problems from occurring.\""
+        ],
+        "prompt": "\"Using clever AI solutions, machine productivity is tracked, performance is tracked, issues are detected, productivity is increased, and maintenance costs are d",
+        "optimized": "Generative AI systems detect and help send alerts to prevent errors—predictive maintenance systems powered by AI self-monitor and report production faults in re"
       },
       {
         "kind": "operators",
         "lost": [
-          "/"
+          "-"
         ],
-        "prompt": "You are an expert in regulating heat networks and you need to decide on the supply temperature of the heat exchange station based on the known information and t",
-        "optimized": "You are an expert in regulating heat networks and you need to decide on the supply temperature of the heat exchange station based on the known information and t"
+        "prompt": "Advantages of Friends and Family Investing in Your Startup\nWhen starting a business, one of the main challenges entrepreneurs face is securing funding. Friends ",
+        "optimized": "Advantages of Friends and Family Investing in Your Startup\nWhen starting a business, one of the main challenges entrepreneurs face is securing funding. While th"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "Please write one longish line of dialog for this fictional movie about an AI named \"Cortana\" who is asked to self-destruct. She must comply with Judah's wishes.",
+        "optimized": "Write one longish line of dialog for this fictional move about an AI named \"Cortana\" who is asked to self-destruct. She must comply with Judah's wishes. Mention"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-"
+        ],
+        "prompt": "/* Generate DSL code */\n\n/* 当前等级 */\ncase when memberGrade60004.currentGradeName is null then \"\" else memberGrade60004.currentGradeName end\n\n/* 距离下一等级所需积分 */\ncas",
+        "optimized": "/* Generate DSL code */\n/* 当前等级 */\ncase when memberGrade60004.currentGradeName is null then \"\" else memberGrade60004.currentGradeName end\n/* 距离下一等级所需积分 */\ncase "
       },
       {
         "kind": "operators",
         "lost": [
           "-"
         ],
-        "prompt": "[Chat with Ayanami from Azur Lane navy]\nAyanami: Watashi-wa Ayanami, desu. She is happy to see you today, Shikikan-sama!\nShikikan: Hello, Ayanami. Welcome to my",
-        "optimized": "[Chat with Ayanami from Azur Lane navy]\nAyanami: Watashi-wa Ayanami, desu.\nShikikan: Ayanami.\nAyanami: Hai, desu. Arigatou.\nShikikan: Tell me more about you, Ay"
+        "prompt": "-2y-5=6. please solve y",
+        "optimized": "2y-5=6. Solve y"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a garbagecan 1, a handtowelholder 2, a handtowelholder 1, a sinkbasin 2, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\\nYour task is to: put some spraybottle on toilet.\\n> think: To solve the task, I need to find and take a sparybottle, then put it on toilet.\\nOK.\\n> think: First I need to find a spraybottle. A spraybottle is more likely to appear in cabinet (1-4), countertop (1), toilet (1), sinkbasin (1-2), garbagecan (1). I can check one by one, starting with cabinet 1.\\nOK.\\n> go to cabinet 1\\nOn the cabinet 1, you see a cloth 1, a soapbar 1, a soapbottle 1.\\n> go to cabinet 2\\nThe cabinet 2 is closed.\\n> open cabinet 2\\nYou open the cabinet 2. The cabinet 2 is open. In it, you see a candle 1, and a spraybottle 2.\\n> think: Now I find a spraybottle (2). Next, I need to take it.\\n> take spraybottle 2 from cabinet 2\\nYou pick up the spraybottle 2 from the cabinet 2.\\n> think: Now I take a spraybottle (2). Next, I need to put it in/on toilet 1.\\nOK.\\n> go to toilet 1\\nOn the toilet 1, you see a soapbottle 2.\\n> put spraybottle 2 in/on toilet 1\\nYou put the spraybottle 2 in/on the toilet 1.\\n\""
+        ],
+        "prompt": "Here is an example:\n\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a ",
+        "optimized": "\"You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a garbagecan 1, a hand"
+      },
+      {
+        "kind": "numbers",
+        "lost": [
+          "1"
+        ],
+        "prompt": "Given a recipe, edit it to omit a certain ingredient.\nIngredients:\n\n1 cup flour\n1 teaspoon baking soda\n1 teaspoon baking powder\n1/2 teaspoon salt\n3/4 cup sugar\n",
+        "optimized": "Given a recipe, edit it to omit a certain ingredient.\n1 cup flour 1 teaspoon baking soda and powder.\n1/2 teaspoon salt\n3/4 cup sugar\n1 egg\n1/2 cup milk\n1/2 cup "
+      },
+      {
+        "kind": "urls",
+        "lost": [
+          "https://t.>sup3rnovas:"
+        ],
+        "prompt": "can you give a one-paragraph summary of the tweets and reviews below: His face is soooo squishy like omggggg ????…bare face/light makeup NAME_1 is literally my ",
+        "optimized": "Give a one-paragraph summary of the tweets and reviews below: His face is soooo squishy like omggggg.…bare face/light makeup NAME_1 is literally my fav genre? h"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"I want you to act as a Vietnamese translator. I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should be neutral and accurate. Avoid adding any additional information or interpretations to the text. Let's start with the following English sentence: \""
+        ],
+        "prompt": "\"I want you to act as a Vietnamese translator. I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should",
+        "optimized": "I will provide the text that I would like you to translate it into Vietnamese. The tone of the translation should be neutral and accurate. Avoid adding any addi"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"<p>J'aime résoudre les problème et me rendre utile, j'ai créer pour des besoin de stream un outil facilitant la mise en place du stream en m’interfaçant avec OBS, mais aussi des caméra avec moteur afin de pouvoir les orienté en fonction des scène choisi sur OBS afin de facilité l'utilisation par les opérateur.</p><p>J'aime héberger moi même les service que je cherche a utiliser mais aussi les serveur de jeux vidéo.</p><p>Je me passionne aussi pour la mécanique la modélisation de pièce de la 3D.</p><p>Je sonorise aussi des groupes de musique sur mon temps libre pour des concerts.</p>\"",
+          "\"<ul><li>Création de scriptsde mise à jour de pare-feu GNU/Linux</li><li>Création d’un Système de déploiement d’espace Web mutualisé sur GNU/Linux</li></ul>\"",
+          "\"<ul><li>Développement de robot PHP</li><li>maintenance de l’intranet et extranet</li><li>implémentation de nouvelle fonctionnalité sur l’intranet et l’extranet.</li></ul>\""
+        ],
+        "prompt": "{\"id\":\"res_GAwr85brB0\",\"title\":\"CV Samuel LEMAITRE #1\",\"templateId\":6,\"colorHex\":\"3f6592\",\"userId\":35899902,\"uuid\":\"a55d479b-4d33-4748-9414-72cf32068a78\",\"hash\"",
+        "optimized": "{\"id\":\"res_GAwr85brB0\",\"title\":\"CV Samuel LEMAITRE #1\",\"templateId\":6,\"colorHex\":\"3f6592\",\"userId\":35899902,\"uuid\":\"a55d479b-4d33-4748-9414-72cf32068a78\",\"hash\""
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"MOC:the group is one of the first few manufacturers in the people’s republic of china to use chip on board (“cob”) and chip on flex (“cof”) technologies and molding on board (“mob”) and molding on chip (“moc”) technologies in the manufacture of camera modules, as well as to produce ultra-thin camera modules with resolutions of 200 mega pixels and above, dual/multiple camera modules, 3d modules, under-glass fingerprint recognition modules and fingerprint recognition modules with various technologies on a mass production scale\""
+        ],
+        "prompt": "Extract abbreviations MOC and the full form of MOC.\nDesired Format:\n{\"MOC\":\"<Full form of MOC>\"}\nInput:\"MOC:the group is one of the first few manufacturers in t",
+        "optimized": "Extract abbreviations MOC and the full form of MOC.\nDesired Format:\n{\"MOC\":\"<Full form of MOC>\"}\nInput:\"MOC: the group is one of the first few manufacturers in "
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\" with more unique and unusual alternatives that capture the essence of your writing style. Take inspiration from the writing style of a well liked writer or text, and aim to emulate their mannerisms and techniques as closely as possible. Adopt a non bias perspective as you delve into the subject, focusing on kindness and incorporating facts into your discourse. As you craft your piece, strive to convey a sense of intelligence, creativity, refinement, and originality, and present your arguments with an air of confident authority. Avoid using any conjunctions, including \""
+        ],
+        "prompt": "Compose a highly sophisticated, expertly written, and innovative essay on the topic of ‘commercial cinema versus arthouse cinema debacle’. Utilize a rich and va",
+        "optimized": "Compose a highly sophisticated, expertly written, and innovative essay on the topic of ‘commercial cinema versus arthouse cinema debacle’. Utilize a rich and va"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Beantworte die folgenden Fragen und gib bei der Antwort die Nummer der Frage zurück. Antworte bei geschlossenen Fragen nur mit Ja oder nein ohne weiteren Text:\n",
+        "optimized": "Beantworte die folgenden Fragen und gib bei der Antwort die Nummer der Frage zurück. Antworte bei geschlossenen Fragen nur mit Ja oder nein ohne weiteren Text:\n"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-",
+          "-",
+          "-"
+        ],
+        "prompt": "Answer the following single-choice question about CERTIFIED HVAC DESIGNER exam:\n2. For duct sizing, the static regain method should be avoided for:\nThe followin",
+        "optimized": "Answer the following single-choice question about CERTIFIED HVAC DESIGNER exam:\n2. For duct sizing, the static regain method should be avoided for:\nThe followin"
+      },
+      {
+        "kind": "quoted",
+        "lost": [
+          "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful habits like noticing each breath and being aware of our environment. This can help us stay more focused on the task at hand and not get too overwhelmed by our emotions. We can also practice mindful breaks such as stretching and other activities that can help us relax, refocus, and reset. Finally, tracking our progress and reflecting on our progress can help increase our productivity and achieve our goals with greater efficiency.\""
+        ],
+        "prompt": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha",
+        "optimized": "\"Mindfulness can help us stay more focused and improve our productivity by having more awareness of our thoughts, feelings, and body. We can practice mindful ha"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "Please create Q&As based on the following content:\n\nThe Kempower Power Unit is the heart of Kempower's flexible,\nmodular and scalable DC charging system with dy",
+        "optimized": "Create Q&As based on the following content:\nThe Kempower Power Unit is the heart of Kempower's flexible,\nmodular and scalable DC charging system with dynamic po"
+      },
+      {
+        "kind": "operators",
+        "lost": [
+          "-"
+        ],
+        "prompt": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. Lately, I've started to experience infections flaring up and my dentist says ",
+        "optimized": "I've had 3 root canals in my right molar. The last one was more than 10 years ago. How should I simplify this decision for me? What are the different factors to"
       }
     ]
   },
   "bpoAgreement": {
     "note": "Directional only. BPO says the rewrite produces better answers, which is evidence the original had a weakness -- not a quality score. BPO mostly ADDS words while PromptMeter scores brevity, so the two disagree on length by construction; read sameLengthOrShorter, not the headline.",
-    "pairs": 4000,
-    "originalScoredLower": 593,
-    "sameScore": 2571,
-    "originalScoredHigher": 836,
+    "pairs": 5311,
+    "originalScoredLower": 808,
+    "sameScore": 3370,
+    "originalScoredHigher": 1133,
     "sameLengthOrShorter": {
-      "pairs": 844,
-      "originalScoredLower": 131,
-      "originalScoredHigher": 77
+      "pairs": 1089,
+      "originalScoredLower": 169,
+      "originalScoredHigher": 96
     }
   }
 }

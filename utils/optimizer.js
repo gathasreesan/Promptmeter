@@ -985,9 +985,72 @@ const PromptMeterOptimizer = {
     // ("Explain recursion" is complete), and a long one is not a good one. Length is
     // reported as information, never as score.
     // ---------------------------------------------------------------------------
+    // Function words that appear in almost any English sentence. Used only to decide
+    // whether the English-only rules below can read a prompt at all -- never to score.
+    ENGLISH_MARKERS: new Set([
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'to', 'of', 'and', 'or',
+        'in', 'on', 'for', 'with', 'that', 'this', 'it', 'i', 'you', 'we', 'my', 'me',
+        'what', 'how', 'why', 'when', 'which', 'who', 'can', 'do', 'does', 'please',
+        'not', 'from', 'as', 'at', 'by', 'about', 'if', 'all', 'some', 'have', 'has',
+        'would', 'should', 'could', 'will', 'want', 'need', 'make', 'give', 'write'
+    ]),
+
+    /**
+     * Whether a prompt is English enough for the English-only quality rules to judge.
+     *
+     * This exists because two of those rules fire on the ABSENCE of an English cue.
+     * `no-clear-request` looks for an English imperative verb and flags a prompt that
+     * has none -- so a perfectly clear Japanese or Portuguese request was flagged for
+     * not being English. Measured over the LMSYS sample, non-English prompts scored a
+     * mean of 83-89 against 92.3 for English, and collected up to twice as many quality
+     * flags per prompt. That gap was the rules failing to read, reported as the user
+     * writing badly.
+     *
+     * Two checks, because script alone is not enough: Portuguese and German are Latin
+     * script and were penalised just as hard as Japanese.
+     *
+     * @param {string} text
+     * @returns {boolean} False when the English-only rules should stay silent.
+     */
+    looksEnglish: function (text) {
+        if (typeof text !== 'string' || !text.trim()) return false;
+
+        // 1. Script. A prompt substantially in a non-Latin script is not English, and
+        //    no amount of word matching will make it so.
+        const letters = text.replace(/[^\p{L}]/gu, '');
+        if (letters.length >= 8) {
+            const latin = (letters.match(/\p{Script=Latin}/gu) || []).length;
+            if (latin / letters.length < 0.65) return false;
+        }
+
+        const words = (text.toLowerCase().match(/[a-z']+/g) || []);
+        if (words.length === 0) return false;
+
+        // 2. Vocabulary. Latin script alone decides nothing -- Portuguese and German
+        //    are Latin too, and a short function-word list is worse than useless
+        //    because Romance languages share several of them ("a", "as", "de", "no").
+        //    The spelling dictionary is a real English vocabulary of a few thousand
+        //    words, so recognition against it separates "Explain recursion" from
+        //    "Explique a recursividade" where a marker list cannot.
+        let known = 0;
+        for (const word of words) {
+            if (this.ENGLISH_MARKERS.has(word) ||
+                (PM_SPELL && PM_SPELL.known && PM_SPELL.known(word))) {
+                known++;
+            }
+        }
+
+        // A third of the words being recognisable English is a low bar on purpose. The
+        // cost of the two readings is asymmetric: calling English text non-English only
+        // silences a couple of rules, while calling Japanese text English flags it for
+        // having no English verb, which is the bias this whole function exists to stop.
+        return known / words.length >= 0.34;
+    },
+
     qualityRules: [
         {
             id: 'missing-output-format',
+            requiresEnglish: true,
             label: 'No output format given for a generative request',
             metric: 'Fires when the prompt asks for something to be produced (write, '
                 + 'draft, create, generate, design, build, summarise) and nowhere states '
@@ -1060,6 +1123,7 @@ const PromptMeterOptimizer = {
         },
         {
             id: 'no-clear-request',
+            requiresEnglish: true,
             label: 'Does not clearly state what it wants',
             metric: 'Fires when the prompt contains no question mark, no imperative '
                 + 'opening verb and no "I want / I need / can you" construction. Such a '
@@ -1107,7 +1171,15 @@ const PromptMeterOptimizer = {
         if (typeof text !== 'string' || text.trim() === '') return [];
 
         const findings = [];
+        // Decided once per prompt rather than per rule: the check walks the text.
+        const english = this.looksEnglish(text);
+
         for (const rule of this.qualityRules) {
+            // A rule that fires on the ABSENCE of an English cue cannot be run on a
+            // prompt it cannot read -- it would report "no clear request" for every
+            // Japanese prompt ever written. Rules that fire on the PRESENCE of an
+            // English phrase need no gate: they simply stay quiet.
+            if (rule.requiresEnglish && !english) continue;
             let count = 0;
             try {
                 count = rule.test.call(this, text) || 0;
