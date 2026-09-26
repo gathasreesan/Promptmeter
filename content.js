@@ -748,6 +748,11 @@ function handleResponseCaptured(prompt, response) {
     PromptMeterStorage.getHistory((history) => {
         const analysis = PromptMeterOptimizer.analyzePrompt(cleanPrompt, history);
 
+        // analyzePrompt returns scored:false when there was no prompt to judge. Saving
+        // that turn would put a null efficiencyScore into the history the dashboard
+        // averages over, and there is nothing to learn from a turn with no prompt.
+        if (analysis.scored === false) return;
+
         const turnData = Object.assign({
             prompt: cleanPrompt,
             response: cleanResponse,
@@ -757,6 +762,9 @@ function handleResponseCaptured(prompt, response) {
             electricity: footprint.electricity,
             carbon: footprint.carbon,
             efficiencyScore: analysis.score,
+            // Which quality heuristics fired, as ids rather than prose. The labels are
+            // presentation and change; the ids are the contract the dashboard reads.
+            qualityIssues: (analysis.quality || []).map(finding => finding.id),
             wasOptimized: wasOptimized,
             tokensSaved: wasOptimized ? lastSavedTokens : 0,
             carbonSaved: wasOptimized ? lastSavedCarbon : 0,

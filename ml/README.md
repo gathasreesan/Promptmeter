@@ -190,6 +190,11 @@ on their own.
 | `dataset/expand.py` | Corpus generator — **an experiment that did not pay off**; see above |
 | `train.py` | Trains, evaluates, exports |
 | `metrics.json` | Full generated report |
+| `ingest.py` | Reference corpus ingestion from LMSYS and BPO |
+| `evaluate_corpus.js` | Measures the scorer and optimizer against the corpus |
+| `test_ingest.py` | Self-check for ingestion, offline |
+| `corpus_eval.json` | **Generated** — the corpus measurement |
+| `corpus/` | **Generated, gitignored** — Parquet shards |
 | `generate_synthetic.py` | Synthetic corpus pipeline — generate, validate, report |
 | `evaluate_synthetic.py` | Compares original vs original+synthetic; never writes the model |
 | `test_generate_synthetic.py` | Self-check for the validator |
@@ -360,6 +365,185 @@ would understate the uncertainty substantially.
 
 ---
 
+## Reference corpus (LMSYS + BPO)
+
+A corpus of real prompts, used to measure the scorer and the optimizer against input
+nobody wrote for a unit test. It is **evaluation data**. Nothing in it trains the shipped
+model, and nothing in it is treated as a verified quality score.
+
+```bash
+pip install -r requirements.txt
+
+python ingest.py --source bpo                 # 14,351 rows, no auth needed
+python ingest.py --export-jsonl corpus/sample.jsonl --export-limit 4000
+node ../ml/evaluate_corpus.js                 # writes ml/corpus_eval.json
+python test_ingest.py                         # 52 checks, offline
+```
+
+`ml/corpus/` is gitignored: it is 29 MB and regenerating it is one command.
+
+### What each dataset is allowed to be used for
+
+| | `zai-org/BPO` | `lmsys/lmsys-chat-1m` |
+| :--- | :--- | :--- |
+| Ships | `prompt`, `optimized_prompt`, `good_res`, `bad_res` | full conversations |
+| Used for | evaluation, preservation tests, prompt diversity | diversity and generalisation |
+| **Not** used for | training the optimizer | anything supervised |
+| Auth | none | HF token + licence acceptance |
+
+**BPO is not a rewrite target, and this is the most important thing in this section.**
+Measured on its validation split, **70% of BPO's optimized prompts are LONGER than the
+original** (median 1.29x, mean 2.08x). BPO optimizes the quality of the model's
+*response*, largely by adding specificity and constraints. PromptMeter optimizes tokens
+spent, under the rule that the user's meaning survives. Fitting one objective to the
+other would teach the optimizer to pad prompts, which is the behaviour this project
+exists to remove.
+
+So BPO is used for what it can honestly support: real prompts, an independent opinion
+that a given prompt was worth rewriting, and a corpus to check that the optimizer does
+not destroy constraints.
+
+### Authentication
+
+BPO is public. LMSYS is gated (`gated: auto` on the Hub) and needs three things:
+
+1. a Hugging Face account,
+2. the terms accepted at <https://huggingface.co/datasets/lmsys/lmsys-chat-1m>,
+3. a token, supplied the standard way:
+
+```bash
+huggingface-cli login      # or: export HF_TOKEN=hf_...
+python ingest.py --source lmsys --limit 2000
+```
+
+**No token is read from, or written to, this repository.** `ingest.py` looks at
+`HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, `HUGGINGFACEHUB_API_TOKEN` and the CLI's own
+store, in that order. With no token it prints what to do and exits cleanly rather than
+failing part-way through a download. LMSYS is read with `streaming=True`, so
+`--limit 2000` costs one shard rather than the several GB of the full dataset.
+
+### Corpus schema
+
+One Parquet shard per batch, with a checkpoint so an interrupted run resumes.
+
+| Column | Meaning |
+| :--- | :--- |
+| `id` | fingerprint of the normalised prompt; the duplicate key |
+| `prompt`, `optimized_prompt` | the pair, or `null` when there is no rewrite |
+| `optimized_origin` | **who** rewrote it: `model` for BPO, `null` otherwise |
+| `source`, `split` | provenance |
+| `task_category` | code / math / writing / analysis / roleplay / explain / howto / factual / other |
+| `char_length`, `word_count`, `token_estimate` | descriptive only |
+| `has_code`, `has_math`, `has_url`, `is_multiline` | what the row contains |
+| `quality_label`, `quality_label_origin` | **always null** — see below |
+| `schema_version` | bumped when the columns change |
+
+`quality_label` exists and is always empty on purpose. Neither dataset ships a verified
+prompt-quality score, so none is written. Human, model and heuristic judgements are kept
+in separate columns precisely so that a later reader cannot mistake one for another —
+`optimized_origin` says a *model* wrote that rewrite, and the extension's own rule output
+lives in `ml/corpus_eval.json`, never in the corpus.
+
+### Cleaning
+
+Exact duplicates are dropped by fingerprint. Prompts under 8 or over 8,000 characters
+are dropped. Personal data is redacted with deliberately narrow rules — emails, API
+keys, bearer tokens, card-shaped digit runs, SSNs — and **never inside a fenced or
+inline code span**, because a corpus that has lost its technical syntax cannot test
+whether the optimizer preserves it. Version numbers, dimensions, money and long ids are
+left alone. `test_ingest.py` asserts all of that.
+
+---
+
+## What the corpus found
+
+### The optimizer was deleting the data prompts operate on
+
+The preservation check runs the optimizer over every prompt and compares what went in
+against what came out. On the first run it lost **numbers in 2.02%** of prompts and
+**operators in 1.43%**:
+
+```
+"Output the 3rd and 7th element of the following list:\n[1, 5, 8, 11, 15, 20, 24, 30]"
+  ->  "Output the 3rd and 7th element of the following list"
+```
+
+The request survived; the data it operates on did not, leaving a prompt that cannot be
+answered. Root cause: `condense.js` decides what to prune from `contentWords()`, which
+matches `[a-z]+` only — so a line of numbers, a bracketed list or a `Label: value` row
+has *zero* content words and read as empty backstory. The `wordCount <= 3` fragment test
+then finished off short list items like `C++`.
+
+Fixed by teaching `classify()` what a data segment is, and treating one as core (never
+droppable). Line structure is now preserved too: everything used to be rejoined with
+spaces, which flattened `Item: X\nQuantity: 3` into one garbled run.
+
+**Numbers lost: 2.02% → 0.05%. Operators: 1.43% → 0.60%.**
+
+### The scorer could not see the things it claims to measure
+
+Over 4,000 real prompts, **86.6% scored a perfect 100**. The rules only knew about
+waste — padding, slang, typos, repetition — and most real prompts are not padded, they
+are *under-specified*. Six quality rules were added, each documenting its own metric:
+
+| id | Fires when | Penalty |
+| :--- | :--- | ---: |
+| `missing-output-format` | a generative request states no length, format or structure | 8 |
+| `dangling-reference` | points at code/files/data that are not in the prompt | 12 |
+| `contradiction` | opposing requirements in one prompt ("detailed but brief") | 10 |
+| `vague-specification` | unquantified quality words carry the whole spec | 4 each, cap 12 |
+| `no-clear-request` | no question, no imperative verb, no stated want | 15 |
+| `truncated-instruction` | ends on a conjunction, colon or comma | 10 |
+
+**Perfect scores: 86.6% → 57.7%. Mean 98.89 → 95.53. p10 95 → 85.**
+
+Prompt length is deliberately *not* a rule. A short prompt is not a bad prompt, and
+`quality.test.js` asserts that padding a prompt never raises its score.
+
+### Other bugs the corpus surfaced
+
+- **An empty prompt scored 100/100** — the one input that cannot be good scored best,
+  and every empty box pulled the dashboard average up. `analyzePrompt` now returns
+  `score: null, scored: false`, and the four places that consume the score were checked
+  for a `null`. Two were wrong: `storage.js` treated null as a number and averaged it as
+  zero, and the dashboard's history row would throw on `rating.color`.
+- **`"What could it be"` became `"What could it is"`** — a modal takes the bare
+  infinitive, and inverted questions put the subject between the modal and its verb.
+- **`"around 1 1/2 years old"` became `"around 1/2 years old"`** — the repeated-word
+  collapser treated two adjacent numbers as a doubled word.
+
+### Agreement with BPO
+
+BPO's pairs are an independent opinion that a prompt was worth rewriting. The only claim
+made from them is directional: if the scorer sees real weakness, the original should not
+out-score the rewrite.
+
+On the subset where BPO's rewrite is **no longer than** the original — the only fair
+comparison, since PromptMeter does not reward length — the scorer now agrees **63/37**
+(131 vs 77), up from 57/43 before the quality rules. This is weak evidence and is
+reported as such: it is one directional signal, not a validated metric.
+
+---
+
+## Was retraining needed? No.
+
+**The shipped classifier was not retrained, and neither dataset can justify retraining
+it.** The model assigns one of four labels — IMPORTANT, FILLER, REDUNDANT, REPETITIVE —
+to a phrase. Neither LMSYS nor BPO carries those labels, or anything convertible into
+them:
+
+- BPO tells you a *whole prompt* was rewritten. It does not say which *span* was filler.
+- LMSYS carries no annotation at all.
+
+Deriving four-class labels from either would mean inventing them, then training on them
+as though they were verified — which is exactly what the brief forbids, and what
+`ml/README.md` already records going wrong once with `dataset/expand.py`.
+
+What the corpus is good for is measuring, and it has now paid for itself twice over: two
+meaning-destroying optimizer bugs and a blind scorer, none of which the 1,095 hand-written
+unit tests had caught, because all of them were written by the same person who wrote the
+rules.
+
 ---
 
 ## Retraining
@@ -385,6 +569,12 @@ node tests/optimizer.test.js    # rules, protection, end-to-end rewrites
 node tests/grammar.test.js      # grammar corrections, and what must NOT be corrected
 node tests/spelling.test.js     # typo corrections, and what must NOT be corrected
 node tests/ml-parity.test.js    # JavaScript reproduces scikit-learn
+node tests/regressions.test.js  # bugs found in real use, pinned to their prompt
+node tests/quality.test.js      # prompt-quality scoring and the shapes that break it
+node tests/tokens.test.js       # the design-token contract
+
+python ml/test_generate_synthetic.py   # the synthetic validator
+python ml/test_ingest.py               # corpus ingestion, offline
 ```
 
 `ml-parity.test.js` is the one that matters most after a retrain. `ml-classifier.js`
