@@ -156,7 +156,57 @@ const PromptMeterOptimizer = {
         "vaccum": "vacuum", "varaible": "variable", "varible": "variable", "varient": "variant",
         "vegtable": "vegetable", "vehical": "vehicle", "visable": "visible",
         "voluntier": "volunteer", "wether": "whether", "wich": "which", "widht": "width",
-        "wierd": "weird", "writting": "writing", "yeild": "yield"
+        "wierd": "weird", "writting": "writing", "yeild": "yield",
+
+        // Second batch, added after "teach me different types of ml" came back
+        // mangled and the tables were audited. Every key here was checked against
+        // PM_WORDS first: a typo key that is also a real word turns correct writing
+        // into a "correction", which is how "form" once became "from".
+        "accomodation": "accommodation", "acheivement": "achievement", "agressive":
+        "aggressive", "allready": "already", "amature": "amateur", "anual": "annual",
+        "apparant": "apparent", "aparently": "apparently", "arrangment": "arrangement",
+        "atleast": "at least", "auther": "author", "avaliable": "available", "availible":
+        "available", "beggining": "beginning", "cemetary": "cemetery", "cheif": "chief",
+        "comming": "coming", "commitee": "committee", "compatable": "compatible",
+        "conected": "connected", "consistantly": "consistently", "contian": "contain",
+        "convinient": "convenient", "decieve": "deceive", "definate": "definite",
+        "dependancy": "dependency", "desireable": "desirable", "develope": "develop",
+        "dieing": "dying", "diffrence": "difference", "dissagree": "disagree", "embarassed":
+        "embarrassed", "enviornmental": "environmental", "equiptment": "equipment",
+        "excercise": "exercise", "explicitely": "explicitly", "extremly": "extremely",
+        "freind": "friend", "garuntee": "guarantee", "generaly": "generally", "greatful":
+        "grateful", "happenning": "happening", "harrassment": "harassment", "hopefull":
+        "hopeful", "immediatly": "immediately", "indispensible": "indispensable",
+        "inevitible": "inevitable", "infinate": "infinite", "inteligence": "intelligence",
+        "intrest": "interest", "irrelevent": "irrelevant", "knowledgable": "knowledgeable",
+        "libary": "library", "maintainance": "maintenance", "mathamatics": "mathematics",
+        "medival": "medieval", "miniscule": "minuscule", "mispell": "misspell", "noticible":
+        "noticeable", "occassionally": "occasionally", "occuring": "occurring",
+        "oppurtunity": "opportunity", "orginal": "original", "parliment": "parliament",
+        "perfomance": "performance", "permanant": "permanent", "personaly": "personally",
+        "phenomonon": "phenomenon", "practial": "practical", "preformance": "performance",
+        "probaly": "probably", "proffesor": "professor", "quantitiy": "quantity",
+        "refering": "referring", "rember": "remember", "repetive": "repetitive",
+        "sacrafice": "sacrifice", "safty": "safety", "scedule": "schedule", "supress":
+        "suppress", "surprize": "surprise", "techniqe": "technique", "tommorrow":
+        "tomorrow", "usualy": "usually", "vacum": "vacuum", "vegetarain": "vegetarian",
+        "writen": "written", "arrya": "array", "aray": "array", "lsit": "list",
+        "dictionery": "dictionary", "intialize": "initialize", "authentification":
+        "authentication", "autentication": "authentication", "asyncronous": "asynchronous",
+        "synchronus": "synchronous", "paralell": "parallel", "compatiblity":
+        "compatibility", "configuraton": "configuration", "configuraion": "configuration",
+        "dependancies": "dependencies", "deployement": "deployment", "enviorment":
+        "environment", "excecute": "execute", "executeable": "executable", "extention":
+        "extension", "frontent": "frontend", "implmentation": "implementation",
+        "inheritence": "inheritance", "itterate": "iterate", "midleware": "middleware",
+        "migraton": "migration", "paramater": "parameter", "perfomrance": "performance",
+        "permision": "permission", "pluging": "plugin", "prefrence": "preference",
+        "proccessing": "processing", "querry": "query", "queyr": "query", "recurssion":
+        "recursion", "refernce": "reference", "repositry": "repository", "respose":
+        "response", "servcie": "service", "sturcture": "structure", "sytem": "system",
+        "temlate": "template", "threding": "threading", "tranaction": "transaction",
+        "validaton": "validation", "wieght": "weight", "seperated": "separated", "langauge":
+        "language", "lifecyle": "lifecycle", "sucessfull": "successful"
     },
 
     // Technical acronyms, matched case-sensitively so "AI" and "Js" are left alone.
@@ -169,17 +219,55 @@ const PromptMeterOptimizer = {
     // needs expanded -- "explain dsa to me" is already as short as that request gets.
     //
     // An entry may therefore never be longer than its key.
+    // Case normalisation only. Every value must be the same length as its key: an
+    // "expansion" like dsa -> "Data Structures & Algorithms" makes the prompt LONGER,
+    // which is the opposite of the job. tests/optimizer.test.js asserts this.
+    //
+    // Nothing here may be an ordinary English word. "rest", "ram" and "crud" were, and
+    // turned "write the rest of the story" into "write the REST of the story" and
+    // "ram the changes through" into "RAM the changes through". They now live in
+    // ambiguousAcronyms below, where a companion word has to vouch for them.
     techAcronymMap: {
-        "ai": "AI", "ml": "ML", "nlp": "NLP", "ui": "UI", "ux": "UX",
+        "ai": "AI", "ml": "ML", "dl": "DL", "nlp": "NLP", "llm": "LLM",
+        "cv": "CV", "nn": "NN", "cnn": "CNN", "rnn": "RNN", "lstm": "LSTM",
+        "gan": "GAN", "ocr": "OCR", "etl": "ETL",
+        "ui": "UI", "ux": "UX", "dom": "DOM", "jsx": "JSX", "tsx": "TSX",
         "api": "API", "apis": "APIs", "sql": "SQL", "json": "JSON",
-        "html": "HTML", "css": "CSS", "js": "JS", "dsa": "DSA", "db": "DB",
-        "xml": "XML", "csv": "CSV", "pdf": "PDF", "url": "URL", "http": "HTTP",
-        "https": "HTTPS", "rest": "REST", "crud": "CRUD", "orm": "ORM",
-        "jwt": "JWT", "cli": "CLI", "gui": "GUI", "ide": "IDE", "os": "OS",
-        "cpu": "CPU", "gpu": "GPU", "ram": "RAM", "sdk": "SDK", "npm": "npm",
+        "yaml": "YAML", "toml": "TOML", "html": "HTML", "css": "CSS",
+        "js": "JS", "ts": "TS", "dsa": "DSA", "db": "DB",
+        "xml": "XML", "csv": "CSV", "pdf": "PDF", "url": "URL", "uri": "URI",
+        "uuid": "UUID", "http": "HTTP", "https": "HTTPS", "grpc": "gRPC",
+        "graphql": "GraphQL", "orm": "ORM", "jwt": "JWT", "oauth": "OAuth",
+        "sso": "SSO", "cors": "CORS", "csrf": "CSRF", "xss": "XSS",
+        "cli": "CLI", "gui": "GUI", "ide": "IDE", "os": "OS", "vm": "VM",
+        "cpu": "CPU", "gpu": "GPU", "sdk": "SDK", "npm": "npm",
         "css3": "CSS3", "html5": "HTML5", "oop": "OOP", "tdd": "TDD",
-        "ci": "CI", "cd": "CD", "dns": "DNS", "ssl": "SSL", "tls": "TLS"
+        "mvc": "MVC", "mvp": "MVP", "qa": "QA",
+        "ci": "CI", "cd": "CD", "dns": "DNS", "ssl": "SSL", "tls": "TLS",
+        "ssh": "SSH", "ftp": "FTP", "tcp": "TCP", "udp": "UDP", "ip": "IP",
+        "cdn": "CDN", "pwa": "PWA", "ssr": "SSR", "csr": "CSR",
+        "aws": "AWS", "gcp": "GCP", "k8s": "K8s", "saas": "SaaS",
+        "paas": "PaaS", "iaas": "IaaS", "wasm": "WASM",
+        "jvm": "JVM", "jdk": "JDK", "apk": "APK", "ios": "iOS",
+        "png": "PNG", "jpg": "JPG", "gif": "GIF", "svg": "SVG", "ascii": "ASCII",
+        "bfs": "BFS", "dfs": "DFS", "lru": "LRU", "gcd": "GCD", "lcm": "LCM",
+        "seo": "SEO", "crm": "CRM", "erp": "ERP", "kpi": "KPI", "roi": "ROI",
+        "b2b": "B2B", "b2c": "B2C", "faq": "FAQ"
     },
+
+    // Acronyms that are also ordinary English words. Each needs a companion term
+    // beside it before the technical reading is safe to assume, so these are
+    // [pattern, replacement] pairs rather than dictionary keys. The companion is in a
+    // lookahead rather than consumed, so the acronym table still normalises it on the
+    // pass that follows.
+    ambiguousAcronyms: [
+        [/\brest(?=[ \t]+(?:api|apis|endpoint|endpoints|service|services|call|calls|client|architecture))/gi, 'REST'],
+        [/\bcrud(?=[ \t]+(?:operation|operations|app|application|api|endpoint|endpoints|interface))/gi, 'CRUD'],
+        [/\bram(?=[ \t]+(?:usage|size|memory|module|modules|stick|slot|speed|limit))/gi, 'RAM'],
+        [/\brag(?=[ \t]+(?:pipeline|pipelines|system|model|retrieval|app|application|setup|chatbot))/gi, 'RAG'],
+        [/\barm(?=[ \t]+(?:processor|processors|architecture|chip|chips|cpu|mac|macs|64))/gi, 'ARM'],
+        [/\bspa(?=[ \t]+(?:app|application|router|routing|framework|mode))/gi, 'SPA']
+    ],
 
     // Informal chat slang and SMS abbreviations, long enough to be unambiguous.
     //
@@ -424,17 +512,17 @@ const PromptMeterOptimizer = {
         // removes "I am trying to" and leaves "learn about X" standing as an imperative,
         // which tells the model to go and learn something. Rewriting it first turns it
         // into the request it actually is.
-        [/(?<=^|[.!?;,]|\n)\s*(?:i'?m|i\s+am|we'?re|we\s+are)\s+trying\s+to\s+(?:learn|understand|figure\s+out|work\s+out)\s+(?:about\s+|how\s+)?/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i'?m|i\s+am|we'?re|we\s+are)\s+trying\s+to\s+(?:learn|understand|figure\s+out|work\s+out)\s+(?:about\s+|how\s+)?/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
         // "help me understand X" has the same failure: the pleasantry stripper removes
         // "can you help me" and leaves "understand X", an instruction to the model to go
         // and understand something rather than to explain it.
-        [/(?<=^|[.!?;,]|\n)\s*(?:(?:can|could|will|would)\s+you\s+)?(?:please\s+)?help\s+me\s+(?:to\s+)?(?:understand|learn|figure\s+out)\s+(?:about\s+)?/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:(?:can|could|will|would)\s+you\s+)?(?:please\s+)?help\s+me\s+(?:to\s+)?(?:understand|learn|figure\s+out)\s+(?:about\s+)?/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
         // Stated-intent wrappers that name the deliverable after them.
-        [/(?<=^|[.!?;,]|\n)\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, ''],
-        [/(?<=^|[.!?;,]|\n)\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, ''],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, 'Explain '],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, 'Show '],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, '$1'],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, '$1'],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, (m, lead) => (lead ? lead + 'show ' : 'Show ')],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
         [/\b(?:things?|stuff)\s+(?:that\s+)?(?:i|we)\s+(?:should|need\s+to|have\s+to)\s+know\s+about\b/gi, 'key points of']
     ],
 
@@ -559,7 +647,13 @@ const PromptMeterOptimizer = {
         /\b(?:pretty\s+please|do\s+me\s+a\s+huge\s+favor(?:\s+and)?|be\s+a\s+sweetheart(?:\s+and)?|my\s+life\s+depends\s+on\s+this|i\s+beg\s+you|i\s+will\s+tip(?:\s+\$\d+)?)\b\s*/gi,
         /(?<=^|[.!?]|[,;]|\n)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b\s*/gim,
         /\b(?:please|plea+se+|ples+a+s+e*|pl+z+|pl+s+)\b\s*/gi,
-        /\b(?:thank\s+you\s+so\s+much(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thank\s+you(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thanks\s+a\s+lot|thanks|thx|tysm|ty|kindly)(?:[,!.\s]*)/gi,
+        // (?!\w) after the alternation is load-bearing. \b anchors only the START, and
+        // the trailing [,!.\s]* is happy to match nothing, so "ty" matched the first two
+        // letters of "types" and the stripper turned "different types of ML" into
+        // "different pes of ML". Every short alternative here has the same exposure --
+        // "thx" inside a word, "ty" inside "typescript", "type", "typical", "tyre".
+        // The same guard is what buildAlternation() appends for the dictionary tables.
+        /\b(?:thank\s+you\s+so\s+much(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thank\s+you(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thanks\s+a\s+lot|thanks|thx|tysm|ty|kindly)(?!\w)(?:[,!.\s]*)/gi,
         /\b(?:chatgpt|chat\s*gpt|gpt)\b(?:[,!.\s]*)/gi
     ],
 
@@ -578,7 +672,18 @@ const PromptMeterOptimizer = {
         // The "for your time" tail is part of the sign-off, not a separate clause. Without
         // it the rule ate "thanks so much" and left "For your time!" standing alone as its
         // own sentence -- a fragment that reads as an instruction and is not one.
-        /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble))?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
+        // `thanks?` alone consumed the "thank" of "thank you" and left the pronoun
+        // standing: "tysm explain joins" came out as "You explain joins", and
+        // "thank you so much for your time" as "You so much for your time". This is
+        // the exact stranding the Stage 3 comment warns about, produced by the generic
+        // rule itself rather than by ordering. Absorbing an optional "you" makes the
+        // alternative match the whole phrase.
+        //
+        // It is (?:thanks|thank\s+you) and not thanks?(?:\s+you)? because a bare
+        // "thank" is a verb, not a pleasantry: "thank the user in the reply" is an
+        // instruction, and the looser form deleted its verb and left "The user in the
+        // reply". Gratitude is either plural or followed by the pronoun.
+        /\b(?:(?:thanks|thank\s+you)(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble))?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
         // Urgency padding: an LLM cannot act on it, so it is pure token cost
         /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
@@ -804,7 +909,10 @@ const PromptMeterOptimizer = {
             }
         }
 
-        // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JavaScript")
+        // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JS").
+        //    The context-gated ones run first: they only fire next to a companion term,
+        //    and they leave that companion in place for the table pass below.
+        str = this.applyRules(str, this.ambiguousAcronyms);
         str = this.replaceAll(str, this.compiled.acronyms, this.techAcronymMap, false);
 
         // 5. Grammar proper. Punctuation is left to the optimizer's own tidy pass, which
@@ -1251,6 +1359,11 @@ const PromptMeterOptimizer = {
             // Exactly two collapse; three are left alone, because that is an ellipsis.
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
             .replace(/\s+([,.?!;:])/g, '$1')
+            // A clause rewrite that fires at a sentence boundary consumes the space
+            // after the full stop, because the anchor ends in \s*. Without this,
+            // "i want to learn ml. i want to learn dl" closes up as
+            // "Explain ML.Explain DL". Only before a letter, so decimals survive.
+            .replace(/([.!?])(?=[A-Za-z])/g, '$1 ')
             // Closing up spaces can re-form a run ("! !" -> "!!"), so collapse again
             .replace(/([!?])\1+/g, '$1')
             .replace(/\n\s*\n/g, '\n')
@@ -1318,6 +1431,11 @@ PromptMeterOptimizer.compiled = (function () {
             Object.keys(o.techAcronymMap).forEach(term => known.add(term));
             Object.values(o.techAcronymMap).forEach(term => known.add(String(term).toLowerCase()));
             Object.values(typoMap).forEach(term => known.add(String(term).toLowerCase()));
+            // The context-gated acronyms are real words, and the spelling corrector
+            // treated them as typos -- "build a rag pipeline" became "a rage
+            // pipeline" before the gate downstream could fire. Derived from the
+            // replacements so the two lists cannot drift apart.
+            o.ambiguousAcronyms.forEach(rule => known.add(String(rule[1]).toLowerCase()));
             Object.keys(o.chatSlangMap).forEach(term => known.add(term));
             if (typeof PM_GRAMMAR !== 'undefined' && PM_GRAMMAR && PM_GRAMMAR.PROPER_NOUNS) {
                 Object.keys(PM_GRAMMAR.PROPER_NOUNS).forEach(term => known.add(term));
