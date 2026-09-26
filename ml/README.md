@@ -422,6 +422,10 @@ store, in that order. With no token it prints what to do and exits cleanly rathe
 failing part-way through a download. LMSYS is read with `streaming=True`, so
 `--limit 2000` costs one shard rather than the several GB of the full dataset.
 
+**Status: LMSYS has now been ingested.** 1,782 rows from a 2,000-row sample (71
+duplicates, 147 under the length floor). The reader worked against the live schema on
+the first run, which is what the faked-stream tests below predicted but could not prove.
+
 **What is verified, and what is not.** The LMSYS field names are taken from its public
 dataset card, which is readable without accepting the gate:
 
@@ -531,6 +535,47 @@ Prompt length is deliberately *not* a rule. A short prompt is not a bad prompt, 
   infinitive, and inverted questions put the subject between the modal and its verb.
 - **`"around 1 1/2 years old"` became `"around 1/2 years old"`** — the repeated-word
   collapser treated two adjacent numbers as a doubled word.
+
+### The scorer was penalising non-English prompts for being non-English
+
+The first evaluation across both sources found a gap that had nothing to do with prompt
+quality:
+
+| | mean score | quality flags per prompt |
+| :--- | ---: | ---: |
+| English | 92.3 | 0.46 |
+| Portuguese | 85.0 | 0.71 |
+| Chinese | 86.7 | 0.89 |
+| Japanese | 83.0 | 1.00 |
+
+Two rules fire on the **absence** of an English cue: `no-clear-request` looks for an
+English imperative verb, and `missing-output-format` for English words describing a
+format. Given a Japanese prompt they find neither, and report a perfectly clear request
+as having no clear request. The rules failing to read was being scored as the user
+writing badly.
+
+Those two now carry `requiresEnglish: true` and are skipped on text the scorer cannot
+read. Rules that fire on the **presence** of an English phrase need no gate — they
+simply stay quiet.
+
+Detecting English is done against the spelling dictionary rather than a function-word
+list, because Latin script decides nothing (Portuguese and German were penalised as
+hard as Japanese) and short function words are shared across Romance languages — "a"
+appears in both "a summary" and "a recursividade". Recognising a third of a prompt's
+words as English is a deliberately low bar: calling English text non-English only
+silences two rules, while the reverse reintroduces the bias.
+
+| | mean score | quality flags per prompt |
+| :--- | ---: | ---: |
+| English | 92.5 | 0.45 |
+| Portuguese | 95.6 | 0.00 |
+| Chinese | 100 | 0.00 |
+| Japanese | 95.0 | 0.20 |
+
+**This is not multilingual support.** The quality rules are English-only and now admit
+it by staying silent instead of guessing. A non-English prompt gets the waste rules —
+typos, padding, repetition — and nothing else. Saying little is the honest position;
+the previous behaviour said a lot and was wrong.
 
 ### Agreement with BPO
 

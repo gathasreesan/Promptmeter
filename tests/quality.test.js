@@ -184,6 +184,57 @@ silent('vague words inside a quote do not count',
         JSON.stringify(optimized));
 });
 
+
+// ---------------------------------------------------------------------------
+// The English gate
+//
+// Two quality rules fire on the ABSENCE of an English cue -- no imperative verb, no
+// stated format. Run on a language they cannot read, they flag every prompt for not
+// being English. Measured over the LMSYS sample that showed up as a real bias:
+// Japanese prompts averaged 83 against 92.3 for English and collected twice the flags
+// per prompt, which was the rules failing to read reported as the user writing badly.
+// ---------------------------------------------------------------------------
+[
+    ['Explain recursion', true],
+    ['The weather is nice today in Paris', true],
+    ['Write a python function that sorts a list of numbers', true],
+    ['plz teach me ml tmrw', true],
+    ['再帰について簡単に説明してください', false],
+    ['请解释一下递归的原理', false],
+    ['Explique a recursividade com um exemplo simples', false],
+    ['Explica la recursividad con un ejemplo', false],
+    ['Erkläre mir den Unterschied zwischen Prozess und Thread', false],
+    ['मुझे मशीन लर्निंग समझाओ', false],
+    ['Объясни рекурсию простыми словами', false],
+].forEach(function (pair) {
+    check('looksEnglish(' + JSON.stringify(pair[0].slice(0, 26)) + ') is ' + pair[1],
+        O.looksEnglish(pair[0]) === pair[1]);
+});
+
+check('looksEnglish handles empty input', O.looksEnglish('') === false);
+check('looksEnglish handles a non-string', O.looksEnglish(null) === false);
+
+// The rules that need English must stay silent on text they cannot read.
+['再帰について簡単に説明してください',
+ 'Explique a recursividade com um exemplo simples',
+ 'Объясни рекурсию'].forEach(function (prompt) {
+    const got = ids(prompt);
+    check('no English-only rule fires on ' + JSON.stringify(prompt.slice(0, 20)),
+        got.indexOf('no-clear-request') === -1 && got.indexOf('missing-output-format') === -1,
+        got.join(', '));
+});
+
+// ...and must still fire on English.
+fires('the gate does not disable the English path',
+    'The weather is nice today in Paris', 'no-clear-request');
+
+// Every rule that fires on an absence must declare requiresEnglish. A new one that
+// forgets reintroduces exactly this bias, silently.
+['missing-output-format', 'no-clear-request'].forEach(function (id) {
+    const rule = O.qualityRules.filter(function (r) { return r.id === id; })[0];
+    check('rule ' + id + ' declares requiresEnglish', rule && rule.requiresEnglish === true);
+});
+
 // ---------------------------------------------------------------------------
 // Length is information, not a verdict
 // ---------------------------------------------------------------------------

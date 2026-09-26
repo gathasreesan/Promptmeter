@@ -84,6 +84,8 @@ function lost(before, after, kind) {
 const scores = [];
 const flagCounts = {};
 const byCategory = {};
+const bySource = {};
+const byLanguage = {};
 const losses = { numbers: 0, operators: 0, code: 0, urls: 0, quoted: 0 };
 const lossExamples = [];
 let errors = 0;
@@ -120,6 +122,25 @@ rows.forEach((row) => {
     byCategory[category] = byCategory[category] || { n: 0, total: 0 };
     byCategory[category].n++;
     byCategory[category].total += analysis.score;
+
+    // Split by source and language. This is what LMSYS is in the corpus for: BPO is a
+    // benchmark and its prompts are tidy, whereas LMSYS is what people actually type.
+    // A scorer that only behaves on the first is not measuring real prompts. And the
+    // quality rules are English-only, so their behaviour on other languages has to be
+    // reported rather than assumed -- a rule that cannot read a prompt should stay
+    // quiet on it, not score it well by accident.
+    const source = row.source || 'unknown';
+    bySource[source] = bySource[source] || { n: 0, total: 0, perfect: 0, flags: 0 };
+    bySource[source].n++;
+    bySource[source].total += analysis.score;
+    if (analysis.score === 100) bySource[source].perfect++;
+    bySource[source].flags += (analysis.quality || []).length;
+
+    const language = row.language || (source === 'bpo' ? 'n/a (BPO)' : 'unknown');
+    byLanguage[language] = byLanguage[language] || { n: 0, total: 0, flags: 0 };
+    byLanguage[language].n++;
+    byLanguage[language].total += analysis.score;
+    byLanguage[language].flags += (analysis.quality || []).length;
 
     if (!optimized || !optimized.trim()) emptyOutput++;
 
@@ -180,6 +201,28 @@ const report = {
     flagFrequency: Object.keys(flagCounts)
         .sort((a, b) => flagCounts[b] - flagCounts[a])
         .reduce((acc, k) => { acc[k] = flagCounts[k]; return acc; }, {}),
+    bySource: Object.keys(bySource).sort().reduce((acc, k) => {
+        const entry = bySource[k];
+        acc[k] = {
+            rows: entry.n,
+            meanScore: Number((entry.total / entry.n).toFixed(2)),
+            perfectPct: Number((100 * entry.perfect / entry.n).toFixed(1)),
+            qualityFlagsPerPrompt: Number((entry.flags / entry.n).toFixed(2)),
+        };
+        return acc;
+    }, {}),
+    byLanguage: Object.keys(byLanguage)
+        .filter((k) => byLanguage[k].n >= 5)
+        .sort((a, b) => byLanguage[b].n - byLanguage[a].n)
+        .reduce((acc, k) => {
+            const entry = byLanguage[k];
+            acc[k] = {
+                rows: entry.n,
+                meanScore: Number((entry.total / entry.n).toFixed(2)),
+                qualityFlagsPerPrompt: Number((entry.flags / entry.n).toFixed(2)),
+            };
+            return acc;
+        }, {}),
     meanScoreByCategory: Object.keys(byCategory).sort().reduce((acc, k) => {
         acc[k] = Number((byCategory[k].total / byCategory[k].n).toFixed(1));
         return acc;
@@ -216,6 +259,21 @@ console.log('SCORES   mean ' + report.scoreDistribution.mean
     + '  p10 ' + report.scoreDistribution.p10
     + '  p90 ' + report.scoreDistribution.p90
     + '  |  100/100: ' + report.scoreDistribution.perfectPct + '%');
+console.log('');
+console.log('BY SOURCE');
+Object.keys(report.bySource).forEach((k) => {
+    const e = report.bySource[k];
+    console.log('  ' + k.padEnd(7) + String(e.rows).padStart(6) + ' rows   mean '
+        + String(e.meanScore).padStart(6) + '   perfect ' + String(e.perfectPct).padStart(5)
+        + '%   quality flags/prompt ' + e.qualityFlagsPerPrompt);
+});
+console.log('');
+console.log('BY LANGUAGE  (>= 5 rows)');
+Object.keys(report.byLanguage).slice(0, 10).forEach((k) => {
+    const e = report.byLanguage[k];
+    console.log('  ' + k.padEnd(12) + String(e.rows).padStart(6) + '   mean '
+        + String(e.meanScore).padStart(6) + '   flags/prompt ' + e.qualityFlagsPerPrompt);
+});
 console.log('');
 console.log('TOP FLAGS');
 Object.keys(report.flagFrequency).slice(0, 12).forEach((k) => {
