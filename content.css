@@ -485,3 +485,46 @@
     margin-bottom: 12px;
     flex: 0 0 auto;
 }
+
+/* ---------------------------------------------------------------------------
+   The card has to survive being short.
+
+   content.js sizes it to the space above the composer and floors that at
+   CARD_MIN_HEIGHT (140px), so a long prompt being typed -- exactly when the card
+   matters most -- can leave it a fraction of its natural height. Everything between
+   the header and the buttons was flex: 0 0 auto, which never shrinks, and the diff
+   could not take up the slack either: a flex item defaults to min-height: auto, which
+   pins it to its content, so overflow-y: auto on it did nothing. The card overflowed,
+   overflow: hidden clipped the bottom, and what got clipped was the action row. The
+   card was visible and Apply was not reachable.
+
+   So: the diff may shrink to nothing, the panels shrink and scroll themselves before
+   the diff dies completely, and the action row is the one thing that never gives way.
+   --------------------------------------------------------------------------- */
+
+.promptmeter-opt-diff {
+    /* Without this the item cannot go below its content height, whatever overflow says. */
+    min-height: 0;
+}
+
+.promptmeter-opt-headroom,
+.promptmeter-opt-preserve,
+.promptmeter-opt-scope,
+.promptmeter-opt-grammar {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Caps so no single panel can eat the card on its own. A long scope list scrolls
+   rather than pushing the diff and the buttons out. */
+.promptmeter-opt-scope,
+.promptmeter-opt-grammar { max-height: 30vh; }
+.promptmeter-opt-headroom,
+.promptmeter-opt-preserve { max-height: 20vh; }
+
+/* The buttons are the last thing to give way, and they never do. */
+.promptmeter-opt-actions {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
