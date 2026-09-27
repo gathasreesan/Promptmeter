@@ -188,5 +188,65 @@ const unaccounted = [...new Set(rendered)].filter((selector) => known.indexOf(se
 check('every rendered card panel has a declared flex behaviour',
     unaccounted.length === 0, unaccounted.join(', '));
 
+// ---------------------------------------------------------------------------
+// Spacing comes off the scale, not off the cuff.
+//
+// The card read as cramped, and the cause was not only that the gaps were small: there
+// were nine different ones -- 5, 6, 7, 8, 9, 10, 12, 14, 16 -- each chosen on its own.
+// Nothing aligned with anything else, so even the generous gaps looked accidental.
+// A tenth arbitrary value undoes that quietly, which is what this catches.
+// ---------------------------------------------------------------------------
+const SPACING_PROPERTIES = ['padding', 'padding-top', 'padding-bottom', 'padding-left',
+    'padding-right', 'margin', 'margin-top', 'margin-bottom', 'margin-left',
+    'margin-right', 'gap', 'row-gap', 'column-gap'];
+
+// Values a gap may hold without naming a step: zero, auto, and the 1-2px used inside a
+// chip, which sits on a caption line and would look wrong at a full step.
+const ALLOWED_LITERALS = /^(0|auto|none|inherit|[12]px)$/;
+
+const chr10 = String.fromCharCode(10);
+const offenders = [];
+RULES.forEach((rule) => {
+    if (rule.selector.indexOf('promptmeter') === -1) return;
+    SPACING_PROPERTIES.forEach((property) => {
+        const found = [...rule.body.matchAll(
+            // Doubled backslashes: in a string literal '\s' is plain "s", so the
+            // single-backslash version matched nothing and the scan silently passed.
+            new RegExp('(?:^|;)\\s*' + property + '\\s*:\\s*([^;]+)', 'g'))];
+        found.forEach((match) => {
+            const value = match[1].trim();
+            if (value.indexOf('var(--space-') !== -1) return;
+            if (value.indexOf('calc(') !== -1 && value.indexOf('--space-') !== -1) return;
+            const parts = value.split(/\s+/);
+            if (parts.every((part) => ALLOWED_LITERALS.test(part))) return;
+            offenders.push(rule.selector.replace(/\s+/g, ' ').slice(0, 44)
+                + ' { ' + property + ': ' + value + ' }');
+        });
+    });
+});
+
+check('every gap in the card names a step on the scale',
+    offenders.length === 0, offenders.join(chr10 + '      '));
+
+// The scale itself has to exist and be evenly stepped, or naming a step means nothing.
+const TOKENS = fs.readFileSync(path.join(ROOT, 'utils', 'tokens.css'), 'utf8');
+const steps = [1, 2, 3, 4, 5, 6].map((n) => {
+    // Doubled backslashes: this is a string literal, so '\s' would be plain "s".
+    const hit = new RegExp('--space-' + n + '\\s*:\\s*(\\d+)px').exec(TOKENS);
+    return hit ? Number(hit[1]) : null;
+});
+check('the scale defines six steps', steps.every((value) => value !== null),
+    JSON.stringify(steps));
+if (steps.every((value) => value !== null)) {
+    check('the steps are a 4px progression',
+        steps.every((value, index) => value === 4 * (index + 1)), JSON.stringify(steps));
+}
+
+// Rows in a list need space between them. Four findings flush against each other read
+// as one block of text, which is most of what "cramped" meant.
+const rowGap = property('.promptmeter-grammar-list li + li', 'margin-top');
+check('correction rows are separated', rowGap !== null && rowGap.indexOf('--space-') !== -1,
+    'margin-top: ' + rowGap);
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

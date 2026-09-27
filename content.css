@@ -25,7 +25,7 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color); /* Border Color */
     border-radius: var(--radius-card); /* Card Radius */
-    padding: 16px;
+    padding: var(--space-5);
     box-shadow: var(--shadow-premium); /* Premium Shadow */
     color: var(--text-primary);
     font-family: var(--font-body);
@@ -57,8 +57,8 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 12px;
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
     flex: 0 0 auto;
 }
 
@@ -74,7 +74,7 @@
 
 .promptmeter-opt-metrics {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 /* Secondary information, so it reads as a quiet caption rather than three badges
@@ -86,7 +86,7 @@
 }
 .promptmeter-metric + .promptmeter-metric::before {
     content: "·";
-    margin: 0 6px;
+    margin: 0 var(--space-2);
     color: var(--border-color);
 }
 
@@ -95,8 +95,8 @@
 .promptmeter-opt-diff {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 14px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -106,7 +106,7 @@
 .promptmeter-diff-box {
     font-size: 13px;
     line-height: 1.5;
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-btn); /* Button/Input Radius */
     word-break: break-word;
     border: 1px solid var(--border-color);
@@ -141,8 +141,8 @@
 }
 
 .promptmeter-opt-grammar {
-    margin-bottom: 14px;
-    padding: 10px 14px;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-btn);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
@@ -153,12 +153,12 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: 6px;
+    margin-bottom: var(--space-2);
 }
 
 .promptmeter-grammar-list {
     margin: 0;
-    padding-left: 16px;
+    padding-left: var(--space-4);
     font-size: 12px;
     line-height: 1.6;
 }
@@ -171,14 +171,14 @@
     opacity: 0.7;
     font-style: italic;
     list-style: none;
-    margin-left: -16px;
+    margin-left: calc(-1 * var(--space-4));
 }
 
 /* Scope advice. Styled apart from the grammar panel because it is not an edit already
    applied to the preview -- it is a judgement only the user can act on. */
 .promptmeter-opt-scope {
-    margin-bottom: 14px;
-    padding: 10px 14px;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-btn);
     border: 1px solid var(--border-color);
     border-left: 2px solid var(--color-error);
@@ -189,12 +189,12 @@
 .promptmeter-scope-title {
     font-size: 11px;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: var(--space-2);
 }
 
 .promptmeter-scope-list {
     margin: 0;
-    padding-left: 16px;
+    padding-left: var(--space-4);
     font-size: 12px;
     line-height: 1.6;
 }
@@ -202,12 +202,12 @@
 .promptmeter-opt-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: var(--space-2);
     flex: 0 0 auto;
 }
 
 .promptmeter-opt-btn {
-    padding: 7px 14px;
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-btn); /* Button Radius */
     font-size: 12px;
     font-weight: 600;
@@ -333,7 +333,7 @@
 .promptmeter-opt-headroom {
     font-size: 11px;
     color: var(--text-muted);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-4);
     font-variant-numeric: tabular-nums;
     flex: 0 0 auto;
 }
@@ -358,7 +358,7 @@
 .promptmeter-metric-count {
     display: inline-flex;
     align-items: baseline;
-    gap: 5px;
+    gap: var(--space-1);
 }
 
 .promptmeter-count-from {
@@ -389,7 +389,7 @@
     font-weight: 600;
     background: var(--wash-success);
     border-radius: var(--radius-pill);
-    padding: 1px 6px;
+    padding: 2px var(--space-2);
 }
 
 /* The middot separator is a caption device. It should not appear between the chip
@@ -405,7 +405,7 @@
     font-weight: 600;
     background: var(--wash-error);
     border-radius: var(--radius-pill);
-    padding: 1px 6px;
+    padding: 2px var(--space-2);
 }
 
 .promptmeter-metric-cost + .promptmeter-metric::before { content: none; }
@@ -418,7 +418,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    margin-right: 7px;
+    margin-right: var(--space-2);
     vertical-align: middle;
     flex: 0 0 auto;
 }
@@ -432,7 +432,7 @@
 .promptmeter-grammar-list li {
     display: flex;
     align-items: baseline;
-    gap: 2px;
+    gap: var(--space-1);
 }
 
 .promptmeter-grammar-text { flex: 1 1 auto; }
@@ -442,7 +442,7 @@
     font: inherit;
     font-size: 10px;
     font-weight: 600;
-    padding: 1px 7px;
+    padding: 2px var(--space-2);
     border-radius: var(--radius-pill);
     border: 1px solid var(--btn-secondary-border);
     background: var(--btn-secondary);
@@ -467,7 +467,7 @@
     color: var(--text-secondary);
     background: var(--bg-surface);
     border-radius: var(--radius-pill);
-    padding: 1px 6px;
+    padding: 2px var(--space-2);
     font-variant: small-caps;
     letter-spacing: 0.02em;
 }
@@ -481,8 +481,8 @@
     color: var(--text-secondary);
     background: var(--wash-warning);
     border-radius: var(--radius-btn);
-    padding: 6px 9px;
-    margin-bottom: 12px;
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
     flex: 0 0 auto;
 }
 
@@ -527,4 +527,14 @@
 .promptmeter-opt-actions {
     flex: 0 0 auto;
     margin-top: auto;
+}
+
+/* Rows need space between them. Four findings flush against each other read as one
+   block of text, which was most of what "cramped" meant. This is the only spacing
+   rule added rather than corrected -- the rest were edited where they were declared,
+   because an override block leaves the old literal in the file and the next person
+   reads the wrong number. */
+.promptmeter-grammar-list li + li,
+.promptmeter-scope-list li + li {
+    margin-top: var(--space-2);
 }

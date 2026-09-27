@@ -101,6 +101,17 @@
     --diff-added-text: #15803D;
     --chart-carbon-fill: rgba(239, 108, 0, 0.25);
 
+    /* Spacing. A 4px scale, because the card had nine different gaps in it -- 5, 6, 7,
+       8, 9, 10, 12, 14 and 16 -- chosen one at a time. That reads as cramped even where
+       a value is generous, because nothing lines up with anything else. Steps are named
+       rather than typed so a panel cannot invent a tenth. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+
     /* Shape and motion */
     --radius-pill: 6px;
     --radius-btn: 8px;
