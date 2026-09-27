@@ -640,6 +640,9 @@ node tests/tokens.test.js       # the design-token contract
 
 python ml/test_generate_synthetic.py   # the synthetic validator
 python ml/test_ingest.py               # corpus ingestion, offline
+node tests/analysis.test.js     # semantic detectors, precision and recall
+node tests/detection.test.js    # error detection by category
+node tests/contrast.test.js     # colour contrast, both themes
 ```
 
 `ml-parity.test.js` is the one that matters most after a retrain. `ml-classifier.js`

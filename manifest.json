@@ -42,6 +42,16 @@
     }
   ],
 
+  "web_accessible_resources": [
+    {
+      "resources": ["utils/tiktoken.bundle.js"],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ]
+    }
+  ],
+
   "action": {
     "default_popup": "popup.html"
   }

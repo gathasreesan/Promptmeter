@@ -878,7 +878,7 @@ const PromptMeterOptimizer = {
      * @param {Array} issues - Optional collector; grammar findings are appended to it.
      * @returns {string} Corrected text.
      */
-    correctGrammarAndSpelling: function (text, issues) {
+    correctGrammarAndSpelling: function (text, issues, preserve) {
         if (!text) return "";
         let str = text;
 
@@ -914,7 +914,14 @@ const PromptMeterOptimizer = {
         //     length. Everything the other tables know about is passed through as
         //     already-correct, so the corrector never second-guesses them.
         if (PM_SPELL) {
-            const spelled = PM_SPELL.correct(str, { extraKnown: this.compiled.knownWords });
+            // `preserve` holds words the USER has said to leave alone -- a name the
+            // corrector mistook for a typo, a term this dictionary has never heard
+            // of. Rejecting a correction has to actually stop it happening, not just
+            // hide the row, or the next keystroke brings it straight back.
+            const known = (preserve && preserve.size)
+                ? new Set([...this.compiled.knownWords, ...preserve])
+                : this.compiled.knownWords;
+            const spelled = PM_SPELL.correct(str, { extraKnown: known });
             str = spelled.text;
             if (issues && spelled.corrections.length > 0) {
                 spelled.corrections.forEach(correction => issues.push({
@@ -1621,13 +1628,13 @@ const PromptMeterOptimizer = {
      * @param {string} prompt - The original prompt text.
      * @returns {Object} { text, grammar, savedWords } where grammar is [{ type, label }].
      */
-    optimizeWithReport: function (prompt) {
+    optimizeWithReport: function (prompt, preserve) {
         // Collected from the real run rather than re-derived: the spelling corrector
         // works inside the pipeline, on masked text, and its findings exist nowhere
         // else. Deduplicated because the same word can be corrected in more than one
         // place, and the card is a summary rather than a log of every edit.
         const collected = [];
-        const text = this.optimizePrompt(prompt, collected);
+        const text = this.optimizePrompt(prompt, collected, preserve);
 
         // Only what the run actually did. Re-deriving findings from the RAW prompt also
         // reported grammar from inside protected spans -- a fenced block containing
@@ -1676,7 +1683,7 @@ const PromptMeterOptimizer = {
      * @param {string} prompt - The original prompt text.
      * @returns {string} The optimized prompt text.
      */
-    optimizePrompt: function (prompt, issues) {
+    optimizePrompt: function (prompt, issues, preserve) {
         // Guard the type, not just emptiness. Every caller in the extension reads from
         // the DOM and so hands over a string, but this module is also driven directly
         // from the tests and the dashboard, where a stray number or object would throw
@@ -1699,7 +1706,7 @@ const PromptMeterOptimizer = {
         if (this.isCodeSnippet(prose)) return prompt;
 
         // Stage 1: grammar, spelling & acronym pre-processing
-        optimized = this.correctGrammarAndSpelling(optimized, issues);
+        optimized = this.correctGrammarAndSpelling(optimized, issues, preserve);
 
         // Stage 2: copy-paste garbage & symbol spam
         optimized = optimized
@@ -1784,7 +1791,7 @@ const PromptMeterOptimizer = {
         }
 
         // Stage 7: re-run grammar over the rewritten text
-        optimized = this.correctGrammarAndSpelling(optimized);
+        optimized = this.correctGrammarAndSpelling(optimized, null, preserve);
 
         // Stage 8: clean joining words, duplicate filler and whitespace artifacts.
         // Duplicate collapsing is safe unconditionally now: anything code-shaped is
@@ -1814,7 +1821,7 @@ const PromptMeterOptimizer = {
         // protected spans remain -- "um uh TypeError: x" should optimise down to the
         // error text, not have its filler restored.
         if (optimized.trim().length === 0) {
-            optimized = this.correctGrammarAndSpelling(protectedText.masked);
+            optimized = this.correctGrammarAndSpelling(protectedText.masked, null, preserve);
         }
         // Stripping a leading "Can you " or "Please " leaves the next word lowercase, so
         // re-capitalise after every sentence break. A placeholder is not [a-z], so a

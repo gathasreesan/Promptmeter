@@ -426,3 +426,37 @@
 .promptmeter-severity-error { background: var(--color-error); }
 .promptmeter-severity-suggestion { background: var(--color-warning); }
 .promptmeter-severity-improvement { background: var(--text-disabled); }
+
+/* A correction row: text on the left, the decline control on the right, only visible
+   when the row is hovered or focused so the panel stays calm at rest. */
+.promptmeter-grammar-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.promptmeter-grammar-text { flex: 1 1 auto; }
+
+.promptmeter-keep {
+    flex: 0 0 auto;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--btn-secondary-border);
+    background: var(--btn-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+}
+
+.promptmeter-grammar-list li:hover .promptmeter-keep,
+.promptmeter-keep:focus-visible { opacity: 1; }
+
+.promptmeter-keep:hover {
+    color: var(--text-primary);
+    background: var(--btn-secondary-hover);
+}

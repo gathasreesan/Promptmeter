@@ -108,6 +108,43 @@ if (typeof PromptMeterTheme !== 'undefined') {
     });
 }
 
+/**
+ * Swaps the heuristic token count for a real cl100k encoder, once.
+ *
+ * Deferred rather than loaded from the manifest: the rank table is about a megabyte of
+ * JSON, and parsing it during page load -- before anyone has typed -- to improve a
+ * number the heuristic already approximates is the wrong trade. requestIdleCallback
+ * puts it after the page has settled. Until it lands the estimate is used and the card
+ * marks every figure with a "~", which is what PromptMeterTokenizer.isExact() is for.
+ *
+ * Bundled locally, never fetched: the extension has to work with no connection after
+ * install, and nothing executable may come from a CDN.
+ */
+function loadExactTokenizer() {
+    if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.getURL) return;
+    if (typeof PromptMeterTokenizer === 'undefined' || PromptMeterTokenizer.isExact()) return;
+
+    const start = () => import(chrome.runtime.getURL('utils/tiktoken.bundle.js'))
+        .then((module) => {
+            PromptMeterTokenizer.setEncoder(module.encode, module.name);
+            console.log('[PromptMeter] exact token counts enabled (' + module.name + ').');
+        })
+        .catch((error) => {
+            // The estimate is already in place and correct to within a few percent, so a
+            // failure here costs precision and nothing else.
+            console.warn('[PromptMeter] exact tokenizer unavailable; using the estimate.',
+                error);
+        });
+
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(start, { timeout: 5000 });
+    } else {
+        setTimeout(start, 2000);
+    }
+}
+
+loadExactTokenizer();
+
 // Global enabled state (controlled by the popup on/off switch)
 let isPromptMeterEnabled = true;
 
@@ -257,6 +294,17 @@ function hideOptimizationCard() {
 // What each severity means, shown on hover. Kept beside the card rather than in
 // optimizer.js because it is presentation: the engine decides the tier, this
 // decides how to explain it.
+// Words the user has told us to leave alone, for this page.
+//
+// Rejecting a correction has to actually stop it happening. Hiding the row would leave
+// the rewrite unchanged and the word still corrected, and the next keystroke would
+// bring the row straight back. These are threaded into the optimizer, which adds them
+// to the vocabulary the spelling corrector treats as already right.
+//
+// Not persisted: it is a correction someone declined on one prompt, not a dictionary
+// entry, and a name that should survive here may well be a typo in the next prompt.
+const preservedWords = new Set();
+
 const SEVERITY_TITLE = {
     error: 'Definitely wrong: a rule that does not depend on context',
     suggestion: 'Probably right, but the context could make it wrong',
@@ -394,7 +442,8 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // optimizeWithReport already de-duplicates these and tags each with a severity,
     // sorted most-certain first, so the card shows what is definitely wrong before
     // what is merely tidier.
-    const issues = (grammarIssues || []).filter(issue => issue && issue.label);
+    const issues = (grammarIssues || [])
+        .filter(issue => issue && (issue.label || issue.explanation));
     const shownIssues = issues.slice(0, 4);
     const hiddenCount = issues.length - shownIssues.length;
     const issueLabels = issues;
@@ -486,7 +535,32 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
                 + (issue.severity || 'suggestion');
             dot.title = SEVERITY_TITLE[issue.severity] || SEVERITY_TITLE.suggestion;
             item.appendChild(dot);
-            item.appendChild(document.createTextNode(issue.label));
+
+            const text = document.createElement('span');
+            text.className = 'promptmeter-grammar-text';
+            text.textContent = issue.label || issue.explanation;
+            item.appendChild(text);
+
+            // A correction the user can decline. Only offered where declining does
+            // something: a spelling change names the word to keep, so the rewrite can be
+            // redone without it. Advice has nothing to undo.
+            if (issue.word) {
+                const keep = document.createElement('button');
+                keep.type = 'button';
+                keep.className = 'promptmeter-keep';
+                keep.textContent = 'Keep';
+                keep.title = 'Leave "' + issue.word + '" as you wrote it';
+                keep.onclick = (event) => {
+                    event.stopPropagation();
+                    preservedWords.add(issue.word.toLowerCase());
+                    // Re-run rather than patch the text: a preserved word changes what
+                    // every later stage sees, and editing the output string would give a
+                    // different answer from the one the pipeline would produce.
+                    analyzeAndOfferOptimization(originalText);
+                };
+                item.appendChild(keep);
+            }
+
             list.appendChild(item);
         });
         if (hiddenCount > 0) {
@@ -532,10 +606,24 @@ function analyzeAndOfferOptimization(text) {
     let grammarIssues = [];
     let scopeIssues = [];
     try {
-        const report = PromptMeterOptimizer.optimizeWithReport(text);
-        optimized = report.text;
-        grammarIssues = report.grammar;
-        scopeIssues = report.scope;
+        // PromptMeterAnalysis when it is available: it runs the same optimizer and then
+        // adds the detectors a rewrite cannot serve -- contradictions, unbounded scope,
+        // ambiguity, missing context -- and tags every finding with the word it changed
+        // so a row can be declined. The optimizer alone is the fallback, so a build
+        // without analysis.js still shows a card rather than nothing.
+        if (typeof PromptMeterAnalysis !== 'undefined') {
+            const result = PromptMeterAnalysis.analyze(text, preservedWords);
+            optimized = result.optimized;
+            grammarIssues = result.findings.filter(f => f.severity !== 'improvement');
+            scopeIssues = result.findings
+                .filter(f => f.category === 'scope')
+                .map(f => ({ label: f.explanation, type: 'scope' }));
+        } else {
+            const report = PromptMeterOptimizer.optimizeWithReport(text, preservedWords);
+            optimized = report.text;
+            grammarIssues = report.grammar;
+            scopeIssues = report.scope;
+        }
     } catch (err) {
         console.error("[PromptMeter] optimizePrompt failed for this text.", err, text);
         hideOptimizationCard();

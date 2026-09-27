@@ -217,6 +217,46 @@ A.analyzeWithSemantics('explain recursion').then((result) => {
 });
 
 // ---------------------------------------------------------------------------
+// Declining a single correction
+//
+// Rejecting a row has to stop the correction happening, not hide it. Hiding would leave
+// the rewrite unchanged and the word still corrected, and the next keystroke would put
+// the row straight back.
+// ---------------------------------------------------------------------------
+const MIXED_TYPOS = 'explain recusrion and specisl cases';
+const both = A.analyze(MIXED_TYPOS);
+check('two distinct typos are two findings',
+    both.findings.filter((f) => f.category === 'spelling').length === 2,
+    JSON.stringify(both.findings.map((f) => f.word)));
+check('each spelling finding names its word',
+    both.findings.filter((f) => f.category === 'spelling').every((f) => f.word));
+check('each spelling finding is located',
+    both.findings.filter((f) => f.category === 'spelling')
+        .every((f) => f.span && f.span.start >= 0));
+
+const kept = A.analyze(MIXED_TYPOS, new Set(['specisl']));
+check('a declined word survives the rewrite',
+    /specisl/.test(kept.optimized), kept.optimized);
+check('the other correction still applies',
+    /recursion/.test(kept.optimized), kept.optimized);
+check('a declined word survives the corrected output too',
+    /specisl/.test(kept.corrected), kept.corrected);
+check('declining removes its finding',
+    kept.findings.filter((f) => f.word === 'specisl').length === 0);
+check('declining nothing changes nothing',
+    A.analyze(MIXED_TYPOS, new Set()).optimized === both.optimized);
+
+// Advice has nothing to undo, so it carries no word to decline.
+check('advisory findings offer no word', A.analyze('create a website and make it good')
+    .findings.filter((f) => f.category !== 'spelling').every((f) => !f.word));
+
+// ---------------------------------------------------------------------------
+// Exact token counts, when the bundled encoder is registered
+// ---------------------------------------------------------------------------
+check('counts are marked estimated without an encoder',
+    PromptMeterTokenizer.stats('teach me ml', 'Teach me ML').exact === false);
+
+// ---------------------------------------------------------------------------
 // Precision and recall over a manually labelled set
 // ---------------------------------------------------------------------------
 // Each entry is [prompt, categories a person judged present]. Detecting a category that

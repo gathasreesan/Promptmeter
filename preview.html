@@ -141,11 +141,26 @@
                     </ul>
                 </div>
                 <div class="promptmeter-opt-grammar">
-                    <div class="promptmeter-grammar-title">Also corrected</div>
+                    <div class="promptmeter-grammar-title">Errors corrected</div>
                     <ul class="promptmeter-grammar-list">
-                        <li>starst &rarr; start</li>
-                        <li>classess &rarr; classes</li>
-                        <li>Sentence capitalisation</li>
+                        <li>
+                            <span class="promptmeter-severity promptmeter-severity-error" title="Definitely wrong: a rule that does not depend on context"></span>
+                            <span class="promptmeter-grammar-text">"starst" corrected to "start"</span>
+                            <button type="button" class="promptmeter-keep" title="Leave it as you wrote it">Keep</button>
+                        </li>
+                        <li>
+                            <span class="promptmeter-severity promptmeter-severity-error" title="Definitely wrong"></span>
+                            <span class="promptmeter-grammar-text">"classess" corrected to "classes"</span>
+                            <button type="button" class="promptmeter-keep" title="Leave it as you wrote it">Keep</button>
+                        </li>
+                        <li>
+                            <span class="promptmeter-severity promptmeter-severity-suggestion" title="Probably right, but context could make it wrong"></span>
+                            <span class="promptmeter-grammar-text">'its' should be 'it&rsquo;s' (it is)</span>
+                        </li>
+                        <li>
+                            <span class="promptmeter-severity promptmeter-severity-improvement" title="Not wrong &mdash; shorter or tidier"></span>
+                            <span class="promptmeter-grammar-text">Sentence capitalisation</span>
+                        </li>
                     </ul>
                 </div>
                 <div class="promptmeter-opt-actions">
@@ -157,25 +172,24 @@
     </div>
 
     <div class="case">
-        <label>Card &mdash; exact counts, nothing else</label>
+        <label>Card &mdash; exact counts, rewrite costs tokens</label>
         <div class="frame">
             <div class="promptmeter-opt-card pm-tokens visible">
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
                     <div class="promptmeter-opt-metrics">
                         <span class="promptmeter-metric promptmeter-metric-count" title="Counted with cl100k_base">
-                            <span class="promptmeter-count-from">38</span>
+                            <span class="promptmeter-count-from">21</span>
                             <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
-                            <span class="promptmeter-count-to">21</span>
+                            <span class="promptmeter-count-to">24</span>
                             <span class="promptmeter-count-unit">tokens</span>
                         </span>
-                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;45%</span>
-                        <span class="promptmeter-metric" title="Estimated">~0.009 g CO&#8322;</span>
+                        <span class="promptmeter-metric promptmeter-metric-cost" title="This rewrite costs tokens">+14%</span>
                     </div>
                 </div>
                 <div class="promptmeter-opt-diff">
-                    <div class="promptmeter-diff-box promptmeter-diff-original">I would like to kindly request that you please explain to me how binary search works</div>
-                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how binary search works</div>
+                    <div class="promptmeter-diff-box promptmeter-diff-original">Explan how fnite automata work</div>
+                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how finite automata work</div>
                 </div>
                 <div class="promptmeter-opt-actions">
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>

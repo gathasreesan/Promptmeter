@@ -101,6 +101,8 @@ const PromptMeterAnalysis = {
             confidence: typeof parts.confidence === 'number' ? parts.confidence : 0.6,
             needsClarification: Boolean(parts.needsClarification),
             question: parts.question || null,
+            // The literal word a reject would preserve, when there is one.
+            word: parts.word || null,
             source: parts.source || 'rule'
         };
     },
@@ -497,6 +499,12 @@ const PromptMeterAnalysis = {
      * @returns {boolean}
      */
     sameGround: function (a, b) {
+        // Neither is located, so the only evidence is what they say. Two spelling
+        // findings both lack a span and are plainly different problems -- treating
+        // every span-less pair as one collapsed them into a single row and lost a
+        // correction.
+        if (!a.span && !b.span) return a.explanation === b.explanation;
+        // One is located and the other describes the category as a whole.
         if (!a.span || !b.span) return true;
         if (a.span.start < 0 || b.span.start < 0) {
             const x = a.span.text.toLowerCase();
@@ -581,7 +589,7 @@ const PromptMeterAnalysis = {
      *     semanticAvailable
      *   }
      */
-    analyze: function (prompt) {
+    analyze: function (prompt, preserve) {
         const empty = {
             findings: [], corrected: '', optimized: '', clarifications: [],
             assumptions: [], tokens: null, semanticAvailable: this.hasSemanticAnalyzer()
@@ -593,8 +601,15 @@ const PromptMeterAnalysis = {
         const masked = PM_A_PROTECT ? PM_A_PROTECT.mask(prompt).masked : prompt;
 
         const report = PM_A_OPTIMIZER
-            ? PM_A_OPTIMIZER.optimizeWithReport(prompt)
+            ? PM_A_OPTIMIZER.optimizeWithReport(prompt, preserve)
             : { text: prompt, grammar: [], scope: [] };
+
+        // The word a spelling finding is about, pulled out of its label, so the card
+        // can offer to keep it. Without the word, "reject" can only hide a row.
+        const wordOf = (label) => {
+            const hit = /^"([^"]+)" corrected to/.exec(label || '');
+            return hit ? hit[1] : null;
+        };
 
         const language = (report.grammar || []).map((issue) => this.finding({
             category: issue.type === 'spelling' ? 'spelling'
@@ -604,7 +619,16 @@ const PromptMeterAnalysis = {
             explanation: issue.label,
             // The optimizer has already applied these, so the suggestion is the fix
             // itself rather than advice about it.
-            confidence: issue.severity === 'error' ? 0.95 : 0.7
+            confidence: issue.severity === 'error' ? 0.95 : 0.7,
+            // A spelling finding is located at the word it changed. That makes two
+            // of them distinct to the merge, and gives the card something to point
+            // at when it offers to keep the word.
+            text: issue.type === 'spelling' ? wordOf(issue.label) : undefined,
+            start: issue.type === 'spelling' && wordOf(issue.label)
+                ? prompt.toLowerCase().indexOf(wordOf(issue.label).toLowerCase())
+                : undefined,
+            // Set only for spelling, where rejecting means "this word is correct".
+            word: issue.type === 'spelling' ? wordOf(issue.label) : null
         }));
 
         const quality = PM_A_OPTIMIZER
@@ -646,7 +670,7 @@ const PromptMeterAnalysis = {
 
         return {
             findings: findings,
-            corrected: this.correctOnly(prompt),
+            corrected: this.correctOnly(prompt, preserve),
             optimized: report.text,
             clarifications: findings
                 .filter((item) => item.needsClarification && item.question)
@@ -670,12 +694,12 @@ const PromptMeterAnalysis = {
      * @param {string} prompt
      * @returns {string}
      */
-    correctOnly: function (prompt) {
+    correctOnly: function (prompt, preserve) {
         if (typeof prompt !== 'string' || !prompt.trim()) return '';
         if (!PM_A_PROTECT || !PM_A_OPTIMIZER) return prompt;
 
         const masked = PM_A_PROTECT.mask(prompt);
-        let fixed = PM_A_OPTIMIZER.correctGrammarAndSpelling(masked.masked, []);
+        let fixed = PM_A_OPTIMIZER.correctGrammarAndSpelling(masked.masked, [], preserve);
 
         // An immediately repeated word is a language error, not a style choice, so
         // it belongs in the corrected output too -- "teh teh teh" spell-corrects to
@@ -691,8 +715,8 @@ const PromptMeterAnalysis = {
      * @param {string} prompt
      * @returns {Promise<Object>} The same shape as analyze().
      */
-    analyzeWithSemantics: function (prompt) {
-        const base = this.analyze(prompt);
+    analyzeWithSemantics: function (prompt, preserve) {
+        const base = this.analyze(prompt, preserve);
         if (!this.hasSemanticAnalyzer()) return Promise.resolve(base);
 
         return this.runSemantic(prompt).then((semantic) => {
