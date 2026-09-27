@@ -641,7 +641,9 @@ const PromptMeterCondense = {
      * @param {Array} sentences
      * @returns {Array} Surviving sentences, in original order.
      */
-    pruneNarrative: function (sentences) {
+    pruneNarrative: function (sentences, minNewTerms) {
+        // Caller-supplied floor, so an aggressive pass can keep less.
+        const threshold = minNewTerms || this.MIN_NEW_TERMS;
         const classified = sentences.map(sentence => ({
             text: sentence,
             info: this.classify(sentence),
@@ -666,7 +668,7 @@ const PromptMeterCondense = {
 
             // Keep a non-core sentence only if it carries genuinely new subject matter.
             const fresh = entry.words.filter(word => !known.has(word));
-            if (fresh.length >= this.MIN_NEW_TERMS) {
+            if (fresh.length >= threshold) {
                 // Rules say keep. The model may propose dropping it -- new vocabulary
                 // is not the same as new information, and this is where a blacklist is
                 // blind: "I have been revising all night for tomorrow" introduces four
@@ -690,12 +692,18 @@ const PromptMeterCondense = {
      * @param {string} text - Masked prompt text.
      * @returns {string} Condensed text.
      */
-    condense: function (text) {
+    condense: function (text, options) {
         if (!text) return text;
+
+        // Thresholds are overridable so a caller can ask for a harder pass without this
+        // module having to know what a compression tier is. Omitting them gives exactly
+        // what every existing caller got, so the seam changes nothing by existing.
+        const minWords = (options && options.minWords) || this.MIN_WORDS;
+        const minNewTerms = (options && options.minNewTerms) || this.MIN_NEW_TERMS;
 
         text = text.replace(/[ \t]+/g, ' ').trim();
         const wordCount = text.split(/\s+/).filter(Boolean).length;
-        if (wordCount < this.MIN_WORDS) return text;
+        if (wordCount < minWords) return text;
 
         const sentences = this.splitSentences(text);
         if (sentences.length < 2) return text;
@@ -712,7 +720,7 @@ const PromptMeterCondense = {
             if (index > 0 && first) startedLine.add(first.trim());
         });
 
-        const condensed = this.pruneNarrative(this.mergeRepeats(sentences));
+        const condensed = this.pruneNarrative(this.mergeRepeats(sentences), minNewTerms);
         return condensed
             .map((part, index) => (
                 index > 0 && startedLine.has(part.trim()) ? '\n' + part : part

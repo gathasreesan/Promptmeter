@@ -35,6 +35,7 @@
         "utils/storage.js",
         "utils/optimizer.js",
         "utils/analysis.js",
+        "utils/compress.js",
         "utils/recommendations.js",
         "utils/gamification.js",
         "content.js"

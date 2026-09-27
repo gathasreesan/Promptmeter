@@ -303,6 +303,13 @@ function hideOptimizationCard() {
 //
 // Not persisted: it is a correction someone declined on one prompt, not a dictionary
 // entry, and a name that should survive here may well be a typo in the next prompt.
+// What the composer held before Apply overwrote it, so Revert can put it back.
+//
+// Undo is not enough: writing into a React or ProseMirror editor goes through synthetic
+// events, and the host's own undo stack does not reliably contain a step for it. Keeping
+// the string is the only way to guarantee the user can get their own words back.
+let revertText = null;
+
 const preservedWords = new Set();
 
 const SEVERITY_TITLE = {
@@ -405,7 +412,7 @@ window.addEventListener("resize", schedulePositionUpdate);
 window.addEventListener("scroll", schedulePositionUpdate, true);
 
 // 3. Create and show the optimization overlay
-function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues, tokenStats, headroom) {
+function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues, tokenStats, headroom, compression) {
     let card = document.getElementById("promptmeter-opt-card");
     if (!card) {
         card = document.createElement("div");
@@ -466,6 +473,9 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
                 ${carbon !== null
                     ? `<span class="promptmeter-metric" title="Estimated">~${carbon.toFixed(3)} g CO₂</span>`
                     : ''}
+                ${compression && compression.mode && compression.mode !== 'none'
+                    ? `<span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode: the shortest rewrite that passed every preservation check">${compression.mode}</span>`
+                    : ''}
                 ${issueLabels.length > 0
                     ? `<span class="promptmeter-metric promptmeter-metric-grammar">${issueLabels.length} fixed</span>`
                     : ''}
@@ -476,6 +486,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
         </div>
         <div class="promptmeter-opt-headroom" hidden></div>
+        <div class="promptmeter-opt-preserve" hidden></div>
         <div class="promptmeter-opt-scope" hidden>
             <div class="promptmeter-scope-title">${(scopeIssues || []).some(f => f.type === 'complexity') ? 'Worth reconsidering' : 'Worth splitting up'}</div>
             <ul class="promptmeter-scope-list"></ul>
@@ -485,6 +496,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <ul class="promptmeter-grammar-list"></ul>
         </div>
         <div class="promptmeter-opt-actions">
+            <button id="promptmeter-btn-revert" class="promptmeter-opt-btn promptmeter-btn-ignore" hidden>Revert</button>
             <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
             <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
         </div>
@@ -505,6 +517,19 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             + `~${headroom.remaining.toLocaleString()} tokens left of ${headroom.contextLimit.toLocaleString()}`
             + (headroom.message ? ` · ${headroom.message}` : '');
         row.className = 'promptmeter-opt-headroom promptmeter-headroom-' + headroom.level;
+        row.hidden = false;
+    }
+
+    // What a harder compression would have cost. The candidates that were tried and
+    // rejected are the most useful thing the compressor knows: "a shorter version was
+    // available and it dropped your word limit" is a better answer than silence about
+    // why the prompt was not compressed further.
+    if (compression && compression.warnings && compression.warnings.length) {
+        const row = card.querySelector('.promptmeter-opt-preserve');
+        const lost = [...new Set(compression.warnings
+            .reduce((all, warning) => all.concat(warning.lost), []))];
+        row.textContent = 'A shorter rewrite was rejected: it would have changed '
+            + lost.join(', ') + '.';
         row.hidden = false;
     }
 
@@ -576,6 +601,25 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // document: if the host page ever ships an element called promptmeter-btn-accept,
     // a global lookup binds the handler to theirs and the button silently stops working.
     card.querySelector("#promptmeter-btn-accept").onclick = () => applyOptimization(optimizedText);
+
+    const revert = card.querySelector("#promptmeter-btn-revert");
+    revert.hidden = revertText === null;
+    revert.onclick = () => {
+        const promptBox = getPromptBox();
+        if (!promptBox || revertText === null) return;
+        const restore = revertText;
+        // Cleared before writing: the write triggers the input handler, and a stale
+        // revertText would offer to revert the text that was just restored.
+        revertText = null;
+        wasOptimized = false;
+        lastSavedTokens = 0;
+        lastSavedCarbon = 0;
+        lastOriginalPrompt = "";
+        ignoredPromptText = restore;
+        promptBox.focus();
+        writeToPromptBox(promptBox, restore);
+        hideOptimizationCard();
+    };
     card.querySelector("#promptmeter-btn-ignore").onclick = () => {
         ignoredPromptText = originalText;
         hideOptimizationCard();
@@ -603,6 +647,7 @@ function analyzeAndOfferOptimization(text) {
     // This runs inside a debounce timer, where a throw is swallowed by the event loop
     // and the card simply never appears. Surface it instead.
     let optimized;
+    let compression = null;
     let grammarIssues = [];
     let scopeIssues = [];
     try {
@@ -611,7 +656,19 @@ function analyzeAndOfferOptimization(text) {
         // ambiguity, missing context -- and tags every finding with the word it changed
         // so a row can be declined. The optimizer alone is the fallback, so a build
         // without analysis.js still shows a card rather than nothing.
-        if (typeof PromptMeterAnalysis !== 'undefined') {
+        if (typeof PromptMeterCompress !== 'undefined') {
+            // The compressor generates several rewrites, validates each against the
+            // original and takes the shortest that survives -- so the card shows a text
+            // that has been checked for lost constraints rather than merely produced.
+            // A budget keeps candidate generation off the critical path of a keystroke.
+            compression = PromptMeterCompress.compress(text, { budgetMs: 40 });
+            optimized = compression.text;
+            const result = PromptMeterAnalysis.analyze(text, preservedWords);
+            grammarIssues = result.findings.filter(f => f.severity !== 'improvement');
+            scopeIssues = result.findings
+                .filter(f => f.category === 'scope')
+                .map(f => ({ label: f.explanation, type: 'scope' }));
+        } else if (typeof PromptMeterAnalysis !== 'undefined') {
             const result = PromptMeterAnalysis.analyze(text, preservedWords);
             optimized = result.optimized;
             grammarIssues = result.findings.filter(f => f.severity !== 'improvement');
@@ -660,7 +717,7 @@ function analyzeAndOfferOptimization(text) {
 
     showOptimizationCard(text, optimized, tokensSaved,
         PromptMeterCalculator.savings(tokensSaved).carbon, grammarIssues, scopeIssues,
-        tokenStats, headroom);
+        tokenStats, headroom, compression);
 }
 
 // 5. Apply the optimized prompt text directly into ChatGPT's input area
@@ -678,6 +735,10 @@ function applyOptimization(optimizedText) {
         0,
         PromptMeterTokenizer.countTokens(originalText) - PromptMeterTokenizer.countTokens(optimizedText)
     );
+
+    // Recorded before the write, whether or not any tokens were saved: a rewrite that
+    // saved nothing is exactly the one a user is most likely to want back.
+    revertText = originalText;
 
     if (tokensSaved > 0) {
         wasOptimized = true;

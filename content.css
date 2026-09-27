@@ -460,3 +460,28 @@
     color: var(--text-primary);
     background: var(--btn-secondary-hover);
 }
+
+/* The compression mode that was selected. A quiet chip, not a badge: which tier won is
+   information about how the rewrite was reached, not a claim about how good it is. */
+.promptmeter-metric-mode {
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border-radius: var(--radius-pill);
+    padding: 1px 6px;
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+}
+
+.promptmeter-metric-mode + .promptmeter-metric::before { content: none; }
+
+/* Why a shorter rewrite was not used. Sits with the headroom line rather than in the
+   corrections panel, because it is about what did NOT happen. */
+.promptmeter-opt-preserve {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--wash-warning);
+    border-radius: var(--radius-btn);
+    padding: 6px 9px;
+    margin-bottom: 12px;
+    flex: 0 0 auto;
+}

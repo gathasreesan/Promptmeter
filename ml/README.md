@@ -590,6 +590,69 @@ reported as such: it is one directional signal, not a validated metric.
 
 ---
 
+## Semantic compression
+
+`utils/compress.js` generates several rewrites at different aggressiveness, validates
+each against the original, and returns the shortest that survives. If none survives the
+original is returned unchanged: a prompt that was not compressed costs tokens, and a
+prompt that was compressed wrongly costs a whole extra turn.
+
+```bash
+node ml/benchmark_compression.js --limit 3000 --repeats 100
+node tests/compression.test.js
+```
+
+### The validator
+
+Compression that shortens a prompt is easy. Compression that shortens it without
+quietly changing what was asked is the problem, so every tier is checked before it can
+be selected:
+
+| Rule | Rejects |
+| :--- | :--- |
+| `numbers` | a numeral dropped **or changed** — "under 300 words" to "under 30 words" still reads fine |
+| `verbatim` | code, inline spans, URLs or quoted passages altered |
+| `constraint` | every numeral in a constraint must survive, and most of its carrier words |
+| `format` | a named output format no longer named |
+| `task` | the leading imperative changed, or gone |
+| `invention` | a content word appears that was never in the input |
+
+`invention` is the strongest and the cheapest: compression may only remove, so anything
+in the output that was not in the input was made up. It needs one allowance — a spelling
+fix legitimately introduces the corrected word, and without that exception it rejected
+**15.7% of the conservative tier**, which does nothing but fix spelling.
+
+### Measured, on 3,000 real corpus prompts
+
+Exact `cl100k_base` counts, not the heuristic.
+
+| | |
+| :--- | ---: |
+| Corpus-wide reduction | **9.88%** (164,662 → 148,399 tokens) |
+| Median reduction, prompts that compressed | **13.18%** |
+| Prompts compressed at all | **34%** |
+| Mean latency per prompt | **2.4 ms** |
+
+| By length | n | reduction | compressed | latency |
+| :--- | ---: | ---: | ---: | ---: |
+| short (<30 tok) | 1,980 | 4.5% | 21% | 0.9 ms |
+| medium (30–120) | 698 | 9.7% | 51% | 2.3 ms |
+| long (>120) | 322 | 11.0% | 76% | 11.2 ms |
+
+Rejection rates say what the tiers are worth: conservative **0.6%**, balanced **2.3%**,
+aggressive **31.4%**. The aggressive tier really does break roughly a third of the
+prompts it touches, and the validator is what stops those reaching the user.
+
+### Downstream answer quality is NOT measured
+
+Whether a compressed prompt gets as good an answer needs a model to answer both versions
+and a judge to score the pair. There is no model in this repository and no API key, so
+the benchmark reports preservation proxies and says so. **A compression ratio is not
+evidence of quality**, and the benchmark file records `downstreamQuality.measured:
+false` rather than leaving that to be assumed.
+
+---
+
 ## Was retraining needed? No.
 
 **The shipped classifier was not retrained, and neither dataset can justify retraining
@@ -643,6 +706,7 @@ python ml/test_ingest.py               # corpus ingestion, offline
 node tests/analysis.test.js     # semantic detectors, precision and recall
 node tests/detection.test.js    # error detection by category
 node tests/contrast.test.js     # colour contrast, both themes
+node tests/compression.test.js  # candidates, validator, token accounting
 ```
 
 `ml-parity.test.js` is the one that matters most after a retrain. `ml-classifier.js`
