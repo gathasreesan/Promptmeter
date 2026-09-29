@@ -495,7 +495,7 @@ const PromptMeterOptimizer = {
         },
         {
             label: "Conversational filler & hedging detected", per: 6, cap: 18,
-            rx: /\b(?:um+|uh+|erm+|hmm+|you\s+know|i\s+mean|(?:i\s+was\s+)?just\s+wondering|out\s+of\s+curiosity|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff|sorry\s+(?:if|for)\s+(?:this|the)|correct\s+me\s+if|i\s+hope\s+(?:this|that)\s+makes\s+sense|is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|are\s+you\s+able\s+to|do\s+you\s+think\s+you\s+(?:can|could))\b/gi
+            rx: /\b(?:um+|uh+|erm+|hmm+|you\s+know|i\s+mean|(?:i\s+was\s+)?just\s+wondering|out\s+of\s+curiosity|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff|sorry\s+(?:if|for)\s+(?:this|the)|correct\s+me\s+if|i\s+hope\s+(?:this|that)\s+makes\s+sense|is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|are\s+you\s+able\s+to|do\s+you\s+think\s+you\s+(?:can|could|might|may|would)(?:\s+be\s+able\s+to)?)\b/gi
         },
         {
             label: "Sign-off & gratitude padding detected", per: 6, cap: 12,
@@ -653,7 +653,22 @@ const PromptMeterOptimizer = {
     // Greetings, pleasantries and request wrappers stripped outright. Ordered most-specific
     // first, so long phrases are consumed before the generic ones that overlap them.
     conversationalStrippers: [
-        /\b(?:hello|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s]*)/gi,
+        // Opinion framing. Whose opinion it is does not change what is being asked, and
+        // an LLM has nothing to do with the attribution. Measured on real prompts these
+        // were the largest uncovered filler family left.
+        // "i feel" is NOT here without a following "like/that": "I feel dizzy" is the
+        // symptom the prompt is about.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:in\s+my\s+(?:opinion|view|honest\s+opinion)|personally(?:\s+(?:i\s+(?:think|feel|believe)(?:\s+(?:like|that))?))?|if\s+you\s+ask\s+me|to\s+be\s+(?:honest|fair|clear)|honestly\s+speaking|frankly\s+speaking|at\s+the\s+end\s+of\s+the\s+day|the\s+way\s+i\s+see\s+it|as\s+far\s+as\s+i\s+(?:know|can\s+tell))\b[,:!.\s]*/gim,
+        // "I think that" and friends, where the belief is the frame rather than the
+        // subject. The optional "that" is what makes it safe: "I think differently" and
+        // "I believe you" are not matched, because neither is followed by a clause this
+        // rule can strip down to.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+(?:think|believe|reckon|suppose|guess|assume)\s+that|i\s+feel\s+(?:like|that))\s+(?=(?:it|this|that|they|we|you|there|the|a|an|my|your)\b)/gim,
+        // The reason-for-asking preamble. The reason is backstory; the ask follows it.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:the\s+reason\s+(?:why\s+)?(?:i\s+(?:am|'m)\s+asking|for\s+(?:my|this)\s+question)\s+is\s+(?:that\s+)?|i\s+(?:am|'m)\s+asking\s+because\s+)/gim,
+        // Announced curiosity. "I just want to know how to X" is "How to X".
+        /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
+        /\b(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s]*)/gi,
         /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+today)?)(?:[,!.\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
         /\b(?:so\s+basically\s+what\s+happened\s+was|to\s+give\s+you\s+a\s+little\s+background(?:\s+context)?|as\s+you\s+might\s+already\s+know|i\s+was\s+sitting(?:\s+at\s+my\s+computer)?\s+thinking(?:\s+and)?)\b(?:[,!.\s]*)/gi,
@@ -703,13 +718,13 @@ const PromptMeterOptimizer = {
         // Urgency padding: an LLM cannot act on it, so it is pure token cost
         /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
-        /\b(?:is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|do\s+you\s+think\s+you\s+(?:can|could)|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
+        /\b(?:is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|do\s+you\s+think\s+you\s+(?:can|could|might|may|would)(?:\s+be\s+able\s+to)?|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
         // Meta announcements about the question itself
         /\b(?:i\s+have\s+a\s+(?:quick\s+)?question(?:\s+about)?|quick\s+question(?:\s+about)?|one\s+(?:more|last)\s+thing|just\s+to\s+clarify|for\s+your\s+information|fyi|please\s+note\s+that)\b[,:!.\s]*/gi,
         // Tentative request wrappers. "I was thinking maybe you could possibly help me"
         // is six words of hedging in front of "help me". The modal and its hedges go
         // together, because removing only the opener leaves "maybe you could possibly".
-        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
+        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|wondering|hoping|hoped|hope|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)(?:\s+be\s+able\s+to)?\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
         // Discourse markers. In a prompt these mark hesitation rather than meaning, and
         // none of them changes what is being asked. "just", "really" and "so" are
         // deliberately absent: each carries meaning often enough to matter ("just the
@@ -718,7 +733,7 @@ const PromptMeterOptimizer = {
         // honestly ..."). It is consumed with it: leaving it behind only moves the
         // problem, and stripping the marker alone would stop the clause matching the
         // clause-start anchor on the next pass.
-        /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)\b[,\s]*/gi,
+        /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)(?:\s+speaking)?\b[,\s]*/gi,
         /\b(?:i\s+guess|i\s+suppose|or\s+so|more\s+or\s+less|if\s+possible|if\s+you\s+can)\b[,!.\s]*/gi,
         // Doubled intensifiers ("very very")
         /\b(very|really|so|super|extremely|totally)\s+\1\b/gi,
@@ -787,6 +802,10 @@ const PromptMeterOptimizer = {
         // anchor match at all.
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:so|and|but|then|well|ok(?:ay)?)\s+)?if\s+you\s+(?:could|can|would)(?:\s+(?:maybe|possibly|perhaps|please|kindly|just))*\s+/gim,
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:i'?m|i\s+am)\s+trying\s+to|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:could|would|can)(?:\s+maybe)?|i\s+wonder(?:ed)?\s+if\s+you\s+(?:could|can|would)|(?:i'?m|i\s+am)\s+looking\s+for\s+(?:a\s+way\s+to|help\s+(?:with|to)))\b\s*/gim,
+        // "you might be able to" is a modal wrapped in a second modal, which the group
+        // above stops at. Without this, "I was hoping you might be able to assist me"
+        // lost nothing at all.
+        /\b(?:you\s+)?(?:(?:might|may|could|would|can|will)\s+)?be\s+able\s+to\s+/gi,
         /\b(?:i\s+need\s+help\s+(?:with|on|to)|i\s+could\s+use\s+(?:some\s+)?help\s+(?:with|on)|any\s+chance\s+you\s+(?:could|can))\b\s*/gi
     ],
 
@@ -799,6 +818,16 @@ const PromptMeterOptimizer = {
 
     // Narrative padding, verbose constructions and wordy request wrappers, rewritten in place.
     structuralRewrites: [
+        // "it is important to X" is an assertion wrapped round the request X. Restricted
+        // to a clause start followed by a verb, so "explain why it is important to test"
+        // -- where the importance IS the subject -- is left alone.
+        [/^(?:it\s+(?:is|'s)\s+)(?:very\s+|really\s+|quite\s+|extremely\s+)?(?:important|essential|crucial|vital|necessary|useful|helpful|good|best)\s+to\s+/i, ''],
+        // "what are some of the best practices I should follow when Xing" -> "Best
+        // practices for Xing". Six words of scaffolding round a two-word request.
+        [/^what\s+(?:are|is)\s+(?:some\s+of\s+the\s+|some\s+|the\s+)?best\s+practices?\s+(?:that\s+)?(?:i\s+should\s+(?:follow|use|know)\s+)?(?:when|for|in|while|to)\s+/i, 'Best practices for '],
+        // A dangling plea left behind once the request in front of it has been folded
+        // into an imperative. "Figure out why X and I need help" ends mid-thought.
+        [/\s*(?:,?\s+?and\s+)?i\s+(?:really\s+)?need\s+(?:some\s+)?help\s*[.!?]?\s*$/i, ''],
         // Trailing emotional confusion fluff
         [/\b(?:because|since)\s+i\s+am\s+(?:really\s+)?(?:confused|stuck|lost|bored|struggling|dumb|clueless|new\s+to\s+this)\b.*/gi, ''],
         // Scenario & narrative compression
@@ -836,7 +865,20 @@ const PromptMeterOptimizer = {
     // Patterns identifying raw code or stack traces, which must never be rewritten.
     codeIndicators: [
         /^\s*(?:import|export)\s+[\w*{}\s,'"]+from/m,
-        /^\s*(?:const|let|var|function|class|def|async|return|if|for|while|switch)\s+[\w$]/m,
+        // A KEYWORD IS NOT ENOUGH. This used to be `keyword + whitespace + word`, which
+        // was wrong in both directions: it missed "if (x > 1) { return 2; }" -- the very
+        // shape it was written for, because a paren is not a word character -- and it
+        // matched twelve of fourteen ordinary prompts in a sample, including "for each
+        // student calculate the average", "let me know what you think" and "class sizes
+        // in schools are growing". Reading a prompt as code makes the optimizer return
+        // it untouched, so each of those was a silent no-op the user saw as "nothing to
+        // fix".
+        //
+        // What separates the two is PUNCTUATION, not vocabulary. Code assigns, calls,
+        // opens a block or ends a statement; prose does none of those. So the line has to
+        // carry a brace or a semicolon, an `=`, a call with no space before its paren, an
+        // arrow, or a trailing colon (Python's block opener).
+        /^\s*(?:const|let|var|function|class|def|async|await|return|yield|if|elif|else|for|while|switch|case|try|catch|except|finally|import|export|public|private|protected|static|void|struct|enum|interface|type|fn|impl|package)\b[^\n]*(?:[{};]|=|[\w$]\(|=>|->|:\s*$)/m,
         /^\s*(?:public|private|protected|static|void|int|string|boolean|double|float)\s+[\w$]/m,
         // SQL needs its actual shape, not just a leading keyword. The previous pattern
         // here was /^\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s+[A-Z*\s]/im,
@@ -905,10 +947,29 @@ const PromptMeterOptimizer = {
             return replacement;
         });
 
-        // 2. Repeated character typos ("grmmmar" -> "grammar", "pleaaase" -> "please")
-        str = str.replace(/([a-z]){2,}/gi, (match, char) => (
-            /[eomsnlpftr]/i.test(char) ? char + char : char
-        ));
+        // 2. Stretched spellings ("pleaaase" -> "please", "sooooo" -> "so").
+        //
+        // The backreference here was a literal control byte for most of this file's life,
+        // eaten by a shell heredoc, so the rule silently matched nothing and every
+        // stretched word -- "doooomed", "pleaaase", "sooooo" -- passed through untouched.
+        str = str.replace(/[a-z]+/gi, (word) => {
+            if (!/([a-z])\1{2,}/i.test(word)) return word;
+
+            // Letters that legitimately double keep a pair, so "pleeeease" lands on
+            // "pleease" for the dictionary to finish rather than on "plese".
+            const doubled = word.replace(/([a-z])\1{2,}/gi, (run, char) => (
+                /[eomsnlpftr]/i.test(char) ? char + char : char));
+            const single = word.replace(/([a-z])\1{2,}/gi, '$1');
+
+            // Whichever is a real word wins. "sooooo" doubles to "soo", which is not one,
+            // and nothing downstream was going to fix it: the corrector only reconsiders
+            // words it does not know, and "soo" is two edits from anything.
+            if (PM_SPELL && !PM_SPELL.known(doubled.toLowerCase())
+                && PM_SPELL.known(single.toLowerCase())) {
+                return single;
+            }
+            return doubled;
+        });
 
         // 3. Chat slang and SMS abbreviation expansion. The contextual pass is separate
         //    because its one- and two-letter keys need the guards in that method.
@@ -1077,6 +1138,43 @@ const PromptMeterOptimizer = {
      * @param {string} text
      * @returns {string}
      */
+    /**
+     * Turns a question FRAME into the question it was standing in for.
+     *
+     *     "I have a question about recursion"     ->  "Explain recursion"
+     *     "I have a question about X: why is Y?"  ->  frame deleted, question kept
+     *
+     * The frame used to be deleted outright as meta commentary, which is right when the
+     * real question follows it and wrong when it does not. "I have a question about
+     * machine learning" came back as "Machine learning" -- a noun phrase that asks for
+     * nothing, which is a worse prompt than the one the user typed even though it is
+     * shorter. The frame was carrying the verb.
+     *
+     * So the frame is only deleted when something else in the prompt still asks. When
+     * nothing does, it becomes the imperative it implied.
+     * @param {string} text
+     * @returns {string}
+     */
+    foldMetaQuestion: function (text) {
+        const FRAME = /(^|[.!?]\s+)[\s'"]*(?:i\s+(?:have|had|have\s+got)\s+(?:a|one|another)\s+(?:quick|small|short|simple)?\s*question|(?:just\s+a\s+)?quick\s+question)\s+(?:about|on|regarding|re|concerning)\s+/i;
+        const match = FRAME.exec(text);
+        if (!match) return text;
+        const head = text.slice(0, match.index + match[1].length);
+        const after = text.slice(match.index + match[0].length);
+        // Only this sentence is folded; anything after it is somebody else's clause.
+        const end = after.search(/[.!?](?:\s|$)/);
+        const rest = (end === -1 ? after : after.slice(0, end)).trim();
+        const tail = end === -1 ? '' : after.slice(end);
+        if (!rest) return text;
+        // A surviving ask means the frame really was just preamble, so it is left for
+        // the stripper pass to delete as before.
+        if (PM_CONDENSE && new RegExp('\\b(?:' + PM_CONDENSE.ASK_WORDS.join('|') + ')\\b', 'i').test(rest)) {
+            return text;
+        }
+        if (rest.indexOf('?') !== -1) return text;
+        return head + 'Explain ' + rest.replace(/^[.,:;\s]+/, '') + tail;
+    },
+
     unwrapWhatIs: function (text) {
         if (typeof text !== 'string' || !text) return text;
         return text.replace(
@@ -1109,15 +1207,21 @@ const PromptMeterOptimizer = {
         }
 
         // Work / project preambles ("I'm working on a X project and Y" -> "Y for a X project.")
-        const projectMatch = str.match(/^I\s+(?:am\s+)?working\s+on\s+a[n]?\s+(.*?)\s+(?:project|app|website)\s+(?:and|so)?\s*(?:I\s+need\s+(?:you\s+to|help\s+to)?|can\s+you|could\s+you)?\s*(.*)$/i);
-        if (projectMatch && projectMatch[1] && projectMatch[2]) {
-            return `${projectMatch[2].trim()} for a ${projectMatch[1].trim()} project.`;
+        const projectMatch = str.match(/^I\s+(?:am\s+|'m\s+)?(?:currently\s+)?working\s+on\s+a[n]?\s+(.*?)\s*(?:project|app|website)\s+(?:and|so)?\s*(?:I\s+need\s+(?:you\s+to|help\s+to)?|can\s+you|could\s+you)?\s*(.*)$/i);
+        if (projectMatch && projectMatch[2].trim()) {
+            const kind = projectMatch[1].trim();
+            // The descriptor is now optional, so it can be empty: "for a  project" with
+            // a doubled space is not what the fold is for.
+            return kind
+                ? `${projectMatch[2].trim()} for a ${kind} project.`
+                : `${projectMatch[2].trim()} with a project.`;
         }
 
         let folded = this.applyRules(str, this.structuralRewrites);
         // Sentence-level folds last: they read a whole clause, so they need the
         // phrase rules to have finished with it.
         folded = this.foldDescribedNoun(folded);
+        folded = this.foldMetaQuestion(folded);
         return this.unwrapWhatIs(folded).trim();
     },
 
@@ -1865,6 +1969,11 @@ const PromptMeterOptimizer = {
         // Stage 2b: turn a stated intent into the command it stands for, before the
         // strippers below can remove its wrapper and strand the verb.
         optimized = this.applyRules(optimized, this.intentRewrites);
+
+        // Same reason, one level up: "I have a question about X" is a request whose
+        // only verb lives in the frame, and stripping the frame as meta commentary
+        // left a bare noun phrase that asks for nothing.
+        optimized = this.foldMetaQuestion(optimized);
 
         // Stage 3: pleasantry and junk stripping. Two passes catch wrappers that only
         // become visible once an outer one has been removed.

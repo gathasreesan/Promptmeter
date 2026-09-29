@@ -312,6 +312,18 @@ let revertText = null;
 
 const preservedWords = new Set();
 
+/**
+ * Names the panel after what is actually in it.
+ * @param {Array} applied - Corrections already made to the text.
+ * @param {Array} advice - Findings only the user can act on.
+ * @returns {string}
+ */
+function headingFor(applied, advice) {
+    if (applied.length && advice.length) return 'Corrected, and worth a look';
+    if (applied.length) return applied.length === 1 ? 'Corrected' : 'Corrections';
+    return advice.length === 1 ? 'Worth a look' : 'Worth a look';
+}
+
 const SEVERITY_TITLE = {
     error: 'Definitely wrong: a rule that does not depend on context',
     suggestion: 'Probably right, but the context could make it wrong',
@@ -443,7 +455,9 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // saved, and printing "~0.000 g CO2" next to a longer prompt states a benefit
     // that was not delivered. The row is dropped instead.
     const carbon = typeof carbonSaved === 'number' && isFinite(carbonSaved)
-        && carbonSaved > 0 && stats && stats.saved > 0
+        // Below a milligram it prints as "~0.000 g", which is a number that says
+        // nothing and takes up the same room as one that does.
+        && carbonSaved >= 0.001 && stats && stats.saved > 0
         ? carbonSaved : null;
 
     // optimizeWithReport already de-duplicates these and tags each with a severity,
@@ -451,7 +465,18 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // what is merely tidier.
     const issues = (grammarIssues || [])
         .filter(issue => issue && (issue.label || issue.explanation));
-    const shownIssues = issues.slice(0, 4);
+    // Applied corrections and advice are different things and the panel used to
+    // run them together under "Errors corrected" -- a heading that was wrong for
+    // two of the three rows under it. A correction has already happened to the
+    // text; advice is something only the user can act on.
+    const APPLIED = new Set(['spelling', 'grammar', 'punctuation', 'agreement',
+        'article', 'verb-form', 'noun-form', 'pronoun-case', 'contraction',
+        'redundancy', 'word-choice', 'phrasing']);
+    const applied = issues.filter(issue => APPLIED.has(issue.type || issue.category));
+    const advice = issues.filter(issue => !APPLIED.has(issue.type || issue.category));
+    const fixedCount = applied.length;
+
+    const shownIssues = applied.concat(advice).slice(0, 5);
     const hiddenCount = issues.length - shownIssues.length;
     const issueLabels = issues;
 
@@ -476,8 +501,8 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
                 ${compression && compression.mode && compression.mode !== 'none'
                     ? `<span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode: the shortest rewrite that passed every preservation check">${compression.mode}</span>`
                     : ''}
-                ${issueLabels.length > 0
-                    ? `<span class="promptmeter-metric promptmeter-metric-grammar">${issueLabels.length} fixed</span>`
+                ${fixedCount > 0
+                    ? `<span class="promptmeter-metric promptmeter-metric-grammar">${fixedCount} fixed</span>`
                     : ''}
             </div>
         </div>
@@ -492,7 +517,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <ul class="promptmeter-scope-list"></ul>
         </div>
         <div class="promptmeter-opt-grammar" hidden>
-            <div class="promptmeter-grammar-title">${(grammarIssues || []).some(i => i.severity === 'error') ? 'Errors corrected' : 'Also corrected'}</div>
+            <div class="promptmeter-grammar-title">${headingFor(applied, advice)}</div>
             <ul class="promptmeter-grammar-list"></ul>
         </div>
         <div class="promptmeter-opt-actions">

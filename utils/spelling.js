@@ -1014,6 +1014,42 @@ const PM_WORDS = [
     // prompts are full of. Each sits one keyboard-neighbour substitution from a common
     // word: "scheduler" from "scheduled", "stare" from "state", "parser" from "parse".
     'analyser analyzer bundler compilers debugger decorator emitter emitters formatter formatters handler handlers interpreter iterator lexer linter listener listeners loader loaders logger loggers optimiser optimizer parser parsers profiler renderer resolver scheduler schedulers serializer stare stares tracer transpiler validator validators viva vivas wrapper wrappers'
+    ,
+    // Words the project's OWN rule lexicons treat as valid English -- correction
+    // targets, ASK_WORDS, and the modifier lists -- that this dictionary did not know.
+    // A word missing from here is not merely unrecognised: the corrector finds a near
+    // neighbour and rewrites a correctly spelled word into a WRONG one. "can you
+    // clarify" came back as "clarity". tests/spelling.test.js now asserts this set
+    // stays closed, so the gap cannot reopen silently.
+    'clarify clarifies clarified clarifying clarification clarifications',
+    'simplify simplifies simplified simplifying simplification',
+    'classify classifies classified classifying classification classifier classifiers',
+    'amplify amplifies amplified unify unifies unified falsify diversify diversified',
+    'signify signifies certify certifies certified testify quantify quantifies quantified',
+    'verify verifies verifying specify specifies identify identifies notify notifies',
+    'refactor refactors refactored refactoring rewrite rewrites rewriting rewritten',
+    'revise revises revised revising revision revisions derive derives derived deriving',
+    'elaborate elaborates elaborated summarise summarises summarised summarising',
+    'optimise optimises optimised optimising optimisation optimisations',
+    'asynchronous synchronous authenticated encrypted paginated stateless idempotent',
+    'performant maintainable testable typed multilingual responsive',
+    'readable legible lucid coherent unambiguous understandable uncomplicated',
+    'straightforward succinct terse exhaustive sizeable speedy sleek slick',
+    'deprecate deprecated deprecates instantiate instantiated serialize serialized',
+    'deserialize memoize memoized paginate paginates idempotence',
+    'prepend prepends prepended append appends appended truncate truncates truncated',
+    'normalise normalises normalised normalize normalizes normalized',
+    'initialise initialises initialised initialize initializes initialized',
+    'iterate iterates iterated iterating iteration iterations iterable',
+    'recurse recurses recursed recursive recursively recursion',
+    'delegate delegates delegated deduplicate deduplicated',
+    'benchmark benchmarks benchmarked benchmarking',
+    'scaffold scaffolds scaffolding boilerplate middleware webhook webhooks',
+    'changelog runtime runtimes lifecycle namespace namespaces',
+    'tokenizer tokeniser tokenize tokenise tokenized tokenised',
+    'embedding embeddings inference quantization quantisation',
+    'dataframe dataset datasets subquery subqueries upsert rollback',
+    'concurrency concurrent parallelism throughput latency observability telemetry'
 ].join(' ').split(/\s+/).filter(Boolean);
 
 const PromptMeterSpelling = {

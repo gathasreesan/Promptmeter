@@ -432,7 +432,20 @@ const PromptMeterGrammar = {
         // Same modal guard as the rule below: "could it have been" is correct English,
         // and without this it became "could it has been".
         out = out.replace(/(?<!\b(?:can|could|will|would|shall|should|may|might|must|to|do|does|did|don't|doesn't|didn't)\s)\b(he|she|it|this|that)\s+(have|are|were|do|don't|aren't|weren't|haven't)\b/gi,
-            (match, subject, verb) => {
+            (match, subject, verb, offset, whole) => {
+                // "that" is a demonstrative ONLY at the start of a clause. Everywhere
+                // else it is a relative pronoun, and a relative pronoun takes the
+                // number of the noun it refers back to -- "the points that are
+                // discussed" is correct, and rewriting it to "that is" corrupts a
+                // sentence the user got right. So a "that" with a word in front of it
+                // is left alone. The other subjects here cannot be relative pronouns.
+                if (/^that$/i.test(subject)) {
+                    const before = whole.slice(0, offset).replace(/\s+$/, '');
+                    const clauseStart = before === ''
+                        || /[.!?,;:(\[{"'—-]$/.test(before)
+                        || /\b(?:and|but|or|so|because|since|although|though|while|if|that)$/i.test(before);
+                    if (!clauseStart) return match;
+                }
                 const singular = {
                     have: 'has', are: 'is', were: 'was', do: 'does',
                     "don't": "doesn't", "aren't": "isn't", "weren't": "wasn't", "haven't": "hasn't"

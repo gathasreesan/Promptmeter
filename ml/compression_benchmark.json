@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T02:23:08.898Z",
+  "generatedAt": "2026-09-29T08:08:04.348Z",
   "sample": "sample.jsonl",
   "prompts": 3000,
   "tokenizer": {
@@ -10,43 +10,43 @@
   "overall": {
     "prompts": 3000,
     "originalTokens": 164662,
-    "optimizedTokens": 148399,
-    "overallReduction": 9.88,
-    "medianReductionWhenCompressed": 13.18,
-    "compressedShare": 34,
-    "meanLatencyMs": 2.394,
+    "optimizedTokens": 148459,
+    "overallReduction": 9.84,
+    "medianReductionWhenCompressed": 13.1,
+    "compressedShare": 33.9,
+    "meanLatencyMs": 2.617,
     "modes": {
-      "balanced": 649,
-      "none": 1980,
-      "aggressive": 273,
-      "conservative": 98
+      "balanced": 651,
+      "none": 1982,
+      "aggressive": 271,
+      "conservative": 96
     }
   },
-  "netTokensSavedAtRepeats": 1626300,
+  "netTokensSavedAtRepeats": 1620300,
   "byLength": {
     "long": {
       "prompts": 322,
       "originalTokens": 99288,
-      "optimizedTokens": 87994,
-      "overallReduction": 11.37,
-      "medianReductionWhenCompressed": 9.73,
-      "compressedShare": 77,
-      "meanLatencyMs": 11.38,
+      "optimizedTokens": 88070,
+      "overallReduction": 11.3,
+      "medianReductionWhenCompressed": 9.58,
+      "compressedShare": 76.4,
+      "meanLatencyMs": 12.48,
       "modes": {
-        "none": 74,
+        "none": 76,
         "balanced": 136,
-        "aggressive": 105,
+        "aggressive": 103,
         "conservative": 7
       }
     },
     "medium": {
       "prompts": 698,
       "originalTokens": 38246,
-      "optimizedTokens": 34498,
-      "overallReduction": 9.8,
+      "optimizedTokens": 34487,
+      "overallReduction": 9.83,
       "medianReductionWhenCompressed": 13.89,
       "compressedShare": 51,
-      "meanLatencyMs": 2.29,
+      "meanLatencyMs": 2.511,
       "modes": {
         "aggressive": 117,
         "balanced": 220,
@@ -57,16 +57,16 @@
     "short": {
       "prompts": 1980,
       "originalTokens": 27128,
-      "optimizedTokens": 25907,
-      "overallReduction": 4.5,
+      "optimizedTokens": 25902,
+      "overallReduction": 4.52,
       "medianReductionWhenCompressed": 14.29,
       "compressedShare": 21,
-      "meanLatencyMs": 0.969,
+      "meanLatencyMs": 1.05,
       "modes": {
-        "balanced": 293,
+        "balanced": 295,
         "none": 1564,
         "aggressive": 51,
-        "conservative": 72
+        "conservative": 70
       }
     }
   },
@@ -74,71 +74,70 @@
     "analysis": {
       "prompts": 60,
       "originalTokens": 5012,
-      "optimizedTokens": 4750,
-      "overallReduction": 5.23,
+      "optimizedTokens": 4745,
+      "overallReduction": 5.33,
       "medianReductionWhenCompressed": 8.99,
       "compressedShare": 35,
-      "meanLatencyMs": 2.821,
+      "meanLatencyMs": 3.223,
       "modes": {
         "none": 39,
-        "balanced": 13,
-        "aggressive": 7,
-        "conservative": 1
+        "balanced": 14,
+        "aggressive": 7
       }
     },
     "code": {
       "prompts": 287,
       "originalTokens": 33614,
-      "optimizedTokens": 30323,
-      "overallReduction": 9.79,
+      "optimizedTokens": 30336,
+      "overallReduction": 9.75,
       "medianReductionWhenCompressed": 14.67,
-      "compressedShare": 56.1,
-      "meanLatencyMs": 4.016,
+      "compressedShare": 56.4,
+      "meanLatencyMs": 4.365,
       "modes": {
         "aggressive": 97,
-        "balanced": 60,
-        "none": 126,
+        "balanced": 61,
+        "none": 125,
         "conservative": 4
       }
     },
     "explain": {
       "prompts": 416,
       "originalTokens": 10957,
-      "optimizedTokens": 10069,
-      "overallReduction": 8.1,
+      "optimizedTokens": 10060,
+      "overallReduction": 8.19,
       "medianReductionWhenCompressed": 12.5,
       "compressedShare": 22.6,
-      "meanLatencyMs": 1.821,
+      "meanLatencyMs": 1.963,
       "modes": {
-        "balanced": 69,
+        "balanced": 70,
         "none": 322,
         "aggressive": 13,
-        "conservative": 12
+        "conservative": 11
       }
     },
     "factual": {
       "prompts": 620,
       "originalTokens": 18537,
-      "optimizedTokens": 16904,
-      "overallReduction": 8.81,
-      "medianReductionWhenCompressed": 13.33,
-      "compressedShare": 32.6,
-      "meanLatencyMs": 1.518,
+      "optimizedTokens": 16994,
+      "overallReduction": 8.32,
+      "medianReductionWhenCompressed": 12.5,
+      "compressedShare": 32.4,
+      "meanLatencyMs": 1.643,
       "modes": {
-        "none": 418,
-        "balanced": 162,
-        "conservative": 24,
-        "aggressive": 16
+        "none": 419,
+        "balanced": 161,
+        "conservative": 25,
+        "aggressive": 15
       }
     },
     "howto": {
       "prompts": 165,
       "originalTokens": 3776,
-      "optimizedTokens": 3487,
-      "overallReduction": 7.65,
+      "optimizedTokens": 3484,
+      "overallReduction": 7.73,
       "medianReductionWhenCompressed": 16.67,
       "compressedShare": 23,
-      "meanLatencyMs": 1.105,
+      "meanLatencyMs": 1.248,
       "modes": {
         "none": 127,
         "balanced": 31,
@@ -149,11 +148,11 @@
     "math": {
       "prompts": 162,
       "originalTokens": 21302,
-      "optimizedTokens": 19561,
-      "overallReduction": 8.17,
-      "medianReductionWhenCompressed": 8.89,
+      "optimizedTokens": 19527,
+      "overallReduction": 8.33,
+      "medianReductionWhenCompressed": 9.14,
       "compressedShare": 35.8,
-      "meanLatencyMs": 4.462,
+      "meanLatencyMs": 5.149,
       "modes": {
         "none": 104,
         "aggressive": 25,
@@ -164,15 +163,15 @@
     "other": {
       "prompts": 846,
       "originalTokens": 38580,
-      "optimizedTokens": 34196,
-      "overallReduction": 11.36,
-      "medianReductionWhenCompressed": 10.53,
+      "optimizedTokens": 34188,
+      "overallReduction": 11.38,
+      "medianReductionWhenCompressed": 10.64,
       "compressedShare": 30.9,
-      "meanLatencyMs": 1.997,
+      "meanLatencyMs": 2.099,
       "modes": {
         "none": 585,
-        "balanced": 162,
-        "conservative": 36,
+        "balanced": 163,
+        "conservative": 35,
         "aggressive": 63
       }
     },
@@ -183,7 +182,7 @@
       "overallReduction": 10.27,
       "medianReductionWhenCompressed": 16.67,
       "compressedShare": 59.2,
-      "meanLatencyMs": 4.73,
+      "meanLatencyMs": 4.841,
       "modes": {
         "none": 29,
         "aggressive": 12,
@@ -194,15 +193,15 @@
     "writing": {
       "prompts": 373,
       "originalTokens": 23364,
-      "optimizedTokens": 20567,
-      "overallReduction": 11.97,
+      "optimizedTokens": 20583,
+      "overallReduction": 11.9,
       "medianReductionWhenCompressed": 12.5,
-      "compressedShare": 38.3,
-      "meanLatencyMs": 3.299,
+      "compressedShare": 37.8,
+      "meanLatencyMs": 3.78,
       "modes": {
-        "none": 230,
-        "balanced": 97,
-        "aggressive": 37,
+        "none": 232,
+        "balanced": 96,
+        "aggressive": 36,
         "conservative": 9
       }
     }
@@ -216,20 +215,20 @@
       },
       "balanced": {
         "tried": 3000,
-        "rejected": 70
+        "rejected": 72
       },
       "aggressive": {
-        "tried": 404,
-        "rejected": 127
+        "tried": 405,
+        "rejected": 129
       }
     },
     "violationsByRule": {
-      "invention": 31,
-      "task": 15,
-      "verbatim": 262,
+      "invention": 35,
+      "task": 16,
+      "verbatim": 261,
       "constraint": 78,
       "format": 8,
-      "numbers": 12
+      "numbers": 36
     }
   },
   "downstreamQuality": {
@@ -267,7 +266,7 @@
       "from": 34,
       "to": 19,
       "original": "Have there been any stories in the bible that have been proven to be true with physical evidence? I have been researching religion a lot lately and am",
-      "compressed": "Have there been any stories in the bible that has been proven to be true with physical evidence?"
+      "compressed": "Have there been any stories in the bible that have been proven to be true with physical evidence?"
     },
     {
       "category": "writing",

@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-09-26T14:33:34.929Z",
+  "generatedAt": "2026-09-29T08:09:01.198Z",
   "sample": "sample.jsonl",
   "rows": 31499,
   "errors": 0,
   "scoreDistribution": {
-    "mean": 94.42,
+    "mean": 94.52,
     "min": 0,
     "p10": 85,
     "median": 100,
     "p90": 100,
     "max": 100,
-    "perfect": 16794,
-    "perfectPct": 53.3
+    "perfect": 17025,
+    "perfectPct": 54
   },
   "flagFrequency": {
-    "No output format given for a generative request": 5559,
-    "Does not clearly state what it wants": 3113,
+    "No output format given for a generative request": 5323,
+    "Does not clearly state what it wants": 3114,
     "Says what is wanted only in vague terms": 1957,
     "Over-politeness/emotional padding detected": 1925,
-    "Grammatical errors detected: 1": 1355,
     "Instruction stops part-way": 1262,
     "Greetings detected": 1149,
+    "Grammatical errors detected: 1": 1134,
     "Conversational preambles detected": 612,
     "Conversational filler & hedging detected": 570,
     "Chat slang & informal abbreviations detected": 515,
@@ -28,16 +28,16 @@
     "Redundant wordy filler phrases detected": 309,
     "Spelling typos & misspellings detected": 244,
     "Over-scoped request: 5 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 238,
-    "Grammatical errors detected: 2": 181,
     "Sign-off & gratitude padding detected": 159,
+    "Grammatical errors detected: 2": 137,
     "Over-scoped request: 4 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 121,
     "Excessive punctuation & symbol spam detected": 83,
     "Meta-prompting fluff / redundant constraints detected": 70,
     "Over-scoped request: 6 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 57,
     "Refers to something that was not included": 44,
-    "Grammatical errors detected: 3": 32,
-    "Grammatical errors detected: 4": 25,
+    "Grammatical errors detected: 3": 28,
     "Over-scoped request: 13 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 22,
+    "Grammatical errors detected: 4": 21,
     "Meta commentary about the question detected": 21,
     "Urgency padding detected": 20,
     "Over-scoped request: 7 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 20,
@@ -45,11 +45,11 @@
     "Over-scoped request: building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse": 18,
     "Over-scoped request: 14 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 15,
     "Over-scoped request: \"complete\", \"every\" and \"in detail\" appear 3 times over a list this long, asking for more than one response can hold": 15,
-    "Grammatical errors detected: 5": 14,
     "Over-scoped request: 16 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 14,
     "Over-scoped request: 15 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 13,
     "Over-scoped request: 17 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 13,
     "Over-scoped request: 8 separate deliverables in one prompt -- each one asked on its own gets a usable answer": 12,
+    "Grammatical errors detected: 5": 12,
     "Over-scoped request: 18 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 8,
     "Over-scoped request: 20 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 8,
     "Over-scoped request: 22 items requested in one list -- an answer covering all of them will be shallow, and the follow-up turns cost more than splitting the request would": 7,
@@ -126,27 +126,27 @@
   "bySource": {
     "bpo": {
       "rows": 14351,
-      "meanScore": 95.39,
-      "perfectPct": 56.4,
-      "qualityFlagsPerPrompt": 0.39
+      "meanScore": 95.48,
+      "perfectPct": 57.3,
+      "qualityFlagsPerPrompt": 0.38
     },
     "lmsys": {
       "rows": 17148,
-      "meanScore": 93.61,
-      "perfectPct": 50.7,
-      "qualityFlagsPerPrompt": 0.37
+      "meanScore": 93.71,
+      "perfectPct": 51.3,
+      "qualityFlagsPerPrompt": 0.36
     }
   },
   "byLanguage": {
     "n/a (BPO)": {
       "rows": 14351,
-      "meanScore": 95.39,
-      "qualityFlagsPerPrompt": 0.39
+      "meanScore": 95.48,
+      "qualityFlagsPerPrompt": 0.38
     },
     "English": {
       "rows": 13737,
-      "meanScore": 92.88,
-      "qualityFlagsPerPrompt": 0.44
+      "meanScore": 92.99,
+      "qualityFlagsPerPrompt": 0.43
     },
     "Portuguese": {
       "rows": 559,
@@ -185,7 +185,7 @@
     },
     "unknown": {
       "rows": 132,
-      "meanScore": 97.2,
+      "meanScore": 97.23,
       "qualityFlagsPerPrompt": 0.15
     },
     "Japanese": {
@@ -350,24 +350,24 @@
     }
   },
   "meanScoreByCategory": {
-    "analysis": 95.1,
-    "code": 90.8,
-    "explain": 97.5,
-    "factual": 97.3,
-    "howto": 95.6,
-    "math": 94.1,
-    "other": 93.3,
-    "roleplay": 90.3,
-    "writing": 91.7
+    "analysis": 95.2,
+    "code": 91,
+    "explain": 97.6,
+    "factual": 97.4,
+    "howto": 95.7,
+    "math": 94.2,
+    "other": 93.4,
+    "roleplay": 90.4,
+    "writing": 91.9
   },
   "preservation": {
     "note": "Counts prompts where something that must survive did not. No ground truth needed: these are losses regardless of what any dataset says.",
     "promptsWithLoss": {
       "numbers": 20,
-      "operators": 424,
+      "operators": 423,
       "code": 0,
       "urls": 2,
-      "quoted": 126
+      "quoted": 127
     },
     "emptyOptimizerOutput": 0,
     "examples": [
@@ -433,7 +433,7 @@
           "-"
         ],
         "prompt": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\nAt night, the full moon hung high in th",
-        "optimized": "Revised the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\n\"Heavenly Phenomenon, a divine body mu"
+        "optimized": "Revise the input to enhance readability but do not change or add new plot and dialogue:\nChapter 1: Outer Court Disciples\n\"Heavenly Phenomenon, a divine body mus"
       },
       {
         "kind": "operators",
@@ -594,13 +594,13 @@
   "bpoAgreement": {
     "note": "Directional only. BPO says the rewrite produces better answers, which is evidence the original had a weakness -- not a quality score. BPO mostly ADDS words while PromptMeter scores brevity, so the two disagree on length by construction; read sameLengthOrShorter, not the headline.",
     "pairs": 14351,
-    "originalScoredLower": 2164,
-    "sameScore": 9229,
-    "originalScoredHigher": 2958,
+    "originalScoredLower": 2114,
+    "sameScore": 9320,
+    "originalScoredHigher": 2917,
     "sameLengthOrShorter": {
       "pairs": 2996,
-      "originalScoredLower": 450,
-      "originalScoredHigher": 260
+      "originalScoredLower": 433,
+      "originalScoredHigher": 259
     }
   }
 }
