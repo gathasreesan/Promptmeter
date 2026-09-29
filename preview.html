@@ -77,21 +77,34 @@
     }
 
     /* The card is fixed to a composer that is not on this page. Static it, and let it
-       be visible without the entrance transition. Position only -- no colours here. */
+       be visible without the entrance transition. Position only -- no colours here.
+
+       THE WIDTH MUST BE THE REAL ONE. This said 420px, which is 360px narrower than the
+       card the extension renders, so every judgement about wrapping and density made on
+       this page was made at the wrong size. It matches CARD_MAX_WIDTH now, and
+       tests/layout.test.js checks that it keeps matching.
+
+       max-height is released on purpose: the card's own ceiling is a share of the
+       viewport and this page is a scrolling list of cards, so honouring it here would
+       show four cards each clipped to the height of this window. It means the page
+       cannot show the panel-cap squeeze -- that is what the caps arithmetic in the
+       layout suite is for. */
     .frame .promptmeter-opt-card {
         position: static;
         transform: none;
         opacity: 1;
         pointer-events: auto;
-        width: 420px;
+        width: 780px;
         max-width: 100%;
         max-height: none;
     }
+    /* Mirrors the real popup: utils/tokens.css + style.css are loaded above, so only the
+       shell's own box is restated here. */
     .popup-shell {
-        width: 270px;
-        padding: 16px;
+        width: 280px;
+        padding: var(--space-4);
         background: var(--bg-primary);
-        border-top: 3px solid var(--color-primary);
+        border-top: 1px solid var(--border-color);
         border-radius: var(--radius-card);
         box-shadow: var(--shadow-premium);
     }

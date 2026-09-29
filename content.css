@@ -15,8 +15,8 @@
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     width: 90%;
-    max-width: 580px;
-    max-height: 60vh;
+    max-width: 780px;
+    max-height: 78vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -192,6 +192,16 @@
     gap: var(--space-2);
     flex: 0 0 auto;
     min-height: 0;
+}
+
+/* THE SUGGESTION IS WHAT THE CARD IS FOR, so when there is not room for both halves the
+   original is the one that gives way: the user wrote it and already knows what it says.
+   Before this the two boxes were equals and a long prompt pushed the rewrite out of
+   sight entirely, leaving a card whose whole purpose was below the fold. */
+.promptmeter-diff-original {
+    max-height: 22vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .promptmeter-diff-label {
@@ -676,12 +686,17 @@
     overflow-y: auto;
 }
 
-/* Caps so no single panel can eat the card on its own. A long scope list scrolls
-   rather than pushing the diff and the buttons out. */
+/* Caps so no single panel can eat the card on its own. A long scope list scrolls rather
+   than pushing the diff and the buttons out.
+   THE NUMBERS HAVE TO ADD UP. These were 30 + 30 + 20 + 20 = 100vh of ceilings inside a
+   card at most 78vh tall, so a prompt with findings and a headroom warning let the
+   panels take their full share and squeezed the diff -- the suggestion the card exists
+   to show -- into whatever was left over. Now they total 52vh, which leaves the diff a
+   majority of the card even in the worst case. */
 .promptmeter-opt-scope,
-.promptmeter-opt-grammar { max-height: 30vh; }
+.promptmeter-opt-grammar { max-height: 16vh; }
 .promptmeter-opt-headroom,
-.promptmeter-opt-preserve { max-height: 20vh; }
+.promptmeter-opt-preserve { max-height: 6vh; }
 
 /* The buttons are the last thing to give way, and they never do. */
 .promptmeter-opt-actions {

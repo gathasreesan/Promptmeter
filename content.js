@@ -340,7 +340,10 @@ const SEVERITY_TITLE = {
 
 const CARD_GAP = 12;         // Clearance between the card and the top of the composer
 const CARD_MIN_HEIGHT = 140; // Below this the card is unreadable; it scrolls instead
-const CARD_MAX_WIDTH = 580;
+// Wide enough to match ChatGPT's composer, which is around 768px. The old 580 cap made
+// the card visibly narrower than the box it sits over, and each extra wrapped line is
+// another line of the suggestion that has to be scrolled to.
+const CARD_MAX_WIDTH = 780;
 const CARD_EDGE = 8;         // Keeps the card off the viewport edges
 
 let composerObserver = null;
@@ -381,7 +384,13 @@ function positionOptimizationCard(force) {
         return;
     }
 
-    const width = Math.min(CARD_MAX_WIDTH, Math.max(280, rect.width));
+    const width = Math.min(
+        CARD_MAX_WIDTH,
+        Math.max(280, rect.width),
+        // The viewport is the real limit. Clamping `left` cannot rescue a card that is
+        // wider than the window -- it pins the left edge and lets the right run off.
+        Math.max(280, window.innerWidth - CARD_EDGE * 2)
+    );
     const left = Math.max(CARD_EDGE, Math.min(
         window.innerWidth - width - CARD_EDGE,
         rect.left + (rect.width - width) / 2

@@ -311,5 +311,103 @@ const hinted = [...JS.matchAll(/promptmeter-btn-key[^>]*>([^<]+)</g)].map((m) =>
 check('the only keyboard hint shown is one that works',
     hinted.every((key) => key.toLowerCase() === 'esc'), hinted.join(', '));
 
+// ---------------------------------------------------------------------------
+// The card has to be big enough to show the suggestion.
+//
+// Reported: the card was too small and the suggestion had to be scrolled to. Three
+// separate causes, and each one needs its own check because fixing one hides the
+// others.
+// ---------------------------------------------------------------------------
+
+// 1. The JS width cap and the stylesheet's fallback must agree. They are used at
+//    different moments -- the fallback until the composer is measured, the cap after --
+//    so a disagreement makes the card visibly resize as it opens.
+const jsWidth = /CARD_MAX_WIDTH\s*=\s*(\d+)/.exec(JS);
+const cssWidth = property('.promptmeter-opt-card', 'max-width');
+check('CARD_MAX_WIDTH is defined', jsWidth !== null);
+if (jsWidth && cssWidth) {
+    check('the JS cap and the CSS fallback are the same width, so the card does not resize as it opens',
+        parseInt(cssWidth, 10) === Number(jsWidth[1]),
+        'css ' + cssWidth + ' vs js ' + jsWidth[1]);
+}
+// Wide enough to match the composer it sits over. ChatGPT's is around 768px, and a card
+// narrower than that reads as a tooltip stuck on top of the prompt box.
+check('the card is at least as wide as a typical composer',
+    jsWidth !== null && Number(jsWidth[1]) >= 760, jsWidth && jsWidth[1]);
+
+// 2. A card wider than the window cannot be rescued by clamping its left edge -- that
+//    pins the left and lets the right run off screen. At 580 this could not happen on any
+//    window wide enough to show ChatGPT; at 780 it can.
+check('the width is clamped to the viewport, not just positioned inside it',
+    /window\.innerWidth\s*-\s*CARD_EDGE\s*\*\s*2/.test(JS));
+
+// 3. THE CAPS HAVE TO ADD UP. Each panel caps itself in vh, and nothing was checking the
+//    total against the card's own ceiling. They summed to 100vh inside a card of at most
+//    78vh, so a prompt carrying findings AND a headroom warning let the panels take their
+//    full share and squeezed the diff -- the one thing the card exists to show.
+const vh = (selector) => {
+    const value = property(selector, 'max-height');
+    const hit = value && /^(\d+(?:\.\d+)?)vh$/.exec(value.trim());
+    return hit ? Number(hit[1]) : null;
+};
+const cardVh = vh('.promptmeter-opt-card');
+const cappedPanels = ['.promptmeter-opt-scope', '.promptmeter-opt-grammar',
+    '.promptmeter-opt-headroom', '.promptmeter-opt-preserve'];
+const panelVh = cappedPanels.map(vh);
+check('every panel that can grow is capped',
+    panelVh.every((value) => value !== null),
+    cappedPanels.map((selector, i) => selector + '=' + panelVh[i]).join(', '));
+check('the card declares a height ceiling', cardVh !== null);
+if (cardVh !== null && panelVh.every((value) => value !== null)) {
+    const total = panelVh.reduce((sum, value) => sum + value, 0);
+    // Two thirds is the line: below it the diff keeps a majority of the card even when
+    // every panel is at its cap at once.
+    check('the panel caps leave the diff most of the card ('
+        + total + 'vh of ' + cardVh + 'vh)',
+        total < cardVh * 0.67, total + 'vh of panels inside ' + cardVh + 'vh of card');
+}
+
+// 4. When there is not room for both halves, the ORIGINAL is the one that gives way.
+//    The user wrote it and knows what it says; the rewrite is the thing being offered.
+//    As equals, a long prompt pushed the rewrite below the fold and left a card whose
+//    entire purpose was out of sight.
+const originalCap = vh('.promptmeter-diff-original');
+check('the original half is capped so it cannot push the suggestion out of sight',
+    originalCap !== null, 'max-height: ' + property('.promptmeter-diff-original', 'max-height'));
+check('the original scrolls rather than growing',
+    (property('.promptmeter-diff-original', 'overflow-y') || '').indexOf('auto') !== -1);
+// The suggestion itself must never be capped, or the fix defeats itself.
+check('the suggestion is never capped',
+    vh('.promptmeter-diff-optimized') === null
+    && property('.promptmeter-diff-optimized', 'max-height') === null);
+if (originalCap !== null && cardVh !== null) {
+    check('the original cap still leaves room for the suggestion beside it',
+        originalCap < cardVh / 2, originalCap + 'vh of ' + cardVh + 'vh');
+}
+
+// 5. The preview must render the card at its real width. It said 420px -- 360px narrower
+//    than the extension's card -- so every judgement about wrapping and density made on
+//    that page was made at the wrong size. The file's promise is that what is wrong there
+//    is wrong in the extension, and at the wrong width it is not keeping it.
+const previewWidth = /\.frame\s+\.promptmeter-opt-card\s*\{[^}]*?width:\s*(\d+)px/
+    .exec(PREVIEW);
+check('preview.html sets a card width', previewWidth !== null);
+if (previewWidth && jsWidth) {
+    check('preview.html renders the card at its real width',
+        Number(previewWidth[1]) === Number(jsWidth[1]),
+        'preview ' + previewWidth[1] + 'px vs card ' + jsWidth[1] + 'px');
+}
+
+// The popup mock has to match the popup too, for the same reason.
+const popupShell = /\.popup-shell\s*\{[^}]*?width:\s*(\d+)px/.exec(PREVIEW);
+const popupReal = /body\s*\{[^}]*?width:\s*(\d+)px/.exec(
+    fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8'));
+check('preview.html mirrors the popup width',
+    popupShell !== null && popupReal !== null
+    && Number(popupShell[1]) === Number(popupReal[1]),
+    popupShell && popupReal
+        ? 'preview ' + popupShell[1] + 'px vs popup ' + popupReal[1] + 'px'
+        : 'one of the two widths was not found');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
