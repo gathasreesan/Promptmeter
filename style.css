@@ -2,56 +2,62 @@
 
    Colours come from utils/tokens.css via <html class="pm-tokens">. */
 
+/* The 3px green stripe across the top was the only thing separating the popup from the
+   browser chrome, and at that weight it read as a warning bar. The card's surface
+   language does the job instead: a page background with a raised panel per figure. */
 body {
-    width: 270px;
+    width: 280px;
     margin: 0;
-    padding: 16px;
+    padding: var(--space-4);
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-body);
-    border-top: 3px solid var(--color-primary);
+    border-top: 1px solid var(--border-color);
 }
 
 .popup-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .popup-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 12px;
+    border-bottom: 1px solid var(--divider-color);
+    padding-bottom: var(--space-3);
 }
 
 .header-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .popup-header h2 {
     margin: 0;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--text-primary);
     font-family: var(--font-heading);
     letter-spacing: -0.02em;
 }
 
+/* ONE SIGNAL, NOT FOUR. This carried a fill, a border, uppercase and 700 weight at
+   once, which is four ways of saying the same word inside a 44px pill. */
 .badge {
-    background: var(--bg-selected);
+    background: var(--wash-success-strong);
     color: var(--color-primary);
-    padding: 2px 8px;
-    border-radius: var(--radius-btn);
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--rec-border-success);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: 10px;
+    font-weight: 600;
+    border: none;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.2s ease;
+    letter-spacing: var(--tracking-label);
+    transition: background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out);
 }
 
 .badge.disabled {
@@ -119,18 +125,22 @@ input:checked + .slider:before {
 }
 
 /* Status Banner */
+/* "Actively monitoring" is the resting state, so it is stated quietly. In the brand
+   green with a green border it competed with the figures underneath, which are the
+   only thing on this surface that changes. */
 .status-banner {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: var(--bg-secondary);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-sunken);
     border-radius: var(--radius-btn);
     font-size: 11px;
-    font-weight: 600;
-    color: var(--color-primary);
-    transition: all 0.2s ease;
-    border: 1px solid var(--rec-border-success);
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out);
+    border: 1px solid var(--divider-color);
 }
 
 .status-banner.disabled {
@@ -155,40 +165,50 @@ input:checked + .slider:before {
 .stats-preview {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
+/* LEFT-ALIGNED, label above figure. Centred text in a 130px box leaves both the caption
+   and the number floating, and the two boxes then share no edge to line up on. A figure
+   reads fastest against a left margin with its label directly over it. */
 .stat-box {
-    background: var(--bg-card);
+    background: var(--surface-raised);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-card); /* 18px aligned popup card rounding */
-    box-shadow: var(--shadow-premium);
-    padding: 14px 10px;
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-3);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    transition: transform 0.2s ease, border-color 0.15s ease;
+    align-items: flex-start;
+    gap: var(--space-1);
+    transition: box-shadow var(--dur-base) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
 }
 
+/* NO LIFT ON HOVER. These are readouts, not controls: nothing happens when you click
+   one, and a box that rises under the cursor says it is clickable. */
 .stat-box:hover {
-    border-color: var(--color-secondary);
-    transform: translateY(-1px);
+    border-color: var(--btn-secondary-border);
+    box-shadow: var(--shadow-premium);
 }
 
 .stat-label {
-    font-size: 12px; /* Increased from 9px for typography balance */
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: 600;
-    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-align: left;
 }
 
 .stat-value {
+    font-family: var(--font-heading);
     font-variant-numeric: tabular-nums;
-    font-size: 20px; /* Proportional value size */
-    font-weight: 800;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
 }
 
 /* Specific Carbon Indicator Stat Box override */
@@ -199,22 +219,29 @@ input:checked + .slider:before {
 .dashboard-btn {
     background: var(--btn-primary);
     color: var(--on-accent);
-    border: none;
+    border: 1px solid transparent;
     border-radius: var(--radius-btn);
-    padding: 11px;
+    padding: var(--space-3);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
+    /* The inset highlight ships with the drop shadow in one token: a filled control lit
+       from above has a brighter top edge, and one without it looks printed on. */
+    box-shadow: var(--shadow-btn);
+    transition: background var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
     width: 100%;
 }
 
 .dashboard-btn:hover {
     background: var(--btn-primary-hover);
+    box-shadow: var(--shadow-premium);
 }
 
+/* A 3% scale on a full-width button visibly changes its width. A 1px press does not. */
 .dashboard-btn:active {
-    transform: scale(0.97);
+    transform: translateY(1px);
 }
 body {
   transition: background-color 0.2s ease, color 0.2s ease;

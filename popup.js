@@ -58,7 +58,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (carbonEl) {
                     const carbonVal = isNaN(stats.totalCarbon) ? 0 : stats.totalCarbon;
-                    carbonEl.textContent = `${carbonVal.toFixed(1)}g`;
+                    carbonEl.textContent = carbonVal === 0
+                        ? '0'
+                        : carbonVal < 1
+                            ? `${Math.round(carbonVal * 1000)}mg`
+                            : `${carbonVal.toFixed(1)}g`;
                 }
 
                 if (effEl) {
