@@ -33,6 +33,7 @@
         "utils/calculator.js",
         "utils/headroom.js",
         "utils/storage.js",
+        "utils/modifiers.js",
         "utils/optimizer.js",
         "utils/analysis.js",
         "utils/compress.js",

@@ -28,6 +28,13 @@ const PM_SPELL = (typeof PromptMeterSpelling !== 'undefined')
 // Grammar detection and repair. Agreement, tense, confusables, pronoun case and
 // article errors all live there, so this file keeps only the vocabulary substitutions
 // (typos, slang, acronyms) that are specific to prompt text.
+// Adjective and redundancy compression. Its own file because deciding whether two
+// modifiers say the same thing is a vocabulary question, not a rules question, and
+// the lexicon is the whole of it.
+const PM_MODIFIERS = (typeof PromptMeterModifiers !== 'undefined')
+    ? PromptMeterModifiers
+    : (typeof require !== 'undefined' ? require('./modifiers.js').PromptMeterModifiers : null);
+
 const PM_GRAMMAR = (typeof PromptMeterGrammar !== 'undefined')
     ? PromptMeterGrammar
     : (typeof require !== 'undefined' ? require('./grammar.js').PromptMeterGrammar : null);
@@ -923,12 +930,67 @@ const PromptMeterOptimizer = {
                 : this.compiled.knownWords;
             const spelled = PM_SPELL.correct(str, { extraKnown: known });
             str = spelled.text;
-            if (issues && spelled.corrections.length > 0) {
-                spelled.corrections.forEach(correction => issues.push({
+            const corrections = spelled.corrections || [];
+            if (issues && corrections.length > 0) {
+                corrections.forEach(correction => issues.push({
                     type: 'spelling',
                     label: `"${correction.from}" corrected to "${correction.to}"`
                 }));
             }
+
+        // 3c. Re-read any correction that landed between modifiers.
+        //
+        // Edit distance alone cannot choose between two readings of a typo, and when it
+        // guesses wrong it does so silently and confidently. "esasy" is one transposition
+        // from "essay" and one dropped consonant from "easy", so the ranking always
+        // answers "essay" -- and in "a simple esasy clean idea" that is a noun wedged
+        // between two adjectives, which is not a sentence anyone wrote.
+        //
+        // The neighbours are the evidence. Where a correction is NOT a modifier but sits
+        // in a run of them, and the ORIGINAL typo is one edit from a word that IS a
+        // modifier, the modifier reading is taken and the other is reported as an
+        // alternative rather than thrown away. The check only ever runs on a word the
+        // corrector already changed, so a word the user spelled correctly is never
+        // reconsidered.
+        if (PM_SPELL && PM_MODIFIERS && issues && PM_SPELL.nearMisses) {
+            corrections.forEach(correction => {
+                const chosen = String(correction.to).toLowerCase();
+                if (PM_MODIFIERS.isModifier(chosen)) return;
+
+                const pattern = new RegExp('(\\w+)\\s+(' + correction.to + ')\\s+(\\w+)', 'i');
+                const around = pattern.exec(str);
+                if (!around) return;
+
+                const neighbours = [around[1], around[3]]
+                    .filter(word => PM_MODIFIERS.isModifier(word));
+                if (neighbours.length === 0) return;
+
+                const alternatives = PM_SPELL.nearMisses(
+                    String(correction.from).toLowerCase(),
+                    candidate => PM_MODIFIERS.isModifier(candidate));
+                if (alternatives.length === 0) return;
+
+                const preferred = alternatives[0];
+                str = str.replace(pattern, (match, before, middle, after) =>
+                    // matchCase lives in grammar.js, not here: keep the capitalisation
+                    // the user typed rather than importing a helper for one call.
+                    before + ' ' + (middle[0] === middle[0].toUpperCase()
+                        ? preferred.charAt(0).toUpperCase() + preferred.slice(1)
+                        : preferred) + ' ' + after);
+
+                // The spelling line said "corrected to essay" and is now untrue.
+                const superseded = issues.findIndex(issue => issue.type === 'spelling'
+                    && issue.label.indexOf('"' + correction.from + '"') === 0);
+                if (superseded !== -1) issues.splice(superseded, 1);
+
+                issues.push({
+                    type: 'ambiguity',
+                    label: '"' + correction.from + '" read as "' + preferred
+                        + '" (it could also be "' + correction.to + '")',
+                    alternatives: [preferred, correction.to]
+                });
+            });
+        }
         }
 
         // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JS").
@@ -967,6 +1029,69 @@ const PromptMeterOptimizer = {
      * @param {string} text - Cleaned prompt text.
      * @returns {string} Structurally transformed text.
      */
+    // An adjective that describes the ANSWER belongs on the verb, not on a noun the
+    // prompt only introduced so the adjective had somewhere to sit. "Give me a basic
+    // explanation of X" spends four words setting up "explanation"; "Explain X simply"
+    // says the same thing and leaves the adjective doing the same work as an adverb.
+    //
+    // Runs after the modifier pass, so a stack like "simple easy basic" has already
+    // collapsed to one word by the time this sees it.
+    ADVERB_FOR: {
+        basic: 'simply', simple: 'simply', easy: 'simply', straightforward: 'simply',
+        brief: 'briefly', short: 'briefly', concise: 'briefly', quick: 'briefly',
+        detailed: 'in detail', comprehensive: 'in detail', thorough: 'in detail',
+        clear: 'clearly'
+    },
+
+    /**
+     * Turns a request for a described artefact into the instruction it stands for.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    foldDescribedNoun: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+
+        const adjectives = Object.keys(this.ADVERB_FOR).join('|');
+        const nouns = 'explanation|overview|summary|description|rundown|walkthrough|breakdown';
+        const pattern = new RegExp(
+            '(?:^|(?<=[.!?]\\s))\\s*(?:please\\s+)?(?:give|provide|write|show|make)\\s+'
+            + '(?:me\\s+)?(?:an?\\s+)?(' + adjectives + ')\\s+(?:' + nouns + ')\\s+'
+            + '(?:of|on|about|for)\\s+([^.!?]+)', 'gi');
+
+        return text.replace(pattern, (match, adjective, object) => {
+            const adverb = this.ADVERB_FOR[adjective.toLowerCase()];
+            if (!adverb) return match;
+            return 'Explain ' + object.trim() + ' ' + adverb;
+        });
+    },
+
+    /**
+     * "Explain what X is" asks for X. The "what ... is" wrapper is the shape of a
+     * spoken question and carries nothing once the sentence is an instruction.
+     *
+     * Restricted to a short object, because a long one is usually a real clause where
+     * the "is" belongs: "explain what the output is when the input is empty" must not
+     * become "explain the output when the input is empty".
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    unwrapWhatIs: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+        return text.replace(
+            // The object is TEMPERED -- it may not itself contain is, are, when or
+            // if. Without that the lazy quantifier simply expanded past the blocked
+            // position: "explain what the output is when the input is empty" matched
+            // with the object running all the way to "the input", and came back as
+            // "Explain the output is when the input empty". A trailing lookahead
+            // cannot stop a match it can slide past; the object itself has to refuse.
+            /\b(explain|describe|tell me)\s+what\s+((?:(?!\b(?:is|are|when|if)\b)[^.!?,;]){1,40}?)\s+(?:is|are)\b/gi,
+            (match, verb, object) => (
+                verb.charAt(0).toUpperCase() + verb.slice(1).toLowerCase() + ' ' + object.trim()
+            ));
+    },
+
     transformStructuralIntent: function (text) {
         if (!text) return "";
         const str = text.trim();
@@ -989,7 +1114,11 @@ const PromptMeterOptimizer = {
             return `${projectMatch[2].trim()} for a ${projectMatch[1].trim()} project.`;
         }
 
-        return this.applyRules(str, this.structuralRewrites).trim();
+        let folded = this.applyRules(str, this.structuralRewrites);
+        // Sentence-level folds last: they read a whole clause, so they need the
+        // phrase rules to have finished with it.
+        folded = this.foldDescribedNoun(folded);
+        return this.unwrapWhatIs(folded).trim();
     },
 
     /**
@@ -1603,7 +1732,11 @@ const PromptMeterOptimizer = {
     // listing them would bury the ones that change meaning.
     REPORTABLE_GRAMMAR: new Set([
         'agreement', 'verb-form', 'tense', 'noun-form', 'pronoun-case',
-        'word-choice', 'article', 'contraction', 'phrasing', 'spelling'
+        'word-choice', 'article', 'contraction', 'phrasing', 'spelling',
+        // A typo with two readings, and a modifier dropped as redundant, are both
+        // things the user may want to overrule. Leaving them out of this set meant
+        // the work happened and the card never said so.
+        'ambiguity', 'redundancy'
     ]),
 
     /**
@@ -1707,6 +1840,20 @@ const PromptMeterOptimizer = {
 
         // Stage 1: grammar, spelling & acronym pre-processing
         optimized = this.correctGrammarAndSpelling(optimized, issues, preserve);
+
+        // Stage 1b: collapse runs of modifiers that say the same thing. After the
+        // spelling pass, so "esasy" has already become a word the lexicon knows,
+        // and before the phrase rules, so they see the shortened noun phrase.
+        if (PM_MODIFIERS) {
+            const trimmed = PM_MODIFIERS.compress(optimized);
+            optimized = trimmed.text;
+            if (issues) {
+                trimmed.dropped.forEach(item => issues.push({
+                    type: 'redundancy',
+                    label: '"' + item.word + '" removed: ' + item.reason
+                }));
+            }
+        }
 
         // Stage 2: copy-paste garbage & symbol spam
         optimized = optimized

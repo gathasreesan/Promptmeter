@@ -1379,10 +1379,14 @@ const PromptMeterSpelling = {
         // and they have already run by this point.
         let best = null;
         let bestDistance = Infinity;
+        // Every candidate that survived the guards, with its distance, so a tie can
+        // be reported rather than silently broken. See rivals() below.
+        const scored = [];
 
         candidates.forEach(candidate => {
             const gap = this.distance(word, candidate);
             if (gap > this.budget(word, candidate)) return;
+            scored.push({ word: candidate, gap: gap });
 
             if (gap < bestDistance ||
                 (gap === bestDistance && this.rank.get(candidate) < this.rank.get(best))) {
@@ -1391,7 +1395,64 @@ const PromptMeterSpelling = {
             }
         });
 
+        this.lastRivals = best
+            ? scored.filter(entry => entry.gap === bestDistance && entry.word !== best)
+                .map(entry => entry.word)
+            : [];
+
         return best;
+    },
+
+    /**
+     * Other corrections that fit the typo exactly as well as the chosen one.
+     *
+     * Ranking breaks ties by frequency, which is right when the candidates are forms
+     * of one word -- "starst" reaching start before starts loses nothing. It is wrong
+     * when they are different words: "esasy" is one edit from "easy" (drop a letter)
+     * and one edit from "essay" (swap two), and picking the commoner silently decides
+     * what the user meant.
+     *
+     * The correction still happens -- refusing to correct a tie was tried and cost
+     * more than it saved -- but the rivals come back with it so the card can offer
+     * the alternative instead of pretending there was none.
+     *
+     * @param {string} word - Lowercased typo, already passed to correctWord().
+     * @returns {Array} Equally-close alternatives, commonest first. Usually empty.
+     */
+    /**
+     * Dictionary words within one edit, WITHOUT the shape guards.
+     *
+     * For reporting only -- never for automatic correction. The guards exist
+     * because a shape like "drop a lone consonant" turns one real word into
+     * another far more often than it fixes a typo, and that is still true here.
+     * But when something else in the sentence says which reading was meant, the
+     * guards are the wrong test: "esasy" reaches "essay" by a transposition and
+     * "easy" only by dropping a consonant, so edit distance alone always answers
+     * "essay", and in "a simple esasy clean idea" it is plainly wrong.
+     *
+     * @param {string} word - Lowercased word.
+     * @param {Function} [accept] - Optional filter on each candidate.
+     * @returns {Array} Candidates at distance 1, commonest first.
+     */
+    nearMisses: function (word, accept) {
+        if (typeof word !== 'string' || word.length < this.MIN_LENGTH) return [];
+
+        const found = new Set();
+        this.deleteVariants(word).forEach(variant => {
+            (this.deleteIndex.get(variant) || []).forEach(candidate => {
+                if (candidate === word) return;
+                if (this.distance(word, candidate) !== 1) return;
+                if (accept && !accept(candidate)) return;
+                found.add(candidate);
+            });
+        });
+
+        return [...found].sort((a, b) =>
+            (this.rank.get(a) || 1e9) - (this.rank.get(b) || 1e9));
+    },
+
+    rivals: function (word) {
+        return (this.lastRivals || []).slice();
     },
 
     // Calendar names, the one place truncation is safe to complete.
