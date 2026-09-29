@@ -248,5 +248,68 @@ const rowGap = property('.promptmeter-grammar-list li + li', 'margin-top');
 check('correction rows are separated', rowGap !== null && rowGap.indexOf('--space-') !== -1,
     'margin-top: ' + rowGap);
 
+// ---------------------------------------------------------------------------
+// preview.html must still resemble the card.
+//
+// The file's own header says "when showOptimizationCard() changes, change it here as
+// well" and then admits nothing checks that it happened. So a restyle could pass every
+// test while the one page a person opens to LOOK at the card rendered markup the
+// extension no longer emits -- which is worse than no preview, because it looks
+// authoritative. Class names are the contract: if the card renders a class, the preview
+// has to use it.
+// ---------------------------------------------------------------------------
+const PREVIEW = fs.readFileSync(path.join(ROOT, 'preview.html'), 'utf8');
+
+// Every promptmeter class the card renders, minus the ones set from JS after render
+// (state and severity), which the preview has no reason to carry.
+const STATEFUL = /^promptmeter-(?:severity|headroom|keep|preserve|scope|opt-card)/;
+const cardClasses = new Set();
+[...JS.matchAll(/class="(promptmeter-[^"$]*)"/g)].forEach((match) => {
+    match[1].split(/\s+/).forEach((name) => {
+        if (name && !STATEFUL.test(name)) cardClasses.add(name);
+    });
+});
+const missing = [...cardClasses].filter((name) => PREVIEW.indexOf(name) === -1);
+check('preview.html uses every class the card renders (' + cardClasses.size + ' checked)',
+    missing.length === 0, 'preview is missing: ' + missing.join(', '));
+
+// ---------------------------------------------------------------------------
+// The restyle's own structure.
+// ---------------------------------------------------------------------------
+// One figure carries the saving. It used to be an 11px chip among four other 11px
+// chips, so the number the card exists to show had no more weight than the mode label.
+const heroSize = property('.promptmeter-hero-value', 'font-size');
+check('the saving is the largest figure on the card',
+    heroSize !== null && parseInt(heroSize, 10) >= 20, 'font-size: ' + heroSize);
+check('the saving uses tabular numerals so it does not jog as it changes',
+    (property('.promptmeter-hero-value', 'font-variant-numeric') || '').indexOf('tabular') !== -1);
+
+// Each half of the diff is named in words. Colour alone is not a label -- and the
+// original used to be painted in the error wash, which said the user had done something
+// wrong rather than that this was their text.
+check('both halves of the diff are labelled in words',
+    (PREVIEW.match(/promptmeter-diff-label/g) || []).length >= 2
+    && JS.indexOf('promptmeter-diff-label') !== -1);
+const originalBg = property('.promptmeter-diff-original', 'background');
+check('the original is a recessed surface, not an error',
+    originalBg !== null && originalBg.indexOf('--surface-sunken') !== -1,
+    'background: ' + originalBg);
+
+// Esc closes the card, and the listener is torn down with it. Left attached it would
+// swallow an Esc the host page wanted, on every page load, for the rest of the session.
+check('Esc dismisses the card', /key\s*!==\s*'Escape'/.test(JS));
+check('the Esc listener is removed when the card hides',
+    /removeEventListener\('keydown'/.test(JS));
+check('dismissing with Esc and with Ignore do the same thing',
+    /btn-ignore"\)\.onclick = dismiss/.test(JS));
+// Enter must NOT be bound: it is how these pages send a message.
+check('Enter is not bound', !/key\s*===\s*'Enter'/.test(JS));
+
+// A hint for a shortcut that does nothing is worse than no hint, so the only key named
+// on a control is the only one that works.
+const hinted = [...JS.matchAll(/promptmeter-btn-key[^>]*>([^<]+)</g)].map((m) => m[1].trim());
+check('the only keyboard hint shown is one that works',
+    hinted.every((key) => key.toLowerCase() === 'esc'), hinted.join(', '));
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

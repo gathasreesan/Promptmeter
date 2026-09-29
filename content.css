@@ -23,10 +23,14 @@
     background: var(--bg-card); /* Card Background */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color); /* Border Color */
-    border-radius: var(--radius-card); /* Card Radius */
+    /* The ring lives in --shadow-card with the shadow layers, so a border would draw a
+       second line half a pixel away from it on fractional-DPI displays. */
+    border: none;
+    border-radius: var(--radius-card-lg);
     padding: var(--space-5);
-    box-shadow: var(--shadow-premium); /* Premium Shadow */
+    /* Two layers: a tight contact shadow under a wide ambient one. A single blurred
+       shadow reads as a drop shadow; this reads as a surface sitting above the page. */
+    box-shadow: var(--shadow-card);
     color: var(--text-primary);
     font-family: var(--font-body);
     z-index: 999999;
@@ -34,6 +38,21 @@
     transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
     box-sizing: border-box;
+}
+
+/* The lit edge. On a real surface the highlight faces the light, and a single pixel of
+   it is what stops the card reading as a flat rectangle. Drawn as a pseudo-element
+   rather than a border so it does not take part in the box model or the corner radius
+   of the panels inside. */
+.promptmeter-opt-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--space-4);
+    right: var(--space-4);
+    height: 1px;
+    background: var(--edge-highlight);
+    pointer-events: none;
 }
 
 .promptmeter-opt-card.visible {
@@ -55,8 +74,9 @@
 .promptmeter-opt-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
+    align-items: baseline;
+    gap: var(--space-3);
+    border-bottom: 1px solid var(--divider-color);
     padding-bottom: var(--space-3);
     margin-bottom: var(--space-4);
     flex: 0 0 auto;
@@ -66,15 +86,75 @@
    leaf glyph and a "Sustainability Coach" tagline, which is a lot of branding for a
    panel that interrupts someone mid-sentence. */
 .promptmeter-opt-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
+    color: var(--text-secondary);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* A 6px dot instead of the leaf glyph and the display face. It marks the panel as ours
+   in the corner of the eye and says nothing else. */
+.promptmeter-opt-title::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    flex: 0 0 auto;
 }
 
 .promptmeter-opt-metrics {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+/* THE ONE FIGURE WITH WEIGHT. The saving used to be an 11px chip in a row of four other
+   11px chips, so the number the card exists to show had no more presence than the mode
+   label beside it. Nothing else on the card competes with this now, and the rest of the
+   numbers moved to the caption line below. */
+.promptmeter-hero {
+    display: flex;
+    align-items: baseline;
     gap: var(--space-2);
+    color: var(--color-primary);
+}
+
+.promptmeter-hero-value {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.promptmeter-hero-unit {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* A rewrite that costs tokens. The user may reasonably decline it -- a correct spelling
+   is longer than a wrong one -- so it is stated in the error colour rather than hidden. */
+.promptmeter-hero-cost { color: var(--color-error); }
+
+/* Everything that is context rather than the headline. */
+.promptmeter-metric-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0;
+    min-width: 0;
 }
 
 /* Secondary information, so it reads as a quiet caption rather than three badges
@@ -95,7 +175,7 @@
 .promptmeter-opt-diff {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
     margin-bottom: var(--space-4);
     flex: 1 1 auto;
     min-height: 0;
@@ -103,29 +183,72 @@
     overscroll-behavior: contain;
 }
 
+/* A label and its box. Neither box said what it was, so colour alone carried the
+   before/after -- unreadable for anyone who cannot use it, and ambiguous for everyone
+   else, since a red block on a card reads as an error rather than as "previously". */
+.promptmeter-diff-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.promptmeter-diff-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.promptmeter-diff-label-after {
+    color: var(--color-primary);
+}
+
 .promptmeter-diff-box {
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.55;
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-btn); /* Button/Input Radius */
+    border-radius: var(--radius-btn);
     word-break: break-word;
     border: 1px solid var(--border-color);
     flex: 0 0 auto;
 }
 
-/* The original is struck through only where it helps; running a line through the whole
-   block made a short prompt hard to read and looked like an error state rather than a
-   before/after. Colour and position already say which one is which. */
+/* THE ORIGINAL IS REFERENCE, NOT AN ERROR. It used to sit in the error wash with a red
+   rail and red text, which says the user did something wrong; they did not, they wrote
+   a prompt. It is now the recessed surface in ordinary body text -- present to compare
+   against, and quiet. The per-word removals inside it still carry the red, which is
+   where that colour actually belongs. */
 .promptmeter-diff-original {
-    background: var(--diff-removed-bg);
-    border-left: 2px solid var(--color-error);
-    color: var(--diff-removed-text);
+    background: var(--surface-sunken);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
 }
 
+/* The rewrite is the thing being offered, so it is the RAISED surface: brighter than
+   the original, ordinary text weight, and marked by a gradient rail rather than a flat
+   border. A 2px solid bar is a border; a rail that fades along its length reads as an
+   indicator pointing at the content. */
 .promptmeter-diff-optimized {
-    background: var(--diff-added-bg);
-    border-left: 2px solid var(--color-primary);
-    color: var(--diff-added-text);
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    position: relative;
+    border-color: var(--rec-border-success);
+    box-shadow: var(--shadow-sm);
+    padding-left: calc(var(--space-4) + 2px);
+}
+
+.promptmeter-diff-optimized::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: var(--space-2);
+    bottom: var(--space-2);
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--rail-accent);
 }
 
 /* Grammar findings. The pill in the header carries the count; this panel names the
@@ -140,27 +263,33 @@
     display: none !important;
 }
 
+/* A panel inside a panel needs to sit BACK, not draw another box. A full border round
+   a panel that is already inside a bordered card gives the card three nested
+   rectangles; the recessed surface says "inside this" with no extra line at all. */
 .promptmeter-opt-grammar {
     margin-bottom: var(--space-4);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-btn);
-    border: 1px solid var(--border-color);
-    background: var(--bg-surface);
+    border: 1px solid var(--divider-color);
+    background: var(--surface-sunken);
     flex: 0 0 auto;
 }
 
 .promptmeter-grammar-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    color: var(--text-secondary);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
     margin-bottom: var(--space-2);
 }
 
 .promptmeter-grammar-list {
     margin: 0;
-    padding-left: var(--space-4);
+    padding-left: 0;
+    list-style: none;
     font-size: 12px;
-    line-height: 1.6;
+    line-height: 1.55;
 }
 
 .promptmeter-grammar-list li {
@@ -168,10 +297,10 @@
 }
 
 .promptmeter-grammar-more {
-    opacity: 0.7;
+    color: var(--text-muted);
     font-style: italic;
     list-style: none;
-    margin-left: calc(-1 * var(--space-4));
+    margin-left: 0;
 }
 
 /* Scope advice. Styled apart from the grammar panel because it is not an edit already
@@ -180,15 +309,20 @@
     margin-bottom: var(--space-4);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-btn);
-    border: 1px solid var(--border-color);
-    border-left: 2px solid var(--color-error);
-    background: var(--bg-surface);
+    border: 1px solid var(--divider-color);
+    border-left: 3px solid var(--color-warning);
+    background: var(--wash-warning);
     flex: 0 0 auto;
 }
 
+/* Amber, not red. This panel is a judgement the user may disagree with -- the prompt is
+   large, or asks several things at once -- and red says the prompt is broken. */
 .promptmeter-scope-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-secondary);
     margin-bottom: var(--space-2);
 }
 
@@ -206,38 +340,64 @@
     flex: 0 0 auto;
 }
 
+/* The action row. The buttons were the same size and weight apart from their fill, so
+   the card asked a question without suggesting an answer. Apply is now clearly the
+   primary and Ignore is a quiet ghost -- which also stops a misclick applying a rewrite
+   nobody wanted. */
 .promptmeter-opt-btn {
     padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-btn); /* Button Radius */
+    border-radius: var(--radius-btn);
     font-size: 12px;
     font-weight: 600;
+    line-height: 1.4;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
     box-sizing: border-box;
+    transition: background var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
 }
 
 .promptmeter-opt-btn:active {
-    transform: scale(0.97);
+    transform: translateY(1px);
 }
 
 .promptmeter-btn-accept {
-    background: var(--color-primary);
+    background: var(--btn-primary);
     color: var(--on-accent);
-    border: none;
+    border: 1px solid transparent;
+    /* The inset highlight is in the token with the drop shadow: a filled control lit
+       from above has a brighter top edge, and one without it looks printed on. */
+    box-shadow: var(--shadow-btn);
 }
 
 .promptmeter-btn-accept:hover {
     background: var(--btn-primary-hover);
+    box-shadow: var(--shadow-premium);
 }
 
+/* A ghost, not a second filled button. */
 .promptmeter-btn-ignore {
-    background: var(--btn-secondary); /* White secondary button */
-    color: var(--text-primary);
-    border: 1px solid var(--btn-secondary-border);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
 }
 
 .promptmeter-btn-ignore:hover {
-    background: var(--btn-secondary-hover);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* The keyboard hint. Only Esc is bound -- Enter is how these pages send a message -- so
+   only Esc is advertised. A hint for a shortcut that does nothing is worse than none. */
+.promptmeter-btn-key {
+    display: inline-block;
+    margin-left: var(--space-2);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 0;
+    opacity: 0.65;
 }
 
 /* ---------------------------------------------------------------------------

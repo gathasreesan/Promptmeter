@@ -279,9 +279,17 @@ function handleInput(e) {
 }
 
 // 2. Hide the optimization card
+// The Esc listener is torn down with the card: left attached it would swallow an Esc
+// the host page wanted, on every page load, for the rest of the session.
+let escHandler = null;
+
 function hideOptimizationCard() {
     const card = document.getElementById("promptmeter-opt-card");
     if (card) card.classList.remove("visible");
+    if (escHandler) {
+        document.removeEventListener('keydown', escHandler, true);
+        escHandler = null;
+    }
 }
 
 // 2a. Keep the card clear of the composer.
@@ -485,30 +493,39 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-opt-title">PromptMeter</div>
             <div class="promptmeter-opt-metrics">
                 ${stats ? `
-                <span class="promptmeter-metric promptmeter-metric-count" title="${countNote}">
-                    <span class="promptmeter-count-from">${approx}${stats.originalTokens}</span>
-                    <span class="promptmeter-count-arrow" aria-hidden="true">→</span>
-                    <span class="promptmeter-count-to">${approx}${stats.optimizedTokens}</span>
-                    <span class="promptmeter-count-unit">tokens</span>
-                </span>
-                <span class="promptmeter-metric ${stats.saved < 0 ? 'promptmeter-metric-cost' : 'promptmeter-metric-saved'}"
-                      title="${stats.saved < 0 ? 'This rewrite costs tokens' : 'Tokens saved'}">
-                    ${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.percent)}%
-                </span>` : ''}
-                ${carbon !== null
-                    ? `<span class="promptmeter-metric" title="Estimated">~${carbon.toFixed(3)} g CO₂</span>`
-                    : ''}
-                ${compression && compression.mode && compression.mode !== 'none'
-                    ? `<span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode: the shortest rewrite that passed every preservation check">${compression.mode}</span>`
-                    : ''}
-                ${fixedCount > 0
-                    ? `<span class="promptmeter-metric promptmeter-metric-grammar">${fixedCount} fixed</span>`
-                    : ''}
+                <div class="promptmeter-hero ${stats.saved < 0 ? 'promptmeter-hero-cost' : ''}"
+                     title="${stats.saved < 0 ? 'This rewrite costs tokens' : 'Tokens saved'}">
+                    <span class="promptmeter-hero-value">${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.percent)}%</span>
+                    <span class="promptmeter-hero-unit">${Math.abs(stats.saved)} ${Math.abs(stats.saved) === 1 ? 'token' : 'tokens'}</span>
+                </div>` : ''}
+                <div class="promptmeter-metric-line">
+                    ${stats ? `
+                    <span class="promptmeter-metric promptmeter-metric-count" title="${countNote}">
+                        <span class="promptmeter-count-from">${approx}${stats.originalTokens}</span>
+                        <span class="promptmeter-count-arrow" aria-hidden="true">→</span>
+                        <span class="promptmeter-count-to">${approx}${stats.optimizedTokens}</span>
+                    </span>` : ''}
+                    ${carbon !== null
+                        ? `<span class="promptmeter-metric" title="Estimated">~${carbon.toFixed(3)} g CO₂</span>`
+                        : ''}
+                    ${compression && compression.mode && compression.mode !== 'none'
+                        ? `<span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode: the shortest rewrite that passed every preservation check">${compression.mode}</span>`
+                        : ''}
+                    ${fixedCount > 0
+                        ? `<span class="promptmeter-metric promptmeter-metric-grammar">${fixedCount} fixed</span>`
+                        : ''}
+                </div>
             </div>
         </div>
         <div class="promptmeter-opt-diff">
-            <div class="promptmeter-diff-box promptmeter-diff-original"></div>
-            <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
+            <div class="promptmeter-diff-row">
+                <div class="promptmeter-diff-label">What you wrote</div>
+                <div class="promptmeter-diff-box promptmeter-diff-original"></div>
+            </div>
+            <div class="promptmeter-diff-row">
+                <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
+                <div class="promptmeter-diff-box promptmeter-diff-optimized"></div>
+            </div>
         </div>
         <div class="promptmeter-opt-headroom" hidden></div>
         <div class="promptmeter-opt-preserve" hidden></div>
@@ -522,7 +539,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         </div>
         <div class="promptmeter-opt-actions">
             <button id="promptmeter-btn-revert" class="promptmeter-opt-btn promptmeter-btn-ignore" hidden>Revert</button>
-            <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+            <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
             <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
         </div>
     `;
@@ -645,10 +662,27 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         writeToPromptBox(promptBox, restore);
         hideOptimizationCard();
     };
-    card.querySelector("#promptmeter-btn-ignore").onclick = () => {
+    // Ignoring the prompt and dismissing with Esc have to mean the same thing, or the
+    // card reappears on the next keystroke after one of them.
+    const dismiss = () => {
         ignoredPromptText = originalText;
         hideOptimizationCard();
     };
+    card.querySelector("#promptmeter-btn-ignore").onclick = dismiss;
+
+    // Esc dismisses it, which is what every other dismissible panel on these pages does
+    // and was previously impossible without reaching for the mouse. Registered on the
+    // document because focus is almost always in the composer, not in the card, and
+    // removed as soon as the card goes so it cannot swallow an Esc meant for the host
+    // page. Enter is deliberately NOT bound: it is how these pages send a message.
+    if (escHandler) document.removeEventListener('keydown', escHandler, true);
+    escHandler = (event) => {
+        if (event.key !== 'Escape') return;
+        if (!card.classList.contains('visible')) return;
+        event.stopPropagation();
+        dismiss();
+    };
+    document.addEventListener('keydown', escHandler, true);
 
     // Place it before it fades in, so it never appears over the composer first.
     // Positioning is a convenience: if measuring the page fails for any reason the

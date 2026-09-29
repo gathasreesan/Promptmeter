@@ -117,21 +117,31 @@
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
                     <div class="promptmeter-opt-metrics">
-                        <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
-                            <span class="promptmeter-count-from">~412</span>
-                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
-                            <span class="promptmeter-count-to">~331</span>
-                            <span class="promptmeter-count-unit">tokens</span>
-                        </span>
-                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;20%</span>
-                        <span class="promptmeter-metric" title="Estimated">~0.041 g CO&#8322;</span>
-                        <span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode">balanced</span>
-                        <span class="promptmeter-metric promptmeter-metric-grammar">3 fixed</span>
+                        <div class="promptmeter-hero">
+                            <span class="promptmeter-hero-value">&minus;20%</span>
+                            <span class="promptmeter-hero-unit">81 tokens</span>
+                        </div>
+                        <div class="promptmeter-metric-line">
+                            <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
+                                <span class="promptmeter-count-from">~412</span>
+                                <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                                <span class="promptmeter-count-to">~331</span>
+                            </span>
+                            <span class="promptmeter-metric" title="Estimated">~0.041 g CO&#8322;</span>
+                            <span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode">balanced</span>
+                            <span class="promptmeter-metric promptmeter-metric-grammar">2 fixed</span>
+                        </div>
                     </div>
                 </div>
                 <div class="promptmeter-opt-diff">
-                    <div class="promptmeter-diff-box promptmeter-diff-original">hey so i was wondering if u could possibly maybe help me out, i wan to starst online classess and i have no idea where to begin honestly. thanks so much in advance!!</div>
-                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Help me start online classes. Where do I begin?</div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label">What you wrote</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original">hey so i was wondering if u could possibly maybe help me out, i wan to starst online classess and i have no idea where to begin honestly. thanks so much in advance!!</div>
+                    </div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Help me start online classes. Where do I begin?</div>
+                    </div>
                 </div>
                 <div class="promptmeter-opt-preserve">A shorter rewrite was rejected: it would have changed constraint, numbers.</div>
                 <div class="promptmeter-opt-headroom promptmeter-headroom-warn">Context: about 78% used, ~1,540 tokens left of 8,192 &middot; Context is filling up. Consider starting a new chat soon.</div>
@@ -167,7 +177,7 @@
                 </div>
                 <div class="promptmeter-opt-actions">
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Revert</button>
-                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
             </div>
@@ -181,21 +191,31 @@
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
                     <div class="promptmeter-opt-metrics">
-                        <span class="promptmeter-metric promptmeter-metric-count" title="Counted with cl100k_base">
-                            <span class="promptmeter-count-from">21</span>
-                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
-                            <span class="promptmeter-count-to">24</span>
-                            <span class="promptmeter-count-unit">tokens</span>
-                        </span>
-                        <span class="promptmeter-metric promptmeter-metric-cost" title="This rewrite costs tokens">+14%</span>
+                        <div class="promptmeter-hero promptmeter-hero-cost">
+                            <span class="promptmeter-hero-value">+14%</span>
+                            <span class="promptmeter-hero-unit">3 tokens</span>
+                        </div>
+                        <div class="promptmeter-metric-line">
+                            <span class="promptmeter-metric promptmeter-metric-count" title="Counted with cl100k_base">
+                                <span class="promptmeter-count-from">21</span>
+                                <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                                <span class="promptmeter-count-to">24</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="promptmeter-opt-diff">
-                    <div class="promptmeter-diff-box promptmeter-diff-original">Explan how fnite automata work</div>
-                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how finite automata work</div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label">What you wrote</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original">Explan how fnite automata work</div>
+                    </div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how finite automata work</div>
+                    </div>
                 </div>
                 <div class="promptmeter-opt-actions">
-                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
             </div>
@@ -209,18 +229,28 @@
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
                     <div class="promptmeter-opt-metrics">
-                        <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
-                            <span class="promptmeter-count-from">~1,204</span>
-                            <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
-                            <span class="promptmeter-count-to">~1,150</span>
-                            <span class="promptmeter-count-unit">tokens</span>
-                        </span>
-                        <span class="promptmeter-metric promptmeter-metric-saved">&minus;4%</span>
+                        <div class="promptmeter-hero">
+                            <span class="promptmeter-hero-value">&minus;4%</span>
+                            <span class="promptmeter-hero-unit">54 tokens</span>
+                        </div>
+                        <div class="promptmeter-metric-line">
+                            <span class="promptmeter-metric promptmeter-metric-count" title="Estimated">
+                                <span class="promptmeter-count-from">~1,204</span>
+                                <span class="promptmeter-count-arrow" aria-hidden="true">&rarr;</span>
+                                <span class="promptmeter-count-to">~1,150</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="promptmeter-opt-diff">
-                    <div class="promptmeter-diff-box promptmeter-diff-original">Build a complete production ready platform that handles students, teachers, courses, attendance, billing, analytics and a mobile app, with tests and documentation and CI.</div>
-                    <div class="promptmeter-diff-box promptmeter-diff-optimized">Build a production platform handling students, teachers, courses, attendance, billing, analytics and a mobile app, with tests, docs and CI.</div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label">What you wrote</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original">Build a complete production ready platform that handles students, teachers, courses, attendance, billing, analytics and a mobile app, with tests and documentation and CI.</div>
+                    </div>
+                    <div class="promptmeter-diff-row">
+                        <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Build a production platform handling students, teachers, courses, attendance, billing, analytics and a mobile app, with tests, docs and CI.</div>
+                    </div>
                 </div>
                 <div class="promptmeter-opt-headroom promptmeter-headroom-critical">Context: about 96% used, ~280 tokens left of 8,192 &middot; Very little context left. Start a new chat to keep the full history.</div>
                 <div class="promptmeter-opt-scope">
@@ -231,7 +261,7 @@
                     </ul>
                 </div>
                 <div class="promptmeter-opt-actions">
-                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
             </div>

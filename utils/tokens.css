@@ -112,13 +112,39 @@
     --space-5: 20px;
     --space-6: 24px;
 
+    /* Layered surfaces. The card used one background for everything, so a panel inside
+       it had only a border to separate it from the card, and the whole thing read flat.
+       A recessed step for reference material and a raised step for the thing being
+       offered is what gives a panel a front and a back. */
+    --surface-sunken: #F4F6F3;
+    --surface-raised: #FFFFFF;
+    /* A hairline lighter than the border, painted on the top edge only. On a real
+       surface the lit edge faces the light; one pixel of it is the difference between a
+       rectangle and an object. */
+    --edge-highlight: rgba(255, 255, 255, 0.9);
+    /* The accent rail beside the rewrite. A flat 2px bar is a border; a gradient that
+       fades along its length reads as an indicator. */
+    --rail-accent: linear-gradient(180deg, var(--color-primary), var(--color-mint));
+    /* Focus. A keyboard user gets the same ring on every surface, and it is drawn
+       outside the control so it never changes the layout. */
+    --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(28, 93, 32, 0.45);
+
     /* Shape and motion */
     --radius-pill: 6px;
     --radius-btn: 8px;
     --radius-card: 12px;
+    /* The injected card. 12px on a 580px panel reads as a dialog from 2016; the larger
+       radius is what the host pages themselves use. */
+    --radius-card-lg: 16px;
+    --radius-sm: 6px;
     --shadow-sm: 0 1px 2px rgba(16, 24, 18, 0.06);
     --shadow-premium: 0 4px 14px rgba(16, 24, 18, 0.10);
     --shadow-lifted: 0 12px 32px rgba(16, 24, 18, 0.14);
+    /* TWO LAYERS, not one. A single blurred shadow reads as a drop shadow; a tight dark
+       contact shadow under a wide soft ambient one is how a surface actually sits above
+       another. The hairline is in the same token so the two never drift apart. */
+    --shadow-card: 0 0 0 1px rgba(16, 24, 18, 0.04), 0 1px 2px rgba(16, 24, 18, 0.08), 0 8px 24px -4px rgba(16, 24, 18, 0.12), 0 24px 48px -12px rgba(16, 24, 18, 0.14);
+    --shadow-btn: 0 1px 2px rgba(16, 24, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.14);
     --dur-fast: 120ms;
     --dur-base: 200ms;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -128,6 +154,9 @@
                  Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-heading: 'Sora', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto,
                     sans-serif;
+    /* Micro-captions. A label at 10px needs tracking to stay legible, and the same
+       amount everywhere or the rows look misaligned. */
+    --tracking-label: 0.08em;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
                  "Liberation Mono", monospace;
 }
@@ -199,6 +228,14 @@
         --diff-added-text: #86EFAC;
         --chart-carbon-fill: rgba(255, 152, 0, 0.28);
 
+        --surface-sunken: #141C16;
+        --surface-raised: #202B22;
+        --edge-highlight: rgba(255, 255, 255, 0.06);
+        --rail-accent: linear-gradient(180deg, var(--color-primary), var(--color-mint));
+        --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(102, 187, 106, 0.55);
+        --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 2px 4px rgba(0, 0, 0, 0.30), 0 12px 32px -6px rgba(0, 0, 0, 0.45), 0 28px 56px -16px rgba(0, 0, 0, 0.55);
+        --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
         --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
         --shadow-lifted: 0 12px 34px rgba(0, 0, 0, 0.55);
@@ -268,6 +305,14 @@
     --diff-added-bg: rgba(102, 187, 106, 0.12);
     --diff-added-text: #86EFAC;
     --chart-carbon-fill: rgba(255, 152, 0, 0.28);
+
+    --surface-sunken: #141C16;
+    --surface-raised: #202B22;
+    --edge-highlight: rgba(255, 255, 255, 0.06);
+    --rail-accent: linear-gradient(180deg, var(--color-primary), var(--color-mint));
+    --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(102, 187, 106, 0.55);
+    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 2px 4px rgba(0, 0, 0, 0.30), 0 12px 32px -6px rgba(0, 0, 0, 0.45), 0 28px 56px -16px rgba(0, 0, 0, 0.55);
+    --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
     --shadow-premium: 0 4px 16px rgba(0, 0, 0, 0.45);
