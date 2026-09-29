@@ -41,7 +41,13 @@ const flag = (name, fallback) => {
 };
 const SAMPLE = args.find((a) => !a.startsWith('--') && a.endsWith('.jsonl'))
     || path.join(__dirname, 'corpus', 'sample.jsonl');
-const LIMIT = flag('limit', 3000);
+// EVERY ROW BY DEFAULT. This was 3000, and a 3,000-row slice of this corpus is not
+// precise enough to compare two runs with: the same code measured 9.84% on one draw and
+// 11.00% on another, against 10.25% for the whole corpus. Changes of a tenth of a point
+// were being reported as results when they were the sampling error. The full pass takes
+// about eighty seconds, which is the right price for a number anyone is going to quote.
+// Pass --limit for a quick look; the report then says what it is.
+const LIMIT = flag('limit', 0);
 const REPEATS = flag('repeats', 100);
 const OUT = path.join(__dirname, 'compression_benchmark.json');
 
@@ -60,8 +66,10 @@ try {
     // The bundle is optional and built separately. countTokens() falls back on its own.
 }
 
-const rows = fs.readFileSync(SAMPLE, 'utf8')
-    .split('\n').filter(Boolean).map((line) => JSON.parse(line)).slice(0, LIMIT);
+let rows = fs.readFileSync(SAMPLE, 'utf8')
+    .split('\n').filter(Boolean).map((line) => JSON.parse(line));
+const TOTAL_ROWS = rows.length;
+if (LIMIT > 0) rows = rows.slice(0, LIMIT);
 
 console.log('Benchmarking ' + rows.length + ' prompts'
     + ' | tokenizer: ' + PromptMeterTokenizer.encoding()
@@ -206,7 +214,14 @@ console.log('');
 console.log('OVERALL');
 console.log('  prompts                 ' + report.overall.prompts);
 console.log('  tokens  ' + report.overall.originalTokens + ' -> ' + report.overall.optimizedTokens);
-console.log('  corpus-wide reduction   ' + report.overall.overallReduction + '%');
+console.log('  corpus-wide reduction   ' + report.overall.overallReduction + '%'
+    + (LIMIT > 0 && LIMIT < TOTAL_ROWS
+        // Named rather than implied: a reader comparing two runs needs to know the
+        // figure carries about a point of sampling error before treating a small
+        // difference as a change.
+        ? '   (SAMPLE of ' + rows.length + '/' + TOTAL_ROWS
+          + ' rows -- about +/-1 point; run without --limit to compare runs)'
+        : ''));
 console.log('  median when compressed  ' + report.overall.medianReductionWhenCompressed + '%');
 console.log('  prompts compressed      ' + report.overall.compressedShare + '%');
 console.log('  mean latency            ' + report.overall.meanLatencyMs + 'ms');

@@ -23,6 +23,19 @@ const PromptMeterTokenizer = {
     encoder: null,
     encoderName: null,
 
+    // Consecutive encoder failures. One bad input is not a broken encoder, and treating
+    // it as one used to cost every later count in the session its precision.
+    encoderFailures: 0,
+    MAX_ENCODER_FAILURES: 3,
+
+    // ChatGPT's own control markers, written out as text. A prompt containing the
+    // literal "<|endofprompt|>" is refused by tiktoken -- it will not encode a special
+    // token it was not told to allow -- and the bundled encoder does not forward the
+    // option that permits it. This is not exotic: it is what a user types when asking
+    // about prompt injection, chat templates or the format itself, and the corpus
+    // contains such prompts.
+    SPECIAL_RX: /<\|[^<>]{0,64}?\|>/g,
+
     /**
      * Registers a BPE encoder.
      *
@@ -34,6 +47,7 @@ const PromptMeterTokenizer = {
         if (typeof encode !== 'function') return false;
         this.encoder = encode;
         this.encoderName = name || 'bpe';
+        this.encoderFailures = 0;
         this.cache.clear();
         return true;
     },
@@ -41,6 +55,38 @@ const PromptMeterTokenizer = {
     /** True when counts come from a real encoder rather than the heuristic. */
     isExact: function () {
         return this.encoder !== null;
+    },
+
+    /**
+     * Counts text containing literal special-token markers, by encoding around them.
+     *
+     * Each marker is encoded in two pieces so the encoder never sees a whole special
+     * token and therefore never refuses it. Splitting prevents a few byte-pair merges
+     * across the seams, so the total can be a token high -- measured at 10 against 9 for
+     * a string identical but for one letter inside the marker. That is the honest cost,
+     * and it buys an exact-ish count for a prompt that would otherwise have fallen back
+     * to the heuristic AND taken every later count in the session with it.
+     *
+     * @param {string} text
+     * @returns {number}
+     */
+    countAroundSpecial: function (text) {
+        let total = 0;
+        let last = 0;
+        let hit;
+        this.SPECIAL_RX.lastIndex = 0;
+        while ((hit = this.SPECIAL_RX.exec(text)) !== null) {
+            if (hit.index > last) {
+                total += this.encoder(text.slice(last, hit.index)).length;
+            }
+            total += this.encoder(hit[0].slice(0, 1)).length
+                + this.encoder(hit[0].slice(1)).length;
+            last = hit.index + hit[0].length;
+            // A zero-length match would spin here forever.
+            if (this.SPECIAL_RX.lastIndex === hit.index) this.SPECIAL_RX.lastIndex++;
+        }
+        if (last < text.length) total += this.encoder(text.slice(last)).length;
+        return total;
     },
 
     /** Which encoding is in use, or "heuristic". */
@@ -70,13 +116,28 @@ const PromptMeterTokenizer = {
         if (this.encoder) {
             try {
                 count = this.encoder(text).length;
+                this.encoderFailures = 0;
             } catch (err) {
-                // A broken encoder must not take the extension down with it. Drop back to
-                // the heuristic permanently rather than throwing on every keystroke.
-                console.error('[PromptMeter] token encoder failed, using the estimate.', err);
-                this.encoder = null;
-                this.encoderName = null;
-                count = this.estimate(text);
+                // TWO DIFFERENT FAILURES, and they used to be treated as one. Text the
+                // encoder refuses is a property of THAT text; a broken encoder is a
+                // property of the session. Retiring the encoder on the first refusal
+                // meant one prompt containing "<|endofprompt|>" silently cost every
+                // later count in the session its precision -- and printed a stack trace
+                // on the user's page while doing it.
+                try {
+                    count = this.countAroundSpecial(text);
+                    this.encoderFailures = 0;
+                } catch (again) {
+                    this.encoderFailures++;
+                    if (this.encoderFailures >= this.MAX_ENCODER_FAILURES) {
+                        console.error('[PromptMeter] token encoder failed '
+                            + this.encoderFailures + ' times; using the estimate from '
+                            + 'here on.', again);
+                        this.encoder = null;
+                        this.encoderName = null;
+                    }
+                    count = this.estimate(text);
+                }
             }
         } else {
             count = this.estimate(text);

@@ -100,6 +100,7 @@ let originalHigher = 0;
 let fairPairs = 0;
 let fairOriginalLower = 0;
 let fairOriginalHigher = 0;
+let copyPairs = 0;
 
 rows.forEach((row) => {
     let analysis;
@@ -167,6 +168,12 @@ rows.forEach((row) => {
             return;
         }
         pairs++;
+        // A rewrite that IS the prompt can only ever score as a draw. Those pairs are
+        // real data -- BPO genuinely decided some prompts needed no change -- but
+        // counting them in the denominator makes the scorer look more often-in-agreement
+        // than it is, because a draw it could not have avoided is scored as a draw it
+        // chose. 1,155 of 14,336 pairs, which is 8% of this split.
+        if (row.optimized_is_copy) copyPairs++;
         if (analysis.score < rewriteScore) originalLower++;
         else if (analysis.score === rewriteScore) equalScore++;
         else originalHigher++;
@@ -288,7 +295,9 @@ Object.keys(losses).forEach((k) => {
 });
 console.log('  empty output ' + emptyOutput);
 console.log('');
-console.log('BPO DIRECTION  (' + pairs + ' pairs)');
+const judgedPairs = pairs - copyPairs;
+console.log('BPO DIRECTION  (' + pairs + ' pairs, ' + copyPairs
+    + ' of them a rewrite identical to the prompt)');
 console.log('  original scored lower than the rewrite : ' + originalLower
     + ' (' + (100 * originalLower / (pairs || 1)).toFixed(1) + '%)');
 console.log('  same score                             : ' + equalScore);
@@ -296,5 +305,13 @@ console.log('  original scored HIGHER                 : ' + originalHigher
     + ' (' + (100 * originalHigher / (pairs || 1)).toFixed(1) + '%)');
 console.log('  -- on the ' + fairPairs + ' pairs where the rewrite is no longer:');
 console.log('     original lower ' + fairOriginalLower + ' / higher ' + fairOriginalHigher);
+// The same counts over the pairs where the source actually changed something. A draw
+// the scorer had no way to avoid is not evidence either way.
+console.log('  -- on the ' + judgedPairs + ' pairs where the rewrite DIFFERS from the prompt:');
+console.log('     original lower ' + originalLower
+    + ' (' + (100 * originalLower / (judgedPairs || 1)).toFixed(1) + '%)'
+    + ' / higher ' + originalHigher
+    + ' (' + (100 * originalHigher / (judgedPairs || 1)).toFixed(1) + '%)'
+    + ' / draw ' + (equalScore - copyPairs));
 console.log('');
 console.log('Wrote ' + path.relative(ROOT, OUT));

@@ -123,7 +123,12 @@ def redact(text):
 
 
 def normalise(text):
-    """Key used for exact-duplicate detection. Never written to the corpus."""
+    """Key behind the row id. Never written to the corpus.
+
+    Deliberately NOT upgraded when dedupe_key was added below: this feeds fingerprint(),
+    so changing it would renumber every row in the corpus and invalidate the resume
+    state, to fix a duplicate problem that dedupe_key solves without touching ids.
+    """
     text = unicodedata.normalize("NFKC", text).lower()
     return re.sub(r"\s+", " ", text).strip()
 
@@ -131,6 +136,90 @@ def normalise(text):
 def fingerprint(text):
     """Stable id for a prompt, so re-runs and shards agree on what is a duplicate."""
     return hashlib.sha1(normalise(text).encode("utf-8")).hexdigest()[:16]
+
+
+# Invisible characters. Every one of these is either a formatting hint no model acts on
+# or an artefact of a bad decode, and each is a real problem rather than an untidiness:
+# a zero-width space inside a word makes the tokenizer see two words, and the optimizer
+# then cannot match the word against its dictionary. They come in through copy-paste
+# from web pages and PDFs.
+#
+#   200b-200d  zero-width space, non-joiner, joiner
+#   200e 200f  left-to-right and right-to-left marks
+#   2060       word joiner
+#   feff       byte-order mark, mid-string
+#   fffd       replacement character -- one byte of this prompt is already lost
+INVISIBLE_RX = re.compile("[\u200b\u200c\u200d\u200e\u200f\u2060\ufeff\ufffd]")
+
+# Control characters, except the three that carry meaning in a prompt. A prompt's line
+# breaks and tabs are structure -- stripping them would flatten a table into one run --
+# but a stray BEL or VT is decode damage.
+#
+# The range runs to \x9f, not \x7f. Unicode's Cc category is TWO blocks -- C0 at
+# 0000-001f and C1 at 007f-009f -- and stopping at \x7f left two rows in the corpus still
+# carrying a C1 character after the first clean. C1 is where a Windows-1252 byte decoded
+# as Latin-1 ends up, so it is the block mojibake arrives in most often.
+CONTROL_RX = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
+
+
+def sanitise(text):
+    """
+    Removes invisible and control characters, leaving everything visible alone.
+
+    NOT a content filter. It does not judge whether a prompt is worth keeping, and it
+    does not touch letters, digits, punctuation, emoji or any script. A prompt in
+    Chinese, a prompt that is only arithmetic and a prompt that is a jailbreak attempt
+    all come out unchanged apart from characters nobody can see.
+
+    A row whose text is DAMAGED is repaired rather than dropped: the eight rows carrying
+    a replacement character were otherwise-intact prompts of up to 2,000 characters, and
+    discarding one over a single lost byte throws away far more than it saves.
+
+    @returns (cleaned text, number of characters removed)
+    """
+    if not text:
+        return text, 0
+    cleaned = INVISIBLE_RX.sub("", text)
+    cleaned = CONTROL_RX.sub("", cleaned)
+    # WHITESPACE IS LEFT ALONE, deliberately. Collapsing runs of spaces looks like
+    # tidying and is not: "[ \t]{2,}" is also what indentation is made of, so a pass that
+    # squeezes it flattens every Python block, YAML fragment and ASCII table in the
+    # corpus -- 3,017 of these prompts contain code, and protecting exactly that is the
+    # thing the rest of this project works hardest at. Measured before it was removed,
+    # that "tidying" rewrote 2,283 rows and deleted 68,510 characters, against the 40
+    # rows that actually carried an invisible character.
+    #
+    # If removing a zero-width space leaves two spaces behind, two spaces is what the
+    # corpus keeps. The text staying otherwise byte-identical is worth more than the
+    # cosmetics, and the optimizer collapses whitespace itself anyway.
+    return cleaned, len(text) - len(cleaned)
+
+
+# Punctuation that may be folded away when deciding whether two prompts are the same.
+# GENTLY, and the limit matters: folding ALL punctuation collapsed "Implement a C#
+# function" and "Implement a C++ function" into one row, because # and ++ are
+# punctuation. Those are different questions about different languages. So only
+# sentence-final marks and a space before a mark are folded -- enough to make
+# "How are you?", "how are you" and "how are you ?" one prompt, and not enough to
+# confuse two programming languages.
+TRAILING_PUNCT_RX = re.compile(r"[\s?!.,;:/]+$")
+SPACE_BEFORE_PUNCT_RX = re.compile(r"\s+([?!.,;:])")
+
+
+def dedupe_key(text):
+    """
+    Key used to decide whether two prompts are the same prompt.
+
+    Separate from normalise() on purpose. normalise() feeds the row id and must stay
+    stable; this is free to be stricter, and needs to be: case and whitespace alone left
+    98 rows in the corpus that differ only by a trailing question mark. In a corpus whose
+    only job is MEASUREMENT, a duplicate is not harmless -- it silently weights whatever
+    it happens to represent.
+    """
+    text = unicodedata.normalize("NFKC", str(text)).lower()
+    text = re.sub(r"\s+", " ", text).strip()
+    text = SPACE_BEFORE_PUNCT_RX.sub(r"\1", text)
+    return TRAILING_PUNCT_RX.sub("", text)
 
 
 # ---------------------------------------------------------------------------
@@ -410,8 +499,10 @@ def ingest(source, limit, batch_size, resume):
 
     state = load_state() if resume else {"seen": [], "shards": [], "counts": {}}
     seen = set(state["seen"])
-    rejected = {"duplicate": 0, "too_short": 0, "too_long": 0, "empty": 0}
+    rejected = {"duplicate": 0, "too_short": 0, "too_long": 0, "empty": 0,
+                "empty_after_sanitise": 0}
     redactions = 0
+    invisible = 0
 
     batch, written, shard_index = [], 0, len(
         [s for s in state["shards"] if s.startswith(source)])
@@ -428,7 +519,15 @@ def ingest(source, limit, batch_size, resume):
             rejected["too_long"] += 1
             continue
 
-        key = fingerprint(prompt)
+        # Invisible characters go before anything measures the text, so char_length,
+        # word_count and the token estimate describe what a model will actually read.
+        prompt, stripped = sanitise(prompt)
+        invisible += stripped
+        if not prompt.strip():
+            rejected["empty_after_sanitise"] += 1
+            continue
+
+        key = dedupe_key(prompt)
         if key in seen:
             rejected["duplicate"] += 1
             continue
@@ -437,6 +536,8 @@ def ingest(source, limit, batch_size, resume):
         prompt, hits = redact(prompt)
         redactions += hits
         if optimized:
+            optimized, stripped = sanitise(optimized)
+            invisible += stripped
             optimized, more = redact(optimized)
             redactions += more
 
@@ -464,7 +565,11 @@ def ingest(source, limit, batch_size, resume):
     save_state(state)
 
     print()
-    print("%s: %d rows written, %d redactions" % (source, written, redactions))
+    print("%s: %d rows written, %d redactions, %d invisible characters removed"
+          % (source, written, redactions, invisible))
+    if any(rejected.values()):
+        print("  rejected: %s" % ", ".join(
+            "%s=%d" % (k, v) for k, v in sorted(rejected.items()) if v))
     for reason, count in rejected.items():
         if count:
             print("  rejected %-12s %d" % (reason, count))
@@ -487,10 +592,21 @@ def export_jsonl(path, limit=None, seed=13):
     shards = sorted(f for f in os.listdir(CORPUS_DIR) if f.endswith(".parquet"))
     rows = []
     for name in shards:
-        table = pq.read_table(os.path.join(CORPUS_DIR, name), columns=[
+        wanted = [
             "id", "prompt", "optimized_prompt", "optimized_origin", "source",
             "task_category", "token_estimate", "has_code", "has_math",
-            "language", "source_redacted"])
+            "language", "source_redacted",
+            # True when the source's "improvement" is the original prompt again. Such a
+            # pair can only ever score as a draw, so a direction metric that cannot see
+            # them reports a denominator it has not earned.
+            "optimized_is_copy",
+        ]
+        # A shard written before a column existed simply does not have it. Asking pyarrow
+        # for a missing column raises, so the list is intersected with what is there
+        # rather than assuming every shard is current.
+        present = set(pq.read_schema(os.path.join(CORPUS_DIR, name)).names)
+        table = pq.read_table(os.path.join(CORPUS_DIR, name),
+                              columns=[c for c in wanted if c in present])
         rows.extend(table.to_pylist())
 
     random.Random(seed).shuffle(rows)

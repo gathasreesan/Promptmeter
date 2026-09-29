@@ -1,208 +1,209 @@
 {
-  "generatedAt": "2026-09-29T08:08:04.348Z",
+  "generatedAt": "2026-09-29T09:22:21.734Z",
   "sample": "sample.jsonl",
-  "prompts": 3000,
+  "prompts": 31401,
   "tokenizer": {
     "encoding": "cl100k_base",
     "exact": true
   },
   "repeatsAssumedForNetSaving": 100,
   "overall": {
-    "prompts": 3000,
-    "originalTokens": 164662,
-    "optimizedTokens": 148459,
-    "overallReduction": 9.84,
-    "medianReductionWhenCompressed": 13.1,
-    "compressedShare": 33.9,
-    "meanLatencyMs": 2.617,
+    "prompts": 31401,
+    "originalTokens": 1781367,
+    "optimizedTokens": 1598732,
+    "overallReduction": 10.25,
+    "medianReductionWhenCompressed": 13.25,
+    "compressedShare": 34.3,
+    "meanLatencyMs": 2.384,
     "modes": {
-      "balanced": 651,
-      "none": 1982,
-      "aggressive": 271,
-      "conservative": 96
+      "balanced": 6648,
+      "aggressive": 3042,
+      "none": 20637,
+      "conservative": 1074
     }
   },
-  "netTokensSavedAtRepeats": 1620300,
+  "netTokensSavedAtRepeats": 18263500,
   "byLength": {
     "long": {
-      "prompts": 322,
-      "originalTokens": 99288,
-      "optimizedTokens": 88070,
-      "overallReduction": 11.3,
-      "medianReductionWhenCompressed": 9.58,
-      "compressedShare": 76.4,
-      "meanLatencyMs": 12.48,
+      "prompts": 3471,
+      "originalTokens": 1089742,
+      "optimizedTokens": 961509,
+      "overallReduction": 11.77,
+      "medianReductionWhenCompressed": 10.39,
+      "compressedShare": 79.1,
+      "meanLatencyMs": 11.171,
       "modes": {
-        "none": 76,
-        "balanced": 136,
-        "aggressive": 103,
-        "conservative": 7
+        "balanced": 1414,
+        "aggressive": 1206,
+        "none": 727,
+        "conservative": 124
       }
     },
     "medium": {
-      "prompts": 698,
-      "originalTokens": 38246,
-      "optimizedTokens": 34487,
-      "overallReduction": 9.83,
-      "medianReductionWhenCompressed": 13.89,
-      "compressedShare": 51,
-      "meanLatencyMs": 2.511,
+      "prompts": 7236,
+      "originalTokens": 403794,
+      "optimizedTokens": 362866,
+      "overallReduction": 10.14,
+      "medianReductionWhenCompressed": 13.58,
+      "compressedShare": 52.9,
+      "meanLatencyMs": 2.442,
       "modes": {
-        "aggressive": 117,
-        "balanced": 220,
-        "none": 342,
-        "conservative": 19
+        "balanced": 2328,
+        "aggressive": 1272,
+        "none": 3406,
+        "conservative": 230
       }
     },
     "short": {
-      "prompts": 1980,
-      "originalTokens": 27128,
-      "optimizedTokens": 25902,
-      "overallReduction": 4.52,
+      "prompts": 20694,
+      "originalTokens": 287831,
+      "optimizedTokens": 274357,
+      "overallReduction": 4.68,
       "medianReductionWhenCompressed": 14.29,
-      "compressedShare": 21,
-      "meanLatencyMs": 1.05,
+      "compressedShare": 20.2,
+      "meanLatencyMs": 0.89,
       "modes": {
-        "balanced": 295,
-        "none": 1564,
-        "aggressive": 51,
-        "conservative": 70
+        "balanced": 2906,
+        "none": 16504,
+        "aggressive": 564,
+        "conservative": 720
       }
     }
   },
   "byCategory": {
     "analysis": {
-      "prompts": 60,
-      "originalTokens": 5012,
-      "optimizedTokens": 4745,
-      "overallReduction": 5.33,
-      "medianReductionWhenCompressed": 8.99,
-      "compressedShare": 35,
-      "meanLatencyMs": 3.223,
+      "prompts": 650,
+      "originalTokens": 52868,
+      "optimizedTokens": 46524,
+      "overallReduction": 12,
+      "medianReductionWhenCompressed": 12,
+      "compressedShare": 36.6,
+      "meanLatencyMs": 3.225,
       "modes": {
-        "none": 39,
-        "balanced": 14,
-        "aggressive": 7
+        "balanced": 148,
+        "none": 412,
+        "aggressive": 76,
+        "conservative": 14
       }
     },
     "code": {
-      "prompts": 287,
-      "originalTokens": 33614,
-      "optimizedTokens": 30336,
-      "overallReduction": 9.75,
-      "medianReductionWhenCompressed": 14.67,
-      "compressedShare": 56.4,
-      "meanLatencyMs": 4.365,
+      "prompts": 3014,
+      "originalTokens": 340233,
+      "optimizedTokens": 306657,
+      "overallReduction": 9.87,
+      "medianReductionWhenCompressed": 14.29,
+      "compressedShare": 56.2,
+      "meanLatencyMs": 4.102,
       "modes": {
-        "aggressive": 97,
-        "balanced": 61,
-        "none": 125,
-        "conservative": 4
+        "balanced": 642,
+        "aggressive": 948,
+        "none": 1321,
+        "conservative": 103
       }
     },
     "explain": {
-      "prompts": 416,
-      "originalTokens": 10957,
-      "optimizedTokens": 10060,
-      "overallReduction": 8.19,
+      "prompts": 4071,
+      "originalTokens": 119458,
+      "optimizedTokens": 108684,
+      "overallReduction": 9.02,
       "medianReductionWhenCompressed": 12.5,
-      "compressedShare": 22.6,
-      "meanLatencyMs": 1.963,
+      "compressedShare": 22.5,
+      "meanLatencyMs": 1.463,
       "modes": {
-        "balanced": 70,
-        "none": 322,
-        "aggressive": 13,
-        "conservative": 11
+        "none": 3156,
+        "balanced": 632,
+        "aggressive": 164,
+        "conservative": 119
       }
     },
     "factual": {
-      "prompts": 620,
-      "originalTokens": 18537,
-      "optimizedTokens": 16994,
-      "overallReduction": 8.32,
-      "medianReductionWhenCompressed": 12.5,
-      "compressedShare": 32.4,
-      "meanLatencyMs": 1.643,
+      "prompts": 6699,
+      "originalTokens": 212599,
+      "optimizedTokens": 192160,
+      "overallReduction": 9.61,
+      "medianReductionWhenCompressed": 13.33,
+      "compressedShare": 33.5,
+      "meanLatencyMs": 1.577,
       "modes": {
-        "none": 419,
-        "balanced": 161,
-        "conservative": 25,
-        "aggressive": 15
+        "balanced": 1725,
+        "none": 4458,
+        "aggressive": 270,
+        "conservative": 246
       }
     },
     "howto": {
-      "prompts": 165,
-      "originalTokens": 3776,
-      "optimizedTokens": 3484,
-      "overallReduction": 7.73,
-      "medianReductionWhenCompressed": 16.67,
-      "compressedShare": 23,
-      "meanLatencyMs": 1.248,
+      "prompts": 1721,
+      "originalTokens": 44712,
+      "optimizedTokens": 41273,
+      "overallReduction": 7.69,
+      "medianReductionWhenCompressed": 12.5,
+      "compressedShare": 19.5,
+      "meanLatencyMs": 1.306,
       "modes": {
-        "none": 127,
-        "balanced": 31,
-        "aggressive": 3,
-        "conservative": 4
+        "none": 1385,
+        "aggressive": 52,
+        "balanced": 235,
+        "conservative": 49
       }
     },
     "math": {
-      "prompts": 162,
-      "originalTokens": 21302,
-      "optimizedTokens": 19527,
-      "overallReduction": 8.33,
-      "medianReductionWhenCompressed": 9.14,
-      "compressedShare": 35.8,
-      "meanLatencyMs": 5.149,
+      "prompts": 1927,
+      "originalTokens": 259375,
+      "optimizedTokens": 236842,
+      "overallReduction": 8.69,
+      "medianReductionWhenCompressed": 9,
+      "compressedShare": 38.8,
+      "meanLatencyMs": 4.9,
       "modes": {
-        "none": 104,
-        "aggressive": 25,
-        "balanced": 27,
-        "conservative": 6
+        "none": 1179,
+        "balanced": 450,
+        "aggressive": 257,
+        "conservative": 41
       }
     },
     "other": {
-      "prompts": 846,
-      "originalTokens": 38580,
-      "optimizedTokens": 34188,
-      "overallReduction": 11.38,
-      "medianReductionWhenCompressed": 10.64,
-      "compressedShare": 30.9,
-      "meanLatencyMs": 2.099,
+      "prompts": 8780,
+      "originalTokens": 387443,
+      "optimizedTokens": 342266,
+      "overallReduction": 11.66,
+      "medianReductionWhenCompressed": 12.5,
+      "compressedShare": 30.1,
+      "meanLatencyMs": 1.939,
       "modes": {
-        "none": 585,
-        "balanced": 163,
-        "conservative": 35,
-        "aggressive": 63
+        "balanced": 1573,
+        "none": 6134,
+        "aggressive": 681,
+        "conservative": 392
       }
     },
     "roleplay": {
-      "prompts": 71,
-      "originalTokens": 9520,
-      "optimizedTokens": 8542,
-      "overallReduction": 10.27,
-      "medianReductionWhenCompressed": 16.67,
-      "compressedShare": 59.2,
-      "meanLatencyMs": 4.841,
+      "prompts": 822,
+      "originalTokens": 124621,
+      "optimizedTokens": 110397,
+      "overallReduction": 11.41,
+      "medianReductionWhenCompressed": 15.79,
+      "compressedShare": 67.5,
+      "meanLatencyMs": 5.786,
       "modes": {
-        "none": 29,
-        "aggressive": 12,
-        "balanced": 28,
-        "conservative": 2
+        "none": 267,
+        "balanced": 336,
+        "aggressive": 204,
+        "conservative": 15
       }
     },
     "writing": {
-      "prompts": 373,
-      "originalTokens": 23364,
-      "optimizedTokens": 20583,
-      "overallReduction": 11.9,
-      "medianReductionWhenCompressed": 12.5,
-      "compressedShare": 37.8,
-      "meanLatencyMs": 3.78,
+      "prompts": 3717,
+      "originalTokens": 240058,
+      "optimizedTokens": 213929,
+      "overallReduction": 10.88,
+      "medianReductionWhenCompressed": 13.28,
+      "compressedShare": 37.4,
+      "meanLatencyMs": 2.8,
       "modes": {
-        "none": 232,
-        "balanced": 96,
-        "aggressive": 36,
-        "conservative": 9
+        "balanced": 907,
+        "none": 2325,
+        "aggressive": 390,
+        "conservative": 95
       }
     }
   },
@@ -210,25 +211,25 @@
     "note": "Candidates rejected by the validator, and which rule rejected them. These are preservation proxies, not a measure of answer quality.",
     "byMode": {
       "conservative": {
-        "tried": 3000,
-        "rejected": 18
+        "tried": 31401,
+        "rejected": 151
       },
       "balanced": {
-        "tried": 3000,
-        "rejected": 72
+        "tried": 31401,
+        "rejected": 855
       },
       "aggressive": {
-        "tried": 405,
-        "rejected": 129
+        "tried": 4494,
+        "rejected": 1368
       }
     },
     "violationsByRule": {
-      "invention": 35,
-      "task": 16,
-      "verbatim": 261,
-      "constraint": 78,
-      "format": 8,
-      "numbers": 36
+      "task": 172,
+      "verbatim": 2467,
+      "invention": 465,
+      "constraint": 790,
+      "format": 146,
+      "numbers": 521
     }
   },
   "downstreamQuality": {
@@ -237,100 +238,100 @@
   },
   "examples": [
     {
-      "category": "writing",
+      "category": "other",
       "mode": "balanced",
-      "from": 7,
-      "to": 4,
-      "original": "Can you please rephrase this letter",
-      "compressed": "Rephrase this letter"
-    },
-    {
-      "category": "howto",
-      "mode": "aggressive",
-      "from": 24,
-      "to": 12,
-      "original": "Can you give advice on how to read the required readings for school? I need to finish it all in a month.",
-      "compressed": "Give advice on how to read the required readings for school."
-    },
-    {
-      "category": "howto",
-      "mode": "aggressive",
-      "from": 13,
-      "to": 7,
-      "original": "how to decide among conflicting values? please keep it short as possible",
-      "compressed": "How to decide among conflicting values?"
+      "from": 143,
+      "to": 41,
+      "original": "Привет! Расскажи про себя, сравни с другими LLM и укажи, в чем ты хуже и в чем лучше. Дай два ответа: один на русском языке и один на английском, оба ",
+      "compressed": "Дай два ответа: один на русском языке и один на английском, оба примерно по 700 символов."
     },
     {
       "category": "other",
       "mode": "balanced",
-      "from": 34,
-      "to": 19,
-      "original": "Have there been any stories in the bible that have been proven to be true with physical evidence? I have been researching religion a lot lately and am",
-      "compressed": "Have there been any stories in the bible that have been proven to be true with physical evidence?"
-    },
-    {
-      "category": "writing",
-      "mode": "balanced",
-      "from": 166,
-      "to": 99,
-      "original": "You are in a 4chan /NAME_1/ (the technology board) thread, /aicg/, also know as \"AI Chatbots General\". A place where anons talk about chatbots, rolepl",
-      "compressed": "You are in a 4chan /NAME_1/ (the technology board) thread, /aicg/, also know as \"AI Chatbots General\". A place where anons talk about chatbots, rolepl"
-    },
-    {
-      "category": "writing",
-      "mode": "balanced",
-      "from": 40,
-      "to": 17,
-      "original": "In an inner monologue, you reveal your moral turmoil, angry at the young black woman that berated you.\nWrite your inner monologue in the first person.",
-      "compressed": "Write your inner monologue in the first person.\nUse figures of speech when necessary."
+      "from": 32,
+      "to": 18,
+      "original": "If I were about to die in an hour, what should I do to prevent it? You do not have more information, my life is in your hands.",
+      "compressed": "If I was about to die in an hour, what should I do to prevent it?"
     },
     {
       "category": "factual",
-      "mode": "balanced",
-      "from": 39,
-      "to": 10,
-      "original": "Can you use fully homomorphic encrypted data for LLM? I have medical sensitive data that can't be exposed to the internet and researcher to be able to",
-      "compressed": "Use fully homomorphic encrypted data for LLM?"
-    },
-    {
-      "category": "factual",
-      "mode": "balanced",
-      "from": 35,
-      "to": 11,
-      "original": "Which word is an antonym for \"stand out from\" ?\nA) Blend in with\nB) Distinguish from\nC) Emerge from\nD) Separate from",
-      "compressed": "Word is an antonym for \"stand out from\"?"
-    },
-    {
-      "category": "roleplay",
-      "mode": "balanced",
-      "from": 195,
-      "to": 106,
-      "original": "Hi can you roleplay as my mum? You're 39, from essex uk. You're attractive but have very low self esteem. You're very feminine. You are married to my ",
-      "compressed": "Roleplay as my mum? You're 39, from essex uk. You are married to my NAME_1 who we both don't like very much. I am your 21 year old son NAME_2 and I re"
-    },
-    {
-      "category": "factual",
-      "mode": "balanced",
-      "from": 39,
-      "to": 20,
-      "original": "Which one of the following is not a base isolation device _____.\na.\nLead rubber bearing\nb.\nHigh Damping Bearing\nc.\nNone of these\nd.\nElastomeric Bearin",
-      "compressed": "One of the following is not a base isolation device _____.\nA.\nB.\nC.\nD."
-    },
-    {
-      "category": "factual",
-      "mode": "balanced",
-      "from": 20,
+      "mode": "aggressive",
+      "from": 28,
       "to": 7,
-      "original": "All pizzas are food. I have not eaten any food today. Have I eaten any pizzas today?",
-      "compressed": "Have I eaten any pizzas today?"
+      "original": "paper is spelt P A P E R. appear is spelt A P P E A R. are these two words anagrams?",
+      "compressed": "Are these two words anagrams?"
     },
     {
       "category": "code",
       "mode": "balanced",
-      "from": 6,
-      "to": 3,
-      "original": "Can you wirte code?",
-      "compressed": "Write code."
+      "from": 4,
+      "to": 2,
+      "original": "can you code?",
+      "compressed": "Code?"
+    },
+    {
+      "category": "howto",
+      "mode": "aggressive",
+      "from": 38,
+      "to": 8,
+      "original": "A carton has six eggs. Two are added. Then one is taken out and eaten. One spoils so it is removed but replaced immediately. How many eggs have left t",
+      "compressed": "How many eggs have left the basket?"
+    },
+    {
+      "category": "writing",
+      "mode": "aggressive",
+      "from": 16,
+      "to": 9,
+      "original": "Re-write the following sentence with some modifications.\nShe loves singing in the shower.",
+      "compressed": "Re-write the following sentence with some modifications."
+    },
+    {
+      "category": "other",
+      "mode": "aggressive",
+      "from": 15,
+      "to": 7,
+      "original": "Formulate a hypothesis about this phenomenon.\nBirds building nests in urban areas",
+      "compressed": "Birds building nests in urban areas"
+    },
+    {
+      "category": "explain",
+      "mode": "balanced",
+      "from": 62,
+      "to": 9,
+      "original": "I really liked Shinsekai Yori, Banana Fish, Hunter x Hunter and Barakamon. I strongly disliked Neon Genesis Evangelion, Seven Deadly Sins, Death Note ",
+      "compressed": "What are some other anime I might enjoy?"
+    },
+    {
+      "category": "analysis",
+      "mode": "aggressive",
+      "from": 125,
+      "to": 68,
+      "original": "expand below paragraph in 250 words\n\nThere is a common pattern that can be observed in many areas of life. For example, in nature, populations of plan",
+      "compressed": "Expand below paragraph in 250 words\nThere is a common pattern that can be observed in many areas of life. As we are using most of our advancement in t"
+    },
+    {
+      "category": "writing",
+      "mode": "aggressive",
+      "from": 555,
+      "to": 319,
+      "original": "I have an excerpt from a psychiatrist talk about trauma, it's cause and effect, perspectives, the struggle, the hope, the future, the past — education",
+      "compressed": "I have an excerpt from a psychiatrist talk about trauma, it's cause and effect, perspectives, the struggle, the hope, the future, the past — education"
+    },
+    {
+      "category": "factual",
+      "mode": "balanced",
+      "from": 8,
+      "to": 4,
+      "original": "Hi Vicuna! How are you?",
+      "compressed": "Vicuna!?"
+    },
+    {
+      "category": "code",
+      "mode": "aggressive",
+      "from": 209,
+      "to": 71,
+      "original": "can you add coments to this code? \ndef evolve_fire(graph, start_node):\n    if len(graph.get_burnt_vertices()) == 0:\n        graph.NAME_1_as_burning(st",
+      "compressed": "Add comments to this code.\nif len(graph.get_burnt_vertices()) == 0:\ngraph.NAME_1_as_burning(start_node)\nneighbors=graph.get_neighbors(burning_vertex)\n"
     }
   ]
 }
