@@ -154,6 +154,26 @@ const PromptMeterGrammar = {
         'europe': 'Europe', 'asia': 'Asia', 'africa': 'Africa',
         'ram and rom': 'RAM and ROM', 'cpu': 'CPU', 'gpu': 'GPU', 'sql': 'SQL', 'html': 'HTML',
         'css': 'CSS', 'json': 'JSON', 'api': 'API', 'pdf': 'PDF', 'sop': 'SOP',
+        // Exams, products and names live testing turned up ("neet" became "nest").
+        'neet': 'NEET', 'jee': 'JEE', 'upsc': 'UPSC', 'cbse': 'CBSE', 'icse': 'ICSE',
+        'nasa': 'NASA', 'seo': 'SEO', 'fps': 'FPS', 'gst': 'GST', 'ceo': 'CEO', 'faq': 'FAQ',
+        'ui': 'UI', 'ux': 'UX', 'pc': 'PC', 'hr': 'HR', 'apa': 'APA', 'mla': 'MLA',
+        'minecraft': 'Minecraft', 'valorant': 'Valorant', 'elden ring': 'Elden Ring', 'fortnite': 'Fortnite',
+        'amazon': 'Amazon', 'flipkart': 'Flipkart', 'microsoft excel': 'Microsoft Excel', 'excel': 'Excel',
+        'kolkata': 'Kolkata', 'japan': 'Japan', 'china': 'China', 'singapore': 'Singapore', 'goa': 'Goa',
+        'montserrat': 'Montserrat', 'diwali': 'Diwali', 'christmas': 'Christmas', 'eid': 'Eid',
+        'january': 'January', 'february': 'February', 'april': 'April', 'june': 'June', 'july': 'July',
+        'august': 'August', 'september': 'September', 'october': 'October', 'november': 'November', 'december': 'December',
+        'ielts': 'IELTS', 'toefl': 'TOEFL', 'gre': 'GRE', 'gmat': 'GMAT', 'usa': 'USA',
+        'node js': 'Node.js', 'next js': 'Next.js', 'react js': 'React.js', 'vue js': 'Vue.js',
+        // "js" is already "JS" by the time this map runs.
+        'node JS': 'Node.js', 'next JS': 'Next.js', 'react JS': 'React.js', 'vue JS': 'Vue.js',
+        'tp link': 'TP-Link', 'tp-link': 'TP-Link', 'hp laserjet': 'HP LaserJet',
+        'windows 10': 'Windows 10', 'windows 11': 'Windows 11', 'windows 7': 'Windows 7',
+        'newtons first law': "Newton's first law", 'newtons second law': "Newton's second law",
+        'newtons third law': "Newton's third law", 'newtons laws': "Newton's laws",
+        'macbeth': 'Macbeth', 'hamlet': 'Hamlet', 'shakespeare': 'Shakespeare', 'kubernetes pod': 'Kubernetes pod',
+        'saas': 'SaaS', 'swot': 'SWOT', 'kpis': 'KPIs', 'kpi': 'KPI', 'llp': 'LLP', 'mcq': 'MCQ', 'mcqs': 'MCQs',
         'openai': 'OpenAI', 'anthropic': 'Anthropic', 'microsoft': 'Microsoft',
         'english': 'English', 'spanish': 'Spanish', 'french': 'French',
         'german': 'German', 'hindi': 'Hindi', 'chinese': 'Chinese',
@@ -186,6 +206,14 @@ const PromptMeterGrammar = {
         [/\bthey're\s+(?=(?:own|house|home|car|books?|jobs?|names?|code|work|ideas?|answers?|team|parents|friends|kids|children)\b)/gi,
             'their ', "'they're' (they are) should be 'their' (belonging to them)"],
         [/\bthier\b/gi, 'their', "'thier' is a misspelling of 'their'"],
+        // Dictation and autocorrect slips, each pinned to a context that decides it.
+        [/(?<!\bday\s)\bto\s+(day|morrow|night)\b(?!\s+(?:to|by|after|\d))/gi, (m, w) => 'to' + w.toLowerCase(), "'to day' should be one word"],
+        [/\bthe\s+different\s+(?=between\b)/gi, 'the difference ', "'different' should be 'difference' here"],
+        [/(?<=\b(?:you|to|please|pls|i|me|and|then|just|can|could)\s)right(?=\s+(?:a|an|me|my|this|it|some|code|essay|email|letter|story|poem|program|function|script|report|song|blog|post|paragraph|summary|review|note|message)\b)(?!\s+(?:a|the)\s+wrong)/gi,
+            'write', "'right' should be 'write'"],
+        [/\bto\s+no\s+(?=(?:more|about|how|what|why|when|where|who|which|if|whether|much)\b)/gi, 'to know ', "'no' should be 'know'"],
+        [/\blets\s+(?=(?:meet|go|start|talk|see|get|do|make|begin|try|discuss|play|eat|have|plan|move|focus|say|assume|take|write|create|build|look)\b)/gi, "let's ", "'lets' should be 'let's' (let us)"],
+        [/\bdefiantly\s+(?=(?:important|better|worse|worth|the|not|going|will|a|an|more|less|true|right|wrong|need|want|recommend|agree|should|can|be|is|was)\b)/gi, 'definitely ', "'defiantly' should be 'definitely'"],
         // Live-tested homophones and verb forms. Each needs the context shown; none
         // fires on the word alone.
         [/\bthere\s+(?=(?:house|home|car|room|parents|friends?|kids|children|own|family|names?|work|school|teacher|money|phones?|way)\b)/gi,
@@ -194,7 +222,7 @@ const PromptMeterGrammar = {
         [/\b(more|less|fewer|better|worse|rather|other|bigger|smaller|larger|higher|lower|faster|slower|older|younger|easier|harder|cheaper|longer|shorter|greater)\b([^.?!]{0,40}?)\bthen\b(?=\s+(?:expected|usual|before|ever|anyone|anything|everyone|i|me|you|he|she|we|they|him|her|us|them|the|a|an|that|this|it|\d))/gi,
             '$1$2than', "'then' should be 'than' in a comparison"],
         [/\b(had|have|has|having)\s+(knew|went|did|saw|took|ate|wrote|gave|broke|spoke|drove|began|drank|swam|ran|came|forgot|chose|stole|froze|rode|threw|grew|flew|hid|bit)\b/gi,
-            (m, aux, v) => aux + ' ' + ({ knew: 'known', went: 'gone', did: 'done', saw: 'seen', took: 'taken', ate: 'eaten', wrote: 'written', gave: 'given', broke: 'broken', spoke: 'spoken', drove: 'driven', began: 'begun', drank: 'drunk', swam: 'swum', ran: 'run', came: 'come', forgot: 'forgotten', chose: 'chosen', stole: 'stolen', froze: 'frozen', rode: 'ridden', threw: 'thrown', grew: 'grown', flew: 'flown', hid: 'hidden', bit: 'bitten' })[v.toLowerCase()],
+            (m, aux, v, offset, str) => /^(?:have|has)$/i.test(aux) && /\b(?:yesterday|last\s+(?:year|week|month|night|time|summer|winter)|ago|in\s+(?:19|20)\d\d)\b/i.test(str) ? v : aux + ' ' + ({ knew: 'known', went: 'gone', did: 'done', saw: 'seen', took: 'taken', ate: 'eaten', wrote: 'written', gave: 'given', broke: 'broken', spoke: 'spoken', drove: 'driven', began: 'begun', drank: 'drunk', swam: 'swum', ran: 'run', came: 'come', forgot: 'forgotten', chose: 'chosen', stole: 'stolen', froze: 'frozen', rode: 'ridden', threw: 'thrown', grew: 'grown', flew: 'flown', hid: 'hidden', bit: 'bitten' })[v.toLowerCase()],
             "past participle after 'have'"],
         [/\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
             (m, s, v) => s + ' ' + (v.toLowerCase() === 'seen' ? 'saw' : 'did'), "'seen/done' needs 'have'; the past tense is 'saw/did'"],
@@ -202,7 +230,7 @@ const PromptMeterGrammar = {
             (m, det, noun) => /(?:ics|news|series|species|ss)$|^(?:datas|informations|advices|feedbacks|researches|knowledges|equipments|furnitures|luggages|softwares|homeworks|evidences)$/i.test(noun) ? m : `${det} ${noun} are`, "a plural subject takes 'are'"],
         [/\bwhose\s+(?=(?:going|coming|doing|been|not|there|here|ready|next|online|available|[a-z]+ing)\b)/gi,
             "who's ", "'whose' should be 'who's' (who is)"],
-        [/\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
+        [/(?<!\b(?:some|any|the|your|my|his|her|our|their|good|this|that|much|of|for|need|needs|want|get|give|an?|great|useful|free|expert|more|no)\s)\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
         [/\bto\s+advice\b/gi, 'to advise', "'advice' (noun) should be 'advise' (verb)"],
         [/\b(on|about|know|decide|choose|sure|idea|wondering|tell\s+me|ask|see)\s+witch\b(?!\s+(?:hunts?|craft|hats?|doctors?|trials?))/gi, '$1 which', "'witch' should be 'which'"],
         [/(?<!\b(?:the|today's|bad|good|nice|this)\s)\bweather\s+(?=(?:to|or\s+not|i|you|we|he|she|they|it)\b)/gi, 'whether ', "'weather' should be 'whether'"],
@@ -242,6 +270,7 @@ const PromptMeterGrammar = {
             "a feeling after 'get' or 'am' takes the -ed form ('get confused', 'am stressed')"],
 
         // loose / lose
+        [/\bloose\s+(?=\d+\s*(?:kg|kgs|kilos?|pounds?|lbs?)\b|\uE000)/gi, 'lose ', "'loose' (not tight) should be 'lose' (to misplace)"],
         [/\bloose\s+(?=(?:the|a|an|my|your|our|their|his|her|its|this|that|it|them|data|points?|money|time|track|weight|connection|access)\b)/gi,
             'lose ', "'loose' (not tight) should be 'lose' (to misplace)"],
 
@@ -302,7 +331,16 @@ const PromptMeterGrammar = {
         // "explain it to me" and "explain to me and my team" are untouched.
         [/\bexplain\s+to\s+me\s+(?=(?:how|what|why|when|where|which|the|a|an|this|that|in|simply)\b)/gi,
             'explain ', "'explain to me X' should be 'explain X'"],
-        [/\b(discuss|describe|mention|emphasi[sz]e)\s+(?:about|on)\b/gi, '$1', "'$1 about' should be just '$1'"],
+        [/\b((?:discuss|describe|mention|emphasi[sz]e)(?:es|s|ed|d|ing)?)\s+(?:about|on)\b/gi, '$1', "'$1 about' should be just '$1'"],
+        [/\bmarried\s+with\b/gi, 'married to', "'married with' should be 'married to'"],
+        // Stative verbs are not used in the progressive: "I am knowing" -> "I know".
+        [/\b(i|we|you|they|he|she|it)\s+(am|is|are)\s+(knowing|understanding|liking|wanting|needing|believing|owning|preferring|meaning|remembering)\b/gi,
+            (m, subj, be, ing) => { const base = ing.toLowerCase().replace(/ing$/, '').replace(/^(understand|know|want|need|own|mean|prefer|remember)$/, '$1').replace(/^(lik|believ)$/, '$1e'); const third = /^(he|she|it)$/i.test(subj); return `${subj} ${third ? base + 's' : base}`; },
+            "a state verb ('know', 'want') does not take '-ing'"],
+        // "one of my friend want" -> "one of my friends wants"
+        [/\b(one\s+of\s+(?:my|the|our|your|his|her|their|these|those))\s+([a-z]{3,}?)(?<![s])\s+(want|need|have|do|go|like|love|live|work|study|say|are|were)\b/gi,
+            (m, lead, noun, verb) => { const v = verb.toLowerCase(); const sg = { have: 'has', do: 'does', go: 'goes', are: 'is', were: 'was', study: 'studies', say: 'says' }[v] || v + 's'; const pl = /(?:s|x|z|ch|sh)$/.test(noun) ? noun + 'es' : /[^aeiou]y$/.test(noun) ? noun.slice(0, -1) + 'ies' : noun + 's'; return `${lead} ${pl} ${sg}`; },
+            "'one of' takes a plural noun and a singular verb"],
         [/\b(compris(?:es|e|ed))\s+of\b/gi, '$1', "'comprise of' should be 'comprise'"],
         [/\b(return|reply|revert)\s+back\b/gi, '$1', "'$1 back' is redundant"],
         [/\brepeat\s+again\b/gi, 'repeat', "'repeat again' is redundant"],
@@ -468,7 +506,9 @@ const PromptMeterGrammar = {
         // The lookbehind keeps it off a compound subject. "He and I were talking" is
         // correct and is what fixCompoundAgreement just produced; without this guard the
         // rule undoes that repair and puts the singular verb straight back.
-        out = out.replace(/(?<!\b(?:and|or)\s)\bI\s+(are|were|aren't|weren't)\b/g, (match, verb) => {
+        // Nor after a conditional: "If I were rich" is the subjunctive, and "I was"
+        // there is the error, not the fix.
+        out = out.replace(/(?<!\b(?:and|or|[Ii]f|[Ww]ish|[Tt]hough|[Ss]uppose|[Ii]magine|[Pp]retend)\s)\bI\s+(are|were|aren't|weren't)\b/g, (match, verb) => {
             const forI = { are: 'am', were: 'was', "aren't": 'am not', "weren't": "wasn't" };
             const fixed = forI[verb.toLowerCase()];
             issues.push({ type: 'agreement', label: `"I ${verb}" should be "I ${fixed}"` });
@@ -909,7 +949,7 @@ const PromptMeterGrammar = {
         if (changed) issues.push({ type: 'capitalization', label: 'capitalization corrected' });
 
         // Sentence openings, last, so it also catches openings the rules above exposed.
-        const withSentences = out.replace(/(^|[.!?]\s+)([a-z])/g,
+        const withSentences = out.replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)/g,
             (match, lead, letter) => lead + letter.toUpperCase());
         if (withSentences !== out) {
             out = withSentences;

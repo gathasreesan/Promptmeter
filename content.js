@@ -1122,6 +1122,15 @@ function analyzeAndOfferOptimization(text, keepOpen) {
         optimized = text;
     }
 
+    // In a conversation already under way, a short follow-up ("fix it", "more", "same
+    // but shorter") refers to the last reply, which this prompt cannot see. Warning that
+    // "it" points at nothing, or that no request is stated, is wrong there; in a new
+    // chat the same warning is right, so it stays for first messages.
+    if (getAssistantMessages().length > 0 && text.split(/\s+/).length <= 8) {
+        const FOLLOW_UP_NOISE = /first thing the prompt mentions|Does not clearly state|stops part-way|not included|vague terms/i;
+        grammarIssues = grammarIssues.filter(issue => !FOLLOW_UP_NOISE.test(issue.label || issue.explanation || ''));
+    }
+
     // Rows describe the suggestion, so a correction it does not contain is dropped:
     // a typo inside a quote the compressor protected, or "pls" -> "please" when "pls"
     // was removed outright. Listing those promised fixes Apply would not make.

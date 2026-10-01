@@ -1400,10 +1400,45 @@ const PromptMeterSpelling = {
      * @param {string} word - Lowercased, alphabetic.
      * @returns {string|null}
      */
+    /**
+     * Fallback for words the core dictionary cannot reach: "phhotosynthesis", "hiku",
+     * "entangelment", "emoojis" all have their answer in the attested list, which used
+     * to be exempt-only and never a target. Only the two safest edit shapes, against
+     * known OR attested words, and only when exactly one word fits:
+     *   doubled letter  "phhotosynthesis" -> "photosynthesis"
+     *   swapped pair    "entangelment"    -> "entanglement"
+     * The first letter never changes. Anything ambiguous stays as typed.
+     */
+    safeEdit: function (word) {
+        if (word.length < 4 || word.length > 24 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word)) return null;
+        // Consonant + y pluralised with a bare -s: "companys" -> "companies".
+        const ies = /[^aeiou]ys$/.test(word) && word.slice(0, -2) + 'ies';
+        if (ies && (this.known(ies) || this.attested.has(ies))) return ies;
+        const real = (w) => w !== word && w[0] === word[0] && (this.known(w) || this.attested.has(w));
+        const hits = new Set();
+        for (let i = 1; i < word.length; i++) {
+            if (word[i] === word[i - 1]) {                       // doubled letter
+                const w = word.slice(0, i) + word.slice(i + 1);
+                if (real(w)) hits.add(w);
+            }
+            // Swapped pair: long words only. Measured on 37k real misspellings a swap
+            // into a short rare word was right barely half the time.
+            if (i < word.length - 1 && word.length >= 7) {
+                const w = word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2);
+                if (real(w)) hits.add(w);
+            }
+        }
+        // No missing-letter shape: it turns real words the lists lack into other
+        // words ("caching" -> "catching", "memoization" -> "memorization"), and on 37k
+        // real misspellings it was right only half the time.
+        return hits.size === 1 ? [...hits][0] : null;
+    },
+
     correctWord: function (word) {
         if (this.cache.has(word)) return this.cache.get(word);
 
-        const result = this.resolve(word);
+        const result = this.resolve(word) || this.safeEdit(word);
         this.cache.set(word, result);
         return result;
     },

@@ -181,7 +181,7 @@ const PromptMeterCompress = {
     // Also a colon after an instruction verb: "Translate to Hindi:", "Proofread my
     // email:", "rewrite this paragraph in formal tone: ..." -- live testing caught the
     // text to translate deleted as a greeting and the email to proofread trimmed.
-    PAYLOAD_MARKER: /\bfollowing\b[^:\n]{0,40}:|\b(?:below|here)\s*:|\b(?:text|paragraph|article|passage|email|message|essay|story|code|sentences?|list|document|poem)\s+below\b[^\n]*\n|\b(?:translate|proofread|fix|correct|check|rewrite|rephrase|paraphrase|summari[sz]e|improve|edit|polish|shorten|simplify|explain|analy[sz]e|review|grade|rate|make\s+it\s+(?:better|shorter|formal|professional))\b[^:\n]{0,60}:(?!\/\/)/i,
+    PAYLOAD_MARKER: /\bfollowing\b[^:\n]{0,300}:|\b(?:below|here)\s*:|\b(?:text|paragraph|article|passage|email|message|essay|story|code|sentences?|list|document|poem)\s+below\b[^\n]*\n|\b(?:translate|proofread|fix|correct|check|rewrite|rephrase|paraphrase|summari[sz]e|improve|edit|polish|shorten|simplify|explain|analy[sz]e|review|grade|rate|make\s+it\s+(?:better|shorter|formal|professional))\b[^:\n]{0,60}:(?!\/\/)|\bfollowing\b[^:\n]{0,80}[.:]?[ \t]*(?=\n)|(?=\n[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:)|^[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:[ \t]*/i,
 
     // Capitalised shorthand people type that names nothing, and the assistant itself,
     // which "Hey ChatGPT," addresses rather than asks about.
@@ -406,6 +406,12 @@ const PromptMeterCompress = {
         if (/\p{L}/u.test(original) && !/\p{L}/u.test(candidate)) {
             return { valid: false, violations: [{ rule: 'empty', detail: 'no words left' }] };
         }
+        // "Hi Vicuna! How are you?" became "Vicuna!": one word left of a real prompt
+        // is the leftover of the strippers, not a shorter prompt.
+        const wordCount = (s) => (s.match(/\p{L}+/gu) || []).length;
+        if (wordCount(candidate) <= 1 && wordCount(original) >= 3) {
+            return { valid: false, violations: [{ rule: 'empty', detail: 'one word left' }] };
+        }
 
         // Names. "Also BASE. And MongoDB. And Postgres." were dropped as fragments and
         // "Thanks to the new API, ..." as a thank-you; each was a thing the user asked
@@ -423,8 +429,14 @@ const PromptMeterCompress = {
         // List items. A numbered or bulleted line is an enumerated requirement:
         // "3. Mobile first" was emptied to "3." and nothing noticed.
         const kept = this.contentWords(candidate);
-        (original.match(/^[ \t]*(?:\d+[.)]|[-*•])[ \t]+.+$/gm) || []).forEach((item) => {
-            const lost = [...this.contentWords(item)].filter((word) => !kept.has(word));
+        const lineWords = candidate.split('\n').map((line) => this.contentWords(line));
+        (original.match(/^[ \t]*(?:\d+\s*[.)\-]|[-*•])[ \t]+.+$/gm) || []).forEach((item) => {
+            const words = [...this.contentWords(item)];
+            // Every word of the item in one line of the candidate: "Never received
+            // item... never received refund." lost its second half and passed, because
+            // "refund" survived in the item below it.
+            const whole = lineWords.some((set) => words.every((word) => set.has(word)));
+            const lost = whole ? [] : words.filter((word) => !kept.has(word)).concat(['(split)']);
             if (lost.length) violations.push({ rule: 'list-item', detail: item.trim().slice(0, 40) });
         });
 
@@ -586,7 +598,15 @@ const PromptMeterCompress = {
                 if (/:\s*$/.test(head) && !/:$/.test(text)) text = text.replace(/[.!?]$/, '') + ':';
                 return Object.assign({}, c, { text: text + sep + tail.replace(/^\s*/, '') });
             });
-            joined.analysis = inner.analysis;
+            // The instruction was analysed without its payload, so advice that only
+            // holds for an instruction with nothing after it ("stops part-way", "this"
+            // points at nothing, "refers to something not included") is dropped: the
+            // payload is that something.
+            const forward = /stops part-way|first thing the prompt mentions|not included/i;
+            joined.analysis = inner.analysis && Object.assign({}, inner.analysis, {
+                findings: (inner.analysis.findings || [])
+                    .filter((f) => !forward.test(f.explanation || f.label || ''))
+            });
             return joined;
         }
 
@@ -741,6 +761,27 @@ const PromptMeterCompress = {
      *   }
      */
     compress: function (prompt, options) {
+        const first = this.compressOnce(prompt, options);
+        if ((options && options.settled) || first.text === prompt) return first;
+        const again = this.compressOnce(first.text, Object.assign({}, options, { settled: true }));
+        if (again.text === first.text) return first;
+        const corrected = (first.candidates || []).find((c) => c.mode === 'conservative');
+        if (!this.validate(prompt, again.text, { alsoAllow: corrected && corrected.text }).valid) return first;
+        const optimized = PM_C_TOKENIZER ? PM_C_TOKENIZER.countTokens(again.text) : 0;
+        if (optimized > first.tokens.optimized) return first;
+        const original = first.tokens.original;
+        return Object.assign({}, first, {
+            text: again.text,
+            tokens: Object.assign({}, first.tokens, {
+                optimized: optimized,
+                saved: original - optimized,
+                percent: original > 0 ? Math.round(((original - optimized) / original) * 100) : 0,
+                netSaved: (original - optimized) * Math.max(1, (options && options.repeats) || 1)
+            })
+        });
+    },
+
+    compressOnce: function (prompt, options) {
         const settings = options || {};
         const started = Date.now();
 
@@ -825,7 +866,11 @@ const PromptMeterCompress = {
         // A correction is worth a token; the card marks a rewrite that costs one.
         // Case and spacing alone ("explain" -> "Explain") are not worth interrupting for.
         let correctedOnly = false;
-        const loose = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+        // Case alone does not count -- except where it fixes something: "i" -> "I",
+        // "kerala" -> "Kerala", "nasa" -> "NASA", a prompt typed in capitals. Only the
+        // capital at the start of a sentence is cosmetic, so only that is folded away.
+        const loose = (s) => s.replace(/\s+/g, ' ').trim()
+            .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase());
         // Among the corrected candidates the level allows, the shortest: fixing typos can
         // cost as many tokens as Trim saves ("btwn ram n rom plz" -> "between RAM and
         // ROM"), and falling back to the Fix text then put "please" back in.
