@@ -1,4 +1,13 @@
 console.log("[PromptMeter] active on ChatGPT");
+// Lets background.js tell whether this tab already runs the current copy, so a reload
+// of the extension injects into open tabs that need it and skips the ones that do not.
+window.__promptMeterActive = true;
+
+// True once the extension has been reloaded under this tab. This copy is then cut off
+// from chrome.* and a fresh copy, injected by background.js, owns the page: this one
+// must do nothing at all -- hiding "its" card would hide the new copy's card, which
+// shares the element id.
+const isOrphaned = () => typeof chrome !== 'undefined' && !!chrome.runtime && !chrome.runtime.id;
 
 // Each util is loaded as its own content script, so one of them failing to parse leaves
 // the others running and the failure is easy to miss. Report what actually arrived.
@@ -327,6 +336,7 @@ function estimateDocumentTokens(pillText) {
 
 // 1. Monitor active typing inside the prompt box
 function handleInput(e) {
+    if (isOrphaned()) return;
     if (!isPromptMeterEnabled) {
         hideOptimizationCard();
         return;
@@ -1488,6 +1498,20 @@ function isFromPromptBox(event) {
     return !!(box && target && (target === box || box.contains(target)));
 }
 document.addEventListener('input', (event) => { if (isFromPromptBox(event)) handleInput(event); }, true);
+
+// A prompt can be in the box without any typing: ChatGPT restores an unsent draft on
+// load and when switching back to a chat, and no input event fires for it. The card
+// waited for the next keystroke, which read as "it does not pop up". So the box is
+// read when it gains focus, and once shortly after load.
+document.addEventListener('focusin', (event) => {
+    if (!isFromPromptBox(event)) return;
+    const card = document.getElementById("promptmeter-opt-card");
+    if (!(card && card.classList.contains('visible'))) handleInput(event);
+}, true);
+setTimeout(() => {
+    const box = getPromptBox();
+    if (box && readText(box).split(/\s+/).length >= MIN_METER_WORDS) handleInput({ target: box });
+}, 1500);
 document.addEventListener('paste', (event) => { if (isFromPromptBox(event)) handleInput(event); }, true);
 
 bindInputListeners();
@@ -1569,11 +1593,10 @@ const observer = new MutationObserver(() => {
     // The extension was reloaded under this tab: this copy of the script is orphaned and
     // every chrome.* call would throw. Stand down cleanly; the fresh copy takes over when
     // the page reloads.
-    if (typeof chrome !== 'undefined' && chrome.runtime && !chrome.runtime.id) {
+    if (isOrphaned()) {
         observer.disconnect();
-        hideOptimizationCard();
         isPromptMeterEnabled = false;
-        console.info('[PromptMeter] extension was reloaded; refresh this tab to use the new version.');
+        console.info('[PromptMeter] extension was reloaded; the new copy has taken over this tab.');
         return;
     }
     if (observerThrottleTimeout) return;
