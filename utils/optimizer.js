@@ -328,7 +328,7 @@ const PromptMeterOptimizer = {
         "exm": "exam", "exms": "exams", "xam": "exam", "xams": "exams",
         "assgn": "assignment", "asgn": "assignment", "hmwrk": "homework",
         "prof": "professor", "lec": "lecture", "lect": "lecture",
-        "ques": "question", "qn": "question", "qns": "questions", "ans": "answer",
+        "ques": "question", "qn": "question", "qns": "questions",
         // Connectives and fillers
         "coz": "because", "cuz": "because", "bcoz": "because", "bcz": "because",
         "bcuz": "because", "becoz": "because",
@@ -382,6 +382,21 @@ const PromptMeterOptimizer = {
             word: 'u', replacement: 'you',
             before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and|are|were|r|love|miss|want|need|tell|told|ask|asked|help|show|give|let|see|for|with)$/i,
             after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?|doing|going|feeling|free|sure|ok|okay)\b/i
+        },
+        {
+            // "ans" is "answer" after a word that takes one ("the ans", "give ans")...
+            word: 'ans', replacement: 'answer',
+            before: /\b(?:the|my|your|his|her|their|our|correct|final|right|wrong|give|with|an|short|exact|full|one|its|this|that|for|need|want|send|check|write)$/i
+        },
+        {
+            // ...and "and" between two clauses: "how do we get X ans also why ...".
+            word: 'ans', replacement: 'and',
+            // Any following word, except those that follow "answer" ("ans of q5").
+            after: /^(?!(?:of|for|to|key|keys|sheet|sheets|is|was|in|please|pls|plz)\b)[a-z]/i
+        },
+        {
+            // Anything left on its own is the abbreviation.
+            word: 'ans', replacement: 'answer'
         },
         {
             // Real words typed for other words, decided by the word before them.
@@ -1666,6 +1681,93 @@ const PromptMeterOptimizer = {
             });
     },
 
+    /**
+     * Two questions joined by "and" that end on the same phrase say it once:
+     * "how do we get a good prompt and also why do we need a good prompt" ->
+     * "how do we get and why do we need a good prompt". Both questions survive whole;
+     * only the repeated phrase (three or more words, so not a stray "it") goes.
+     * @param {string} text
+     * @returns {string}
+     */
+    mergeSharedTail: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+        const q = '(?:how|why|what|when|where|which|who|can|could|should|is|are|do|does)';
+        const rx = new RegExp('\\b(' + q + '\\b[^.?!,;\\n]{2,60}?)\\s+([^.?!,;\\n]{3,80}?)\\s+and\\s+(?:also\\s+)?('
+            + q + '\\b[^.?!,;\\n]{2,60}?)\\s+\\2(?=\\s*(?:[.?!]|$))', 'gi');
+        return text.replace(rx, (match, first, shared, second) => {
+            if (shared.trim().split(/\s+/).length < 3) return match;
+            // The shared part must be a noun phrase, and the first question must end on
+            // a verb that takes it: not "how do I learn Python and why should I learn
+            // Python" (shared "I learn Python") or "what is X and how do I write X".
+            if (!/^(?:a|an|the|this|that|these|those|my|your|our|their|his|her|such|good|better|best)\b/i.test(shared.trim())) return match;
+            if (/\b(?:is|are|was|were|be|been)\s*$/i.test(first)) return match;
+            return first + ' and ' + second + ' ' + shared;
+        });
+    },
+
+    /**
+     * A noun phrase said twice in one sentence is said once: "what is a good resume and
+     * how do I write a good resume" -> "... how do I write one"; "the virtual DOM ...
+     * update the virtual DOM" -> "... update it". Only phrases of two words or more
+     * that open with a determiner, only the second mention, and only when nothing
+     * else in between could be what the pronoun points at.
+     * @param {string} text
+     * @returns {string}
+     */
+    pronounForRepeat: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+        const FUNCTION = /^(?:and|or|but|how|what|why|when|where|which|who|do|does|did|i|we|you|is|are|was|were|to|of|in|on|for|with|that|this|it|be|can|should|a|an|the|my|your|our|their|me|so|also|then|if|about|from|by|at|as|not|no|some|any|will|would|could|has|have|had)$/i;
+        const DET = /^(?:a|an|the|this|that|my|your|our|their)$/i;
+        return text.split(/(?<=[.!?])\s+/).map((sentence) => {
+            const tokens = sentence.split(/(\s+)/);          // words and the spaces between
+            const words = [];
+            tokens.forEach((t, i) => { if (!/^\s+$/.test(t) && t) words.push({ t, i }); });
+            const bare = (w) => w.replace(/[.,!?;:]+$/, '');
+            for (let len = 5; len >= 2; len--) {
+                for (let a = 0; a + len <= words.length; a++) {
+                    const phrase = words.slice(a, a + len).map((w) => bare(w.t).toLowerCase());
+                    // Words only: in "x >= 0 and y >= 0" the operator run is not a phrase,
+                    // and replacing it produced "y it".
+                    if (!phrase.every((w) => /^[a-z0-9][\w+#.'-]*$/i.test(w))) continue;
+                    if (phrase.filter((w) => /^[a-z]{2,}/i.test(w)).length < 2) continue;
+                    if (FUNCTION.test(phrase[0]) && !DET.test(phrase[0])) continue;
+                    if (FUNCTION.test(phrase[phrase.length - 1])) continue;
+                    const content = phrase.filter((w) => !FUNCTION.test(w));
+                    if (content.length < (DET.test(phrase[0]) ? 1 : 2)) continue;
+                    // The same phrase again, later, behind an "and".
+                    for (let b = a + len; b + len <= words.length; b++) {
+                        const again = words.slice(b, b + len).map((w) => bare(w.t).toLowerCase());
+                        const sameCore = DET.test(phrase[0])
+                            ? DET.test(again[0]) && again.slice(1).join(' ') === phrase.slice(1).join(' ')
+                            : again.join(' ') === phrase.join(' ');
+                        if (!sameCore) continue;
+                        // After a subject, a modal or "to" the repeat is a verb phrase
+                        // ("why should I learn Python"), and "it" cannot stand for a verb.
+                        const before = b > 0 ? bare(words[b - 1].t).toLowerCase() : '';
+                        if (/^(?:i|we|you|they|he|she|should|can|could|would|will|must|to|shall|might|may|cannot|can't|don't|dont)$/.test(before)) break;
+                        const between = words.slice(a + len, b).map((w) => bare(w.t).toLowerCase());
+                        if (!between.includes('and')) break;
+                        // Another noun phrase in between could be what "it" points at.
+                        // Not when the repeat is the object of "of": in "draw a diagram of
+                        // the water cycle" -> "a diagram of it", "it" cannot be the diagram.
+                        const ofRepeat = between[between.length - 1] === 'of';
+                        if (!ofRepeat && between.some((w, k) => DET.test(w) && between[k + 1] && !FUNCTION.test(between[k + 1]))) break;
+                        const plural = /[^s]s$/.test(phrase[phrase.length - 1]) && content.length >= 1;
+                        const pronoun = /^an?$/.test(again[0]) ? 'one' : plural ? 'them' : 'it';
+                        // Keep trailing punctuation of the replaced phrase.
+                        const lastTok = words[b + len - 1].t;
+                        const punct = (lastTok.match(/[.,!?;:]+$/) || [''])[0];
+                        const out = tokens.slice();
+                        out[words[b].i] = pronoun + punct;
+                        for (let k = b + 1; k < b + len; k++) { out[words[k].i] = ''; out[words[k].i - 1] = ''; }
+                        return out.join('');
+                    }
+                }
+            }
+            return sentence;
+        }).join(' ');
+    },
+
     mergeRepeatedVerbs: function (text) {
         if (typeof text !== 'string' || !text) return text;
 
@@ -2583,6 +2685,8 @@ const PromptMeterOptimizer = {
         // run, so the merged clause is what they see.
         optimized = this.mergeRepeatedVerbs(optimized);
         optimized = this.splitRunOn(optimized);
+        optimized = this.mergeSharedTail(optimized);
+        optimized = this.pronounForRepeat(optimized);
         optimized = this.applyRules(optimized, this.fluffReplacements);
         optimized = this.applyRules(optimized, this.concisePhrases);
         // Again, now the wrappers are gone: "I was wondering if you could possibly help

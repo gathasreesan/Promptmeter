@@ -584,5 +584,27 @@ const cond = (p) => PromptMeterCompress.compress(p, { budgetMs: 1e5, maxMode: 'a
     else { failed++; console.log('FAIL  condense ' + JSON.stringify(p) + '\n      expected ' + JSON.stringify(want) + '\n      got      ' + JSON.stringify(got)); }
 });
 
+// ---------------------------------------------------------------------------
+// Live report: "how to do we get a good and optimised promt ans also why do we need a
+// good and optimised promt" -- "ans" became "answer", "how to do we" stayed, and the
+// repeated phrase was said twice. A repeat is said once; both questions survive.
+// ---------------------------------------------------------------------------
+equals('how to do we get a good and optimised promt ans also why do we need a good and optimised promt',
+       'How do we get and why do we need a good and optimised prompt');
+keeps('cats ans dogs', 'cats and dogs');
+keeps('give me the ans', 'the answer');
+keeps('ans of question 5', 'Answer of question 5');
+equals('how do i write a cover letter and why do i need a cover letter', 'How do I write and why do I need a cover letter');
+equals('what is machine learning and how does machine learning work', 'What is machine learning and how does it work');
+equals('explain the water cycle and also draw a diagram of the water cycle', 'Explain the water cycle and draw a diagram of it');
+equals('what is a good resume and how do i write a good resume', 'What is a good resume and how do I write one');
+equals('what are the best laptops and where can i buy the best laptops', 'What are the best laptops and where can I buy them');
+// Not repeats, or not safe to fold.
+keeps('explain the difference between the stack and the heap', 'the stack and the heap');
+keeps('compare the old phone and the new phone', 'the new phone');
+keeps('write a story about a dog and a cat, and make the dog the hero', 'make the dog the hero');
+keeps('how do i learn python and also why should i learn python', 'why should I learn Python');
+keeps('solve x + 2 = 5 and x + 2 = 7', 'x + 2 = 7');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

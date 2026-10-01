@@ -370,7 +370,7 @@ const PromptMeterCompress = {
     // Words the optimizer's and tighten()'s own rewrites put in place of longer
     // phrases ("in simple terms" -> "simply", "due to the fact that" -> "because").
     // Seeing one in a candidate is not the compressor inventing content.
-    REWRITE_WORDS: new Set(['quickly', 'many', "i'm", 'im', 'summarize', 'summarise', 'teach', 'define', 'plan',
+    REWRITE_WORDS: new Set(['quickly', 'many', "i'm", 'im', 'summarize', 'summarise', 'teach', 'define', 'plan', 'one', 'them',
         'simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
         'beginner', 'should', 'how', 'explain', 'concisely', 'shortly',
         // Corrections the grammar rules make from a different word in the original.
@@ -500,7 +500,10 @@ const PromptMeterCompress = {
         // optimizer removes it, and requiring it to survive threw the fix away.
         const strayDigits = (text) => text.replace(/\b([A-Za-z]+)\d([A-Za-z]+)\b/g,
             (m, a, b) => (a.length + b.length >= 3 ? a + b : m));
-        const beforeNumbers = this.numbersIn(strayDigits(unshorthand(asWords(original))));
+        // Each distinct number once: a value repeated in the original ("the best phone
+        // under 20000 ... buy the best phone under 20000") is one requirement, kept when
+        // the repeated phrase is said once.
+        const beforeNumbers = [...new Set(this.numbersIn(strayDigits(unshorthand(asWords(original)))))];
         const afterNumbers = this.numbersIn(candidate).slice();
         beforeNumbers.forEach((number) => {
             const at = afterNumbers.indexOf(number);

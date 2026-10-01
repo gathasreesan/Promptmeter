@@ -239,6 +239,9 @@ const PromptMeterGrammar = {
             "who's ", "'whose' should be 'who's' (who is)"],
         [/(?<!\b(?:some|any|the|your|my|his|her|our|their|good|this|that|much|of|for|need|needs|want|get|give|an?|great|useful|free|expert|more|no)\s)\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
         [/\bto\s+advice\b/gi, 'to advise', "'advice' (noun) should be 'advise' (verb)"],
+        // "how to do we get": "how to" and "how do we" crossed.
+        [/\b(how|what|why|where|when)\s+to\s+(do|does|did|can|could|should|would|will|is|are)\s+(?=(?:i|we|you|they|he|she|it|one)\b)/gi,
+            '$1 $2 ', "'how to do we' should be 'how do we'"],
         // "i a facing" / "i an going": "am" with a letter dropped, before an -ing verb.
         [/\b(i)\s+an?\s+(?=[a-z]{2,}ing\b)/gi, (m, i) => (i === 'i' ? 'I' : i) + ' am ', "'I a' should be 'I am'"],
         // "different kind of", "many type of": a plural quantifier takes the plural.
