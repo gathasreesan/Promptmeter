@@ -1282,7 +1282,9 @@ const PromptMeterSpelling = {
             word.replace(/ence$/, 'ense')];
         const stems = (w) => {
             const out = [];
-            const add = (stem) => { if (stem.length >= 3) out.push(stem, stem + 'e'); };
+            // A stem with no vowel is an abbreviation, not a word to inflect: "plc" made
+            // "plces" pass as plc + es, so it was never corrected to "places".
+            const add = (stem) => { if (stem.length >= 3 && /[aeiouy]/.test(stem)) out.push(stem, stem + 'e'); };
             let m;
             if ((m = /^(.+)ies$/.exec(w))) out.push(m[1] + 'y');
             if ((m = /^(.+)ied$/.exec(w))) out.push(m[1] + 'y');
@@ -1476,10 +1478,70 @@ const PromptMeterSpelling = {
         return hits.size === 1 ? [...hits][0] : null;
     },
 
+    /**
+     * A typo in an inflected word whose base is in the dictionary but whose inflection
+     * is not: "plces" is "plce" + s, and "plce" corrects to "place". The ranked list
+     * holds base forms, so "places" was never a candidate.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    inflected: function (word) {
+        if (word.length < 5 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const real = (w) => w !== word && (this.known(w) || this.attested.has(w));
+        const found = new Set();
+        for (const ending of ['s', 'es', 'ies', 'ed', 'ing', 'ly']) {
+            if (!word.endsWith(ending) || word.length - ending.length < 3) continue;
+            const base = this.resolve(word.slice(0, -ending.length));
+            if (!base) continue;
+            // Rebuilt the way English spells it -- "accommodate" + ed is "accommodated",
+            // not "accommodateed" -- and accepted only when the result is a listed word.
+            const vowel = /^[aeiouy]/.test(ending);
+            const stem = vowel && base.endsWith('e') ? base.slice(0, -1)
+                : ending === 'ies' && base.endsWith('y') ? base.slice(0, -1) : base;
+            const rebuilt = stem + (ending === 'ies' ? 'ies' : ending);
+            if (real(rebuilt)) found.add(rebuilt);
+        }
+        return found.size === 1 ? [...found][0] : null;
+    },
+
+    // Function words that run into their neighbour when the space is missed.
+    SPLIT_WORDS: new Set('a an the to of in on is it me my you we and or for be do at by as so if up'.split(' ')),
+    PREFIX_LIKE: new Set('a an for in on at be as up by'.split(' ')),
+
+    /**
+     * Two words typed without the space between them: "mea" (me a), "inthe", "tellme".
+     * Last resort, after every single-word correction has declined, and only when one
+     * half is a common function word and exactly one split fits -- anything looser
+     * turns rare real words into pairs.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    split: function (word) {
+        // Short words only, and the other half must be common: measured on Wikipedia's
+        // misspelling list, longer splits read prefixes as words ("inbalance" -> "in
+        // balance", "forhead" -> "for head") and rare halves made "nestin" "nest in".
+        if (word.length < 3 || word.length > 7 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const common = (w) => w.length >= 2 && this.rank.has(w) && this.rank.get(w) < 1500;
+        const fits = [];
+        for (let i = 1; i < word.length; i++) {
+            const left = word.slice(0, i);
+            const right = word.slice(i);
+            // "for", "in", "a", "at", "be", "as", "up" double as prefixes (forehead,
+            // imbalance, accustom), so they are only ever the second half.
+            const ok = (this.SPLIT_WORDS.has(left) && !this.PREFIX_LIKE.has(left) && common(right))
+                || (this.SPLIT_WORDS.has(right) && common(left));
+            if (ok) fits.push(left + ' ' + right);
+        }
+        return fits.length === 1 ? fits[0] : null;
+    },
+
     correctWord: function (word) {
         if (this.cache.has(word)) return this.cache.get(word);
 
-        const result = this.resolve(word) || this.safeEdit(word);
+        const result = this.resolve(word) || this.safeEdit(word) || this.inflected(word)
+            || this.split(word);
         this.cache.set(word, result);
         return result;
     },
@@ -1571,12 +1633,43 @@ const PromptMeterSpelling = {
             if (gap > this.budget(word, candidate)) return;
             scored.push({ word: candidate, gap: gap });
 
+            // On a tie, a reading where the user only DROPPED letters beats one where they
+            // typed a wrong one: "hom" is "home" with a letter missing, and "him" only by
+            // frequency. Omission is the commonest typo; substitution needs a slip.
+            // A swap keeps every letter, so it ranks above an omission: "teh" is "the",
+            // not "tech".
+            const shape = (w) => (w.length === word.length && this.isTransposition(word, w)) ? 2
+                : (w.length > word.length && this.isSubsequence(word, w)) ? 1 : 0;
             if (gap < bestDistance ||
-                (gap === bestDistance && this.rank.get(candidate) < this.rank.get(best))) {
+                (gap === bestDistance && shape(candidate) > shape(best)) ||
+                (gap === bestDistance && shape(candidate) === shape(best)
+                    && this.rank.get(candidate) < this.rank.get(best))) {
                 best = candidate;
                 bestDistance = gap;
             }
         });
+
+        // Two swapped letters keep every letter the user typed, which is stronger
+        // evidence than any dropped or added one. "raom" is one edit from "ram" (drop a
+        // letter) and one from "roam" (swap two), and frequency picked "ram" -- but only
+        // because "roam" is in the attested list, not the ranked dictionary, so it was
+        // never a candidate. When the best guess throws away one of the letters the user
+        // typed, a single same-length swap onto a real word wins. Not when the guess ADDS
+        // a letter: a dropped letter is the commonest typo of all, and "formla" is
+        // "formula", not "formal". Four letters and up: at three a swap is how acronyms
+        // look ("dma", "dsa").
+        if (word.length >= 4 && (!best || best.length < word.length)) {
+            const swaps = new Set();
+            for (let i = 1; i < word.length - 1; i++) {
+                if (word[i] === word[i + 1]) continue;
+                const swapped = word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2);
+                if (this.known(swapped) || this.attested.has(swapped)) swaps.add(swapped);
+            }
+            if (swaps.size === 1) {
+                best = [...swaps][0];
+                bestDistance = 1;
+            }
+        }
 
         // A three-letter word has too little signal to overrule what the user typed, so it
         // has to clear one of two bars. See SHORT_WORD_MAX_RANK.
@@ -1822,7 +1915,12 @@ PromptMeterSpelling.misspellings = (typeof PM_MISSPELLINGS !== 'undefined')
 // one-consonant skeleton, and "queues" and "sentence" sit behind attested look-alikes.
 Object.assign(PromptMeterSpelling.misspellings = Object.assign({}, PromptMeterSpelling.misspellings), {
     queu: 'queue', queus: 'queues', qeue: 'queue', qeues: 'queues',
-    sentance: 'sentence', sentances: 'sentences'
+    sentance: 'sentence', sentances: 'sentences',
+    // "Ned" the name is attested, so the lowercase typo of "need" passed as a word.
+    ned: 'need', neds: 'needs', neded: 'needed', neding: 'needing',
+    // A real tie (formula minus a letter, formal with two swapped) that the shape
+    // ranking resolves the wrong way for this word.
+    formla: 'formula', formlas: 'formulas', formlae: 'formulae'
 });
 
 PromptMeterSpelling.rank = new Map();

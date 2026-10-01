@@ -440,5 +440,29 @@ keeps('difference between stacks and queus', 'queues');
 keeps('the job was canceled', 'canceled');
 keeps('labeled data for training', 'labeled');
 
+// ---------------------------------------------------------------------------
+// Live report: "give mea tour plan to raom in kochi for a day" became "...to ram...",
+// and "ned" was never corrected. Each case below is one cause.
+// ---------------------------------------------------------------------------
+equals('give mea tour plan to raom in kochi for a day', 'Give me a tour plan to roam in Kochi for a day');
+equals('i ned help with my code', 'I need help with my code');
+keeps('ask Ned about the report', 'Ned');                        // the name stays
+keeps('waht is the formla for area of circle', 'formula');       // a dropped letter, not "formal"
+keeps('how to cok biriyani at hom', 'cook biriyani at home');    // two-letter words are English evidence
+keeps('teh results', 'The');                                     // a swap beats an omission ("tech")
+keeps('best plces to vist in munnar', 'places');                 // inflection of a corrected base
+keeps('write notes on algoritms', 'algorithms');
+keeps('tellme abt recursion', 'Tell me');
+keeps('what happens inthe kernel', 'in the');
+// The constraint "in java" must not be read out of "in javascirpt", or the corrected
+// "in JavaScript" fails validation and the whole fix is thrown away.
+equals('sort an aray in javascirpt', 'Sort an array in JavaScript');
+keeps('diffrence btw tcp and udp in detial', 'between TCP and UDP');
+keeps('btw can u explain recursion', 'By the way');
+keeps('wat r the advntages of cloud computng', 'What are the advantages');
+keeps('sugest some gud books for dsa', 'good books');
+keeps('tel me a joke abut cats', 'about cats');
+keeps('the two buildings abut each other', 'abut');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

@@ -328,6 +328,7 @@ const PromptMeterOptimizer = {
         "b4": "before", "gr8": "great", "msg": "message", "msgs": "messages",
         "thnx": "thanks", "tnx": "thanks", "thanx": "thanks", "btwn": "between", "bw": "between",
         "idk": "I do not know", "imo": "in my opinion", "btw": "by the way",
+        "gud": "good",
         // Modals. The corrector alone turned "shud" into "stud".
         "shud": "should", "shld": "should", "wud": "would", "wld": "would", "cud": "could", "cld": "could"
     },
@@ -368,9 +369,16 @@ const PromptMeterOptimizer = {
             after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?|doing|going|feeling|free|sure|ok|okay)\b/i
         },
         {
+            // "abut" is a real verb, so the corrector leaves it -- but after a word that
+            // takes "about" it is always the typo: "a joke abut cats", "tell me abut X".
+            word: 'abut', replacement: 'about',
+            before: /\b(?:joke|jokes|story|stories|me|us|talk|talking|know|think|thinking|more|all|question|questions|info|information|details|something|anything|everything|nothing|notes|essay|article|is|was|it's|care|worry|worried|sure|curious|confused)$/i
+        },
+        {
             // "u r wrong", "r u there" -- only ever next to a second-person pronoun.
             word: 'r', replacement: 'are',
-            before: /\b(?:u|you|we|they|there)$/i,
+            // ...and after a question word: "wat r the advantages", "how r things".
+            before: /\b(?:u|you|we|they|there|what|wat|wht|where|how|why|who|which|when)$/i,
             after: /^(?:u|you|we|they|there)\b/i
         },
         {
@@ -1166,6 +1174,10 @@ const PromptMeterOptimizer = {
         //    because its one- and two-letter keys need the guards in that method.
         str = this.normalizeShouting(str);
         if (englishEnough) {
+            // "btw" is "by the way" -- except after a comparison, where it is "between":
+            // "difference btw tcp and udp" came out as "Difference by the way TCP and UDP".
+            str = str.replace(/\b(differences?|diff|compare|comparison|contrast|distinguish|relation(?:ship)?|gap|link|choose|choice|similarit(?:y|ies))\s+btw\b/gi,
+                '$1 between');
             str = this.replaceAll(str, this.compiled.slang, this.chatSlangMap, false);
             str = this.expandContextualSlang(str);
         }
@@ -1570,7 +1582,10 @@ const PromptMeterOptimizer = {
         // One- and two-letter tokens are evidence either way and should not dilute the
         // ratio. "a + b + c" is three tokens of pure arithmetic; counting them as
         // not-English made a sentence of maths and typos look like another language.
-        const informative = words.filter((w) => w.length >= 3);
+        const informative = words.filter((w) => w.length >= 3
+            // A two-letter dictionary word ("to", "at", "an", "in") is evidence too:
+            // dropping them made "how to cok biriyani at hom" read as foreign.
+            || (w.length === 2 && PM_SPELL && PM_SPELL.known && PM_SPELL.known(w)));
         const scored = informative.length ? informative : words;
 
         // A word the corrector can repair is English that was typed badly: "a + b + c teh
@@ -1664,7 +1679,10 @@ const PromptMeterOptimizer = {
         // corrector was skipped and "importnt" shipped uncorrected. Symbol-and-initialism
         // prose is extremely common in real prompts.
         const acronym = (word) => Object.prototype.hasOwnProperty.call(this.techAcronymMap || {}, word);
-        const informative = words.filter((w) => w.length >= 3);
+        const informative = words.filter((w) => w.length >= 3
+            // A two-letter dictionary word ("to", "at", "an", "in") is evidence too:
+            // dropping them made "how to cok biriyani at hom" read as foreign.
+            || (w.length === 2 && PM_SPELL && PM_SPELL.known && PM_SPELL.known(w)));
         const counted = informative.length ? informative : words;
         let known = 0;
         for (const word of counted) {

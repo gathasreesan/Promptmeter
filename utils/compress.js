@@ -166,7 +166,9 @@ const PromptMeterCompress = {
         /\b(?:to not|not to|without)\s+\w+/gi,
         /\b(?:would|'d)\s+(?:really\s+)?(?:like|love|prefer)\s+(?:it\s+)?(?:to|if|that)\b[^.!?\n]*/gi,
         /\bappreciate\s+it\s+if\b[^.!?\n]*/gi,
-        /\bin\s+(?:python|javascript|typescript|java|c\+\+|c#|go|rust|ruby|php|sql)\s*\d*\.?\d*/gi,
+        // (?!\w): without it "in javascirpt" read as the constraint "in java", which the
+        // corrected "in JavaScript" then failed, so the typo fix was thrown away.
+        /\bin\s+(?:python|javascript|typescript|java|c\+\+|c#|go|rust|ruby|php|sql)(?!\w)\s*\d*\.?\d*/gi,
         // Depth and style of the answer. "In detail" after a question was dropped as a
         // fragment; "Use O(n) time" and "step by step" are the shape of the answer.
         /\b(?:in (?:great |full |more )?detail|in depth|in-depth|briefly|step[- ]by[- ]step|with (?:an? |some )?examples?|in O\([^)]+\)|O\([^)]+\) (?:time|space))\b/gi,
