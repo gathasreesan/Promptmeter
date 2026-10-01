@@ -732,6 +732,8 @@ const PromptMeterAnalysis = {
         // "the the the", which is still not English. Numbers are excluded: two
         // adjacent identical numbers are usually one value ("1 1/2").
         fixed = PM_A_OPTIMIZER.collapseAdjacentRepeats(fixed);
+        // A statement and a question run together is a punctuation error too.
+        if (PM_A_OPTIMIZER.splitRunOn) fixed = PM_A_OPTIMIZER.splitRunOn(fixed);
 
         return PM_A_PROTECT.unmask(fixed, masked.spans);
     },

@@ -144,6 +144,9 @@ const PromptMeterCondense = {
     // whether a prompt still asks for something -- an imperative that follows a comma-
     // less preamble ("...exam tomorrow teach me ML") is invisible to the anchored
     // patterns above.
+    // ...or a stated need for a deliverable: "...tomorrow I need notes for dma".
+    MID_NEED: /\b(?:i|we)\s+(?:really\s+)?(?:need|want|would\s+like|'d\s+like)\s+(?:some\s+|a\s+|an\s+|the\s+|short\s+|quick\s+|good\s+)*(?:notes|help|tips|ideas|summary|summaries|explanation|answers?|examples?|code|list|plan|steps|questions|essay|email|letter|program|solution|guide|overview|outline|report|advice|suggestions|recommendations|points|definition|diagram|table|script)\b/i,
+
     MID_ASK: /\b(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk)\s+(?:me|us|my|our|the|a|an|this|that|these|those|it|how|what|why|when|where|which|about|some|more|\d+|[a-z]{2,})\b/i,
 
     // "I need you to write X" is an instruction wearing a wrapper. The wrapper is
@@ -212,6 +215,10 @@ const PromptMeterCondense = {
         'outline', 'rewrite', 'improve', 'check', 'debug', 'walk', 'define', 'derive',
         'prove', 'simplify', 'elaborate', 'clarify', 'plan', 'prepare', 'study', 'learn',
         'revise', 'guide', 'quiz', 'test', 'practice', 'start', 'begin',
+        // "I need notes for dma", "I want a summary": a stated need is the request.
+        // Without these, "I have an exam tomorrow I need notes for dma" found no ask
+        // once the exam clause was gone, and kept the whole prompt.
+        'need', 'want',
         'what', 'why', 'how', 'when', 'where', 'which', 'who', 'whose',
         'can', 'could', 'should', 'would', 'will', 'is', 'are', 'do', 'does', 'did',
         'need', 'want', 'please'
@@ -313,7 +320,9 @@ const PromptMeterCondense = {
     // study plan for my exam" (nothing but the occasion names a subject) while clearing
     // "the key points of operating systems for my exam".
     SITUATIONAL_TAIL_CORES: [
-        "\\s+(?:for|before|ahead\\s+of|in\\s+time\\s+for|because\\s+of)\\s+(?:my|our|the|this|next)\\s+(?:upcoming\\s+|big\\s+)?EVENT\\b(?:\\s+(?:tomorrow|today|tonight|next\\s+\\w+|this\\s+\\w+|on\\s+\\w+))?"
+        // (?!...): the occasion word modifying a following noun is not an occasion --
+        // "ideas for my final year project" lost "for my final" and read "ideas year".
+        "\\s+(?:for|before|ahead\\s+of|in\\s+time\\s+for|because\\s+of)\\s+(?:my|our|the|this|next)\\s+(?:upcoming\\s+|big\\s+)?EVENT\\b(?!\\s+(?:year|yr|years|project|projects|round|version|draft|answer|report|presentation|thesis|submission|semester|sem|grade|class|term|stage|phase|level|step|product|design|model|code|output|results?|score|marks|topics?|syllabus|portion))(?:\\s+(?:tomorrow|today|tonight|next\\s+\\w+|this\\s+\\w+|on\\s+\\w+))?"
     ],
 
     /**
@@ -336,7 +345,9 @@ const PromptMeterCondense = {
         // A dot only inside a token ("Node.js", "3.5"): as a token's last character it
         // is the sentence's full stop, and taking it glued the next sentence on --
         // "...before and I am panicking lol. Can you give me" became "before give me".
-        const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’/+#-]+(?:\\.[A-Za-z0-9]+)*){0,10}`;
+        // Nor into "I need ..." / "we want ...": a new clause that states the request,
+        // run on without punctuation ("I have an exam tomorrow I need notes for dma").
+        const tail = `(?:\\s+(?!${stop}\\b)(?!(?:i|we)\\s+(?:need|want|would|'d)\\b)[A-Za-z0-9$%'’/+#-]+(?:\\.[A-Za-z0-9]+)*){0,10}`;
 
         // A context clause is recognised in exactly two positions: at the start of a
         // clause, optionally behind one or two lead-ins ("so basically my professor
@@ -394,7 +405,7 @@ const PromptMeterCondense = {
         if (text.indexOf('?') !== -1) return true;
         // A request does not always start a clause. "I have an exam tomorrow teach me
         // ML" holds no punctuation at all, so the verb is looked for mid-sentence too.
-        if (this.MID_ASK.test(text)) return true;
+        if (this.MID_ASK.test(text) || this.MID_NEED.test(text)) return true;
 
         return text.split(/[.!?;,\n]+/).some(clause => {
             const trimmed = clause.trim();
@@ -472,6 +483,20 @@ const PromptMeterCondense = {
         if (!this.hasAsk(out)) return text;
         // Guard 2: the subject must not have left with the circumstances.
         if (this.topicWords(out).length === 0) return text;
+        // Guard 4: the request is only a generic noun ("tips", "ideas", "advice") with
+        // nothing saying what about, and the removed clause held the topic. "I am
+        // preparing for my interview so can you give me some tips" became "Give tips".
+        const GENERIC = /^(?:tips?|advice|ideas?|suggestions?|guidance|help|notes?|questions?|resources?|plan|strategy|strategies|recommendations?|some|me|give|share|list|suggest|provide|any|good|best|few)$/;
+        const left = this.topicWords(out);
+        if (left.length && left.every((word) => GENERIC.test(word))
+            && !/\b(?:on|for|about|regarding|to|of)\s+\w/i.test(out)) return text;
+        // Guard 3: the request points back at what was removed. "I am really confused
+        // about pointers in C, can you explain them with a simple example" kept a topic
+        // word ("example") and lost the topic: "Explain them with a simple example".
+        if (/\b(?:explain|describe|teach|show|clarify|simplify|break\s+down|go\s+over|help\s+me\s+with|tell\s+me\s+about)\s+(?:them|it|this|that|these|those)\b/i.test(out)) {
+            const kept = new Set(this.topicWords(out));
+            if (this.topicWords(text).some((word) => !kept.has(word))) return text;
+        }
 
         return out;
     },

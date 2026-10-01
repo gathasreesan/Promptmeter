@@ -1505,6 +1505,36 @@ const PromptMeterSpelling = {
         return found.size === 1 ? [...found][0] : null;
     },
 
+    /**
+     * One letter missing from a long word that is attested but not in the ranked list:
+     * "photosynthsis", "disadvantges". The ranked list is only a few thousand words,
+     * so long subject vocabulary is attested-only and was never a candidate. Seven
+     * letters and up, and exactly one word may fit.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    droppedLetter: function (word) {
+        if (word.length < 7 || word.length > 24 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const fits = new Set();
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        // Middle positions only. A letter added right after the first ("deadlocks" ->
+        // "dreadlocks") or at the end ("aggrieve" -> "aggrieved") turns a real word
+        // the lists lack into a different real word; measured on a large English word
+        // list those two positions made most of this rule's false corrections.
+        for (let i = 2; i < word.length; i++) {
+            for (const c of letters) {
+                const w = word.slice(0, i) + c + word.slice(i);
+                // Attested-only targets: ranked words were already weighed by resolve(),
+                // which declines "memoization" -> "memorization" on purpose. Any ranked
+                // word in reach also blocks the guess, for the same reason.
+                if (this.known(w)) return null;
+                if (this.attested.has(w)) fits.add(w);
+            }
+        }
+        return fits.size === 1 ? [...fits][0] : null;
+    },
+
     // Function words that run into their neighbour when the space is missed.
     SPLIT_WORDS: new Set('a an the to of in on is it me my you we and or for be do at by as so if up'.split(' ')),
     PREFIX_LIKE: new Set('a an for in on at be as up by'.split(' ')),
@@ -1541,7 +1571,7 @@ const PromptMeterSpelling = {
         if (this.cache.has(word)) return this.cache.get(word);
 
         const result = this.resolve(word) || this.safeEdit(word) || this.inflected(word)
-            || this.split(word);
+            || this.droppedLetter(word) || this.split(word);
         this.cache.set(word, result);
         return result;
     },
@@ -1566,6 +1596,11 @@ const PromptMeterSpelling = {
             const doubled = undoubled[1] + undoubled[2] + undoubled[2] + undoubled[3];
             if (this.known(doubled)) return doubled;
         }
+        // A silent e kept before -ing: "gameing", "useing". formOfKnown reads them as
+        // game+ing and use+ing; English drops the e. Not "ageing" or "queueing", which
+        // are attested spellings and return above.
+        const keptE = /^(.*[^aeiouy])eing$/.exec(word);
+        if (keptE && !this.attested.has(word) && this.known(keptE[1] + 'e')) return keptE[1] + 'ing';
         if (this.attested.has(word) || this.formOfKnown(word)) return null;
 
         // A skeleton of one consonant carries almost no evidence -- "bee" reduces to "b",
@@ -1906,6 +1941,21 @@ PromptMeterSpelling.firstNames = new Set(((typeof PM_FIRST_NAMES !== 'undefined'
     + 'tailwind kotlin rustc cargo gradle maven numpy scipy pandas sklearn keras pytorch '
     + 'fastapi flask django laravel rails nginx redis kafka spark hadoop terraform ansible '
     + 'kubectl helm grafana jupyter colab figma canva notion jira trello calculus')
+    .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
+// Technical vocabulary the lists lack, one letter from a word they have: "memoization"
+// became "memorization" once long words could be repaired by a missing letter.
+('memoization memoize memoized memoizing tokenization tokenize tokenizer tokenizers '
+    + 'serialization deserialization serialize deserialize virtualization containerization '
+    + 'parallelization vectorization vectorize quantization quantize linearizability '
+    + 'idempotent idempotency polymorphism encapsulation inheritance instantiation '
+    + 'instantiate refactoring refactor middleware dataframe dataframes hashmap hashmaps '
+    + 'hashtable hashtables backpropagation regularization hyperparameter hyperparameters '
+    + 'embeddings embedding transpile transpiler minification minify debounce debouncing '
+    + 'throttling mutex mutexes semaphore semaphores enum enums tuple tuples iterable '
+    + 'iterator iterators coroutine coroutines async boolean booleans nullable getter '
+    + 'getters setter setters runtime runtimes webhook webhooks localhost namespace '
+    + 'namespaces subnet subnets kubernetes dockerfile monorepo microservice microservices '
+    + 'deadlock deadlocks livelock livelocks spinlock spinlocks')
     .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
 // Known misspellings with their fix (same generated file). Looked up before ranking.
 PromptMeterSpelling.misspellings = (typeof PM_MISSPELLINGS !== 'undefined')

@@ -119,7 +119,7 @@ equals('i want to know about recursion, and i want to know about memoization',
 equals('i am curious about ml, then i want to see examples',
     'Explain ML, then show examples');
 keeps('help me understand joins, and also help me understand indexes',
-    'and also explain indexes');
+    'and explain indexes');
 
 // The connective itself must survive: dropping it leaves two unlinked commands.
 keeps('i want to learn ml, and i want to learn dl', 'and');
@@ -128,7 +128,7 @@ keeps('i want to learn ml, and i want to learn dl', 'and');
 dropsExact('i want to learn ml, and i want to learn dl', 'and Explain');
 
 // A rewrite at a sentence boundary must not eat the space after the full stop.
-keeps('i want to learn ml. i want to learn dl', '. Explain');
+keeps('i want to learn ml. i want to learn dl', '. Teach me');
 // ...without breaking decimals.
 keeps('explain pi which is 3.14 exactly', '3.14');
 
@@ -463,6 +463,126 @@ keeps('wat r the advntages of cloud computng', 'What are the advantages');
 keeps('sugest some gud books for dsa', 'good books');
 keeps('tel me a joke abut cats', 'about cats');
 keeps('the two buildings abut each other', 'abut');
+
+// ---------------------------------------------------------------------------
+// Shorter Trim. Each rewrite drops only words that carry nothing.
+// ---------------------------------------------------------------------------
+equals('could you kindly summarize the following paragraph for me in a few sentences so that it is easy to understand',
+       'Summarize the following paragraph in a few sentences simply');
+equals('what are some of the best places that i can visit in kerala during the month of december with my family',
+       'What are the best places to visit in Kerala in December with my family');
+equals('can you explain to me in detail how the process of photosynthesis works in plants step by step',
+       'Explain in detail how photosynthesis works in plants step by step');
+equals('basically what i want is a list of 10 project ideas for my final year computer science engineering project using machine learning',
+       'List 10 project ideas for my final year computer science engineering project using machine learning');
+keeps('can you please check whether my sentence is grammatically correct or not: me and him went', 'grammatically correct:');
+keeps('explain the concept of recursion in programming to me like i am a 10 year old child', "like I'm 10");
+keeps('what is the best way for me to learn dsa in a short amount of time', 'best way to learn DSA quickly');
+keeps('can you give me a detailed explanation of what is the difference between tcp and udp with some examples',
+      'Explain the difference between TCP and UDP');
+keeps('can you tell me what are some of the most common mistakes beginners make', 'the most common mistakes');
+keeps('some of the students failed the test', 'Some students');
+
+// Meaning that Trim used to lose.
+keeps('give me ideas for my final year project', 'for my final year project');   // not "ideas year project"
+keeps('convert this code from java to python and also explain what each line is doing', 'explain what each line is doing');
+keeps('tell me what a closure is and give an example', 'what a closure is');
+keeps('i am really confused about pointers in c, can you explain them with a simple example', 'pointers');
+
+// ---------------------------------------------------------------------------
+// Live report: "give me the different types of respiratory pr5oblems" was neither
+// corrected nor shortened. The digit split the word for every later step, and the
+// validator then demanded the "5" survive as a number.
+// ---------------------------------------------------------------------------
+equals('give me the different types of respiratory pr5oblems', 'List the types of respiratory problems');
+equals('the pr0blem is in my c0de', 'The problem is in my code');
+keeps('write a s3cret message', 'secret');
+// Names with digits are not typos.
+keeps('explain k8s pods and mp3 encoding', 'mp3');
+keeps('h2o and web3 basics', 'h2o and web3');
+keeps('py3k and b2b sales', 'Py3k');
+keeps('s3 bucket vs ec2 instance', 'ec2');
+keeps('covid19 vaccine types', 'covid19');
+keeps('what are the different kinds of clouds', 'the kinds of clouds');
+keeps('tell me the symptoms of dengue', 'List the symptoms of dengue');
+
+// ---------------------------------------------------------------------------
+// Live report: a prompt typed with mistakes was barely optimised, the same prompt
+// typed correctly was fully optimised. Typos hid the words the shortening rules key on.
+// ---------------------------------------------------------------------------
+equals('hi chatpt i have and exam tommrow give me notes for dma', 'Give me notes for dma');
+equals('thanku so much, now cn u writ a sumary of this artical', 'Summarize this article');
+equals('i wnt u to wirte an emial to my manger askin for leave', 'Write an email to my manager asking for leave');
+equals('culd u sugest sum gud books for lerning pyhton', 'Suggest some good books for learning Python');
+equals('i hav an assignmnt due tmrw, explian photosynthsis', 'Explain photosynthesis');
+keeps('wat r the advantges and disadvantges of socal media', 'advantages and disadvantages of social media');
+keeps('there is and error in my code', 'an error');
+keeps('i have apples and oranges', 'apples and oranges');
+keeps('i have and use a mac', 'have and use');
+keeps('find the sum of two numbers in python', 'sum of two numbers');
+keeps('the writ of habeas corpus', 'writ');
+// A summary of a given length is not "summarize N words".
+keeps('write a summary of 200 words on climate change', 'summary of 200 words');
+// The topic stays when the request is only a generic noun.
+keeps('hello i am preparing for my interview so can you give me some tips', 'interview');
+keeps('Explain memoization with an example', 'memoization');
+
+// ---------------------------------------------------------------------------
+// Live report: "i have and exam tomrw i need notes for dma + sdu" showed "already
+// concise". The card hid every correction that saved no tokens, "tomrw" was unknown,
+// and "I need ..." did not count as a request, so the exam clause stayed.
+// ---------------------------------------------------------------------------
+equals('i have and exam tomrw i need notes for dma + sdu', 'I need notes for dma + sdu');
+equals('i have an exam tomorrow i need you to explain deadlocks', 'Explain deadlocks');   // not "dreadlocks"
+keeps('i have an exam tomorrow i want to cry', 'I want to cry');      // a feeling, not a request
+keeps('see u tomorow', 'tomorrow');
+keeps('the tomb was empty', 'tomb');
+// The sweep of forty messy prompts.
+keeps('how to mak a resume for internshp with no experiance', 'no experience');
+keeps('how meny calories in a banana', 'many calories');
+keeps('why is the sky blu during the day', 'sky blue');
+keeps('buy a blu-ray player', 'blu-ray');
+keeps('recomend a laptop for gameing', 'gaming');
+keeps('wats the best way to lern guitar by myslef', "What's the best way");
+equals('i want to learn react from scratch', 'Teach me React from scratch');
+equals('i want to learn ml, and i want to learn dl', 'Teach me ML and DL');
+
+// ---------------------------------------------------------------------------
+// Live report: "i a facing many rspiratory issues what are the different kind of
+// respiratory issues that can exist" kept "i a", "kind", the run-on and the filler.
+// ---------------------------------------------------------------------------
+equals('i a facing many rspiratory issues what are the different kind of respiratory issues that can exist',
+       'I am facing many respiratory issues. What are the kinds of respiratory issues');
+keeps('i an going to college', 'I am going');
+keeps('there are two way of doing it', 'two ways');
+keeps('some kind of magic', 'kind of magic');          // singular is right here
+keeps('a different type of ML', 'a different type');    // and here
+keeps('i am learning python how do i install it', 'Python. How do I');
+keeps('i wonder what causes rain', 'wonder what');       // a clause, not a run-on
+keeps('i have an exam tomorrow which is exam which is dma', 'tomorrow which is dma');
+equals('i have a doubt what is recursion', 'What is recursion');
+keeps('i am not sure how to start', 'I am not sure');    // "i" -> "I" is a real fix
+
+// Condense is a real step beyond Trim.
+['modifiers', 'analysis', 'compress'].forEach((name) => {
+    Object.assign(global, require(path.join(__dirname, '..', 'utils', name + '.js')));
+});
+const cond = (p) => PromptMeterCompress.compress(p, { budgetMs: 1e5, maxMode: 'aggressive' }).text;
+[['i a facing many rspiratory issues what are the different kind of respiratory issues that can exist',
+  'List the kinds of respiratory issues'],
+ ['what are the symptoms of dengue', 'List the symptoms of dengue'],
+ ['how do i install python on windows', 'How to install Python on windows'],
+ ['what is the meaning of entropy', 'Define entropy'],
+ ['i wonder what causes rain', 'What causes rain?'],
+ ['i am not sure how to start a blog', 'How to start a blog?'],
+ ['could you please help me understand how neural networks actually work, i am a beginner and i dont really know much about machine learning',
+  'Explain how neural networks work for a beginner'],
+ ['i would like you to generate some catchy names for my new bakery', 'Generate catchy names for my new bakery']
+].forEach(([p, want]) => {
+    const got = cond(p);
+    if (got === want) passed++;
+    else { failed++; console.log('FAIL  condense ' + JSON.stringify(p) + '\n      expected ' + JSON.stringify(want) + '\n      got      ' + JSON.stringify(got)); }
+});
 
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

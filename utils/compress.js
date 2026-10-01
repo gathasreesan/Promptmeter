@@ -84,7 +84,10 @@ const PromptMeterCompress = {
         [/\bthe\s+(?:concept|idea|notion|topic)\s+of\s+/gi, ''],
         // Requests
         [/\bgive\s+me\s+(?:a\s+list\s+of|some)\s+/gi, 'list '],
-        [/\b(?:and\s+)?also\s+(?:tell\s+me|explain|show\s+me)\s+/gi, 'and '],
+        // Only "also" goes: the verb is the second request. Dropping it turned
+        // "convert this and also explain what each line is doing" into "and what each
+        // line is doing".
+        [/\b(and\s+)?also\s+(tell\s+me|explain|show\s+me)\s+/gi, (m, and, verb) => 'and ' + verb + ' '],
         [/,?\s+and\s+also\s+(?:i\s+want\s+you\s+to\s+)?/gi, ' and '],
         // "Explain X ... and explain it simply" / "Explain X. Explain it simply.": the
         // second "explain" only carries the manner, so the manner is all that stays.
@@ -105,6 +108,27 @@ const PromptMeterCompress = {
         [/\b(?:because|since|as)\s+i(?:'m|\s+am)\s+new\s+to\s+(\w+)/gi, 'for a $1 beginner'],
         // "like" before a question word is filler: "like what it is and how it works"
         [/,?\s+like\s+(?=(?:what|how|why|when|where|which|who)\b)/gi, ', '],
+        // Questions that are really requests, in their shortest form. Condense only:
+        // Trim keeps the user's question; Condense trades it for the command.
+        [/(^|[.!?]\s+)what\s+are\s+(?:the\s+|some\s+)?(?:different\s+|various\s+|main\s+)?(types|kinds|forms|categories|causes|symptoms|benefits|advantages|disadvantages|uses|stages|steps|examples|features|applications|effects|signs|risks)\s+of\s+/gi,
+            (m, lead, what) => lead + 'List the ' + what.toLowerCase() + ' of '],
+        [/(^|[.!?]\s+)how\s+(?:do|can|should)\s+(?:i|we|one)\s+/gi, '$1How to '],
+        [/(^|[.!?]\s+)what\s+is\s+the\s+meaning\s+of\s+/gi, '$1Define '],
+        [/(^|[.!?]\s+)what\s+does\s+(.{1,40}?)\s+mean\b\??/gi, '$1Define $2'],
+        [/(^|[.!?]\s+)is\s+it\s+possible\s+to\s+/gi, '$1Can I '],
+        [/(^|[.!?]\s+)i\s+wonder\s+(what|how|why|which|where|when|who|whether|if)\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, q, rest) => lead + q.charAt(0).toUpperCase() + q.slice(1) + ' ' + rest + '?'],
+        [/(^|[.!?]\s+)i(?:'m|\s+am)\s+not\s+sure\s+how\s+to\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, rest) => lead + 'How to ' + rest + '?'],
+        // Who it is for, in two words: ", I am a beginner and I don't know much about
+        // machine learning" -> " for a beginner".
+        [/,?\s*(?:and\s+|as\s+|since\s+|because\s+)?i(?:'m|\s+am)\s+(?:a\s+)?(?:complete\s+|total\s+|absolute\s+)?(beginner|newbie|novice)(?:\s+(?:and|so)\s+i\s+(?:do\s*n[o']?t|don'?t)\s+(?:really\s+)?know\s+(?:much|anything)\s+about\s+[^.,;?!]+)?/gi, ' for a $1'],
+        [/\basking\s+(?:him|her|them)\s+for\b/gi, 'asking for'],
+        [/\b(generate|give|list|suggest|write|share|provide|recommend|create|make)\s+(me\s+)?some\s+(?=(?:[a-z]+\s+)?[a-z]+s\b)/gi, '$1 $2'],
+        [/\ball\s+the\s+(?=(?:[a-z]+\s+)?[a-z]+s\b)/gi, 'all '],
+        [/\bi(?:'m|\s+am)\s+planning\s+to\b/gi, 'I plan to'],
+        [/(^|[.!?]\s+)what\s+(?:are|is)\s+the\s+(best|top|cheapest|easiest|fastest)\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, sup, rest) => lead + sup.charAt(0).toUpperCase() + sup.slice(1) + ' ' + rest + '?'],
         // Trailing padding
         [/\s+for\s+me\b(?!\s+(?:and|to)\b)/gi, ''],
         [/\s+as\s+well(?=\s*[.?!]|$)/gi, ''],
@@ -122,6 +146,14 @@ const PromptMeterCompress = {
         // simply." needs the first to become "Explain" before the two can merge).
         const pass = (text) => this.TIGHTEN_RULES.reduce((s, [rx, to]) => s.replace(rx, to), text);
         let out = pass(pass(masked.masked));
+        // "I am facing many respiratory issues. List the kinds of respiratory issues":
+        // the opening sentence only announces the subject the request names again.
+        out = out.replace(/^\s*i(?:'m|\s+am|\s+have\s+been)\s+(?:facing|having|experiencing|dealing\s+with|suffering\s+from|struggling\s+with|getting|seeing)\s+(?:many\s+|some\s+|a\s+lot\s+of\s+|a\s+few\s+|lots\s+of\s+|frequent\s+)?([^.?!]{3,60})[.!]\s+(?=\S)/i,
+            (m, subject, offset, whole) => {
+                const rest = whole.slice(m.length).toLowerCase();
+                const head = subject.trim().toLowerCase().split(/\s+/).pop().replace(/s$/, '');
+                return head.length > 3 && rest.includes(head) ? '' : m;
+            });
         if (out === masked.masked) return text;
         out = out
             .replace(/[ \t]{2,}/g, ' ')
@@ -338,7 +370,8 @@ const PromptMeterCompress = {
     // Words the optimizer's and tighten()'s own rewrites put in place of longer
     // phrases ("in simple terms" -> "simply", "due to the fact that" -> "because").
     // Seeing one in a candidate is not the compressor inventing content.
-    REWRITE_WORDS: new Set(['simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
+    REWRITE_WORDS: new Set(['quickly', 'many', "i'm", 'im', 'summarize', 'summarise', 'teach', 'define', 'plan',
+        'simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
         'beginner', 'should', 'how', 'explain', 'concisely', 'shortly',
         // Corrections the grammar rules make from a different word in the original.
         "they're", "it's", "you're", "who's", 'than', 'whether', 'which', 'their', 'there',
@@ -463,7 +496,11 @@ const PromptMeterCompress = {
         // courtesy bribe ("I will tip $200") are not requirements.
         const asWords = (text) => (PM_C_OPTIMIZER && PM_C_OPTIMIZER.expandDigitWords
             ? PM_C_OPTIMIZER.expandDigitWords(text) : text).replace(/\bi\s+will\s+tip\s+\$?\d[\d,.]*/gi, ' ');
-        const beforeNumbers = this.numbersIn(unshorthand(asWords(original)));
+        // A digit typed inside a word ("pr5oblems") is a typo, not a number: the
+        // optimizer removes it, and requiring it to survive threw the fix away.
+        const strayDigits = (text) => text.replace(/\b([A-Za-z]+)\d([A-Za-z]+)\b/g,
+            (m, a, b) => (a.length + b.length >= 3 ? a + b : m));
+        const beforeNumbers = this.numbersIn(strayDigits(unshorthand(asWords(original))));
         const afterNumbers = this.numbersIn(candidate).slice();
         beforeNumbers.forEach((number) => {
             const at = afterNumbers.indexOf(number);
@@ -512,7 +549,13 @@ const PromptMeterCompress = {
             // bar is that most of them are still there.
             const carriers = [...this.contentWords(constraint)]
                 .filter((word) => !this.COMPARATORS.has(word));
-            const kept = carriers.filter((word) => present.has(word)).length;
+            // A misspelled carrier survives as its correction: "no experiance" is kept
+            // by "no experience", and reading it as lost threw away every fix.
+            const fixedForm = (word) => {
+                const fix = PM_C_SPELL && PM_C_SPELL.correctWord && PM_C_SPELL.correctWord(word);
+                return fix && present.has(fix.toLowerCase());
+            };
+            const kept = carriers.filter((word) => present.has(word) || fixedForm(word)).length;
             const lostMeaning = carriers.length > 0 && kept * 2 < carriers.length;
 
             if (lostNumber || lostMeaning) {
@@ -523,6 +566,8 @@ const PromptMeterCompress = {
         // A named output format must still be named.
         const candidateFormats = new Set((candidate.match(this.OUTPUT_FORMATS) || [])
             .map((f) => f.toLowerCase()));
+        // "Summarize" asks for the summary format by itself.
+        if (/\bsummari[sz]e\b/i.test(candidate)) candidateFormats.add('summary');
         parts.format.forEach((format) => {
             if (!candidateFormats.has(format)) {
                 violations.push({ rule: 'format', detail: format });
@@ -542,7 +587,11 @@ const PromptMeterCompress = {
         // A verb that was never there is still caught by the invention rule below.
         // "give me a list of" -> "list", "tell me" -> "explain": the same request.
         const SAME_TASK = { give: ['list', 'show', 'suggest'], tell: ['explain', 'list'], show: ['list'] };
-        if (before && after !== before && !(SAME_TASK[before] || []).includes(after)
+        // "give me an explanation of X" is "explain X": the noun was the request.
+        const explanationAsked = (before === 'give' && after === 'explain' && /\bexplanation\b/i.test(original))
+            // "write/give/make a summary of X" is "summarize X".
+            || (/^summari[sz]e$/.test(after || '') && /\bsummary\b/i.test(original));
+        if (before && after !== before && !explanationAsked && !(SAME_TASK[before] || []).includes(after)
             && !new RegExp('\\b' + before + '\\b', 'i').test(candidate)) {
             violations.push({ rule: 'task',
                 detail: after ? before + ' -> ' + after : 'the request verb is gone' });
@@ -879,8 +928,9 @@ const PromptMeterCompress = {
         // Case alone does not count -- except where it fixes something: "i" -> "I",
         // "kerala" -> "Kerala", "nasa" -> "NASA", a prompt typed in capitals. Only the
         // capital at the start of a sentence is cosmetic, so only that is folded away.
+        // Not a lone "i": "i am" -> "I am" is a grammar fix, not a cosmetic capital.
         const loose = (s) => s.replace(/\s+/g, ' ').trim()
-            .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase());
+            .replace(/(^|[.!?]\s+)([a-z])(?=[a-z])/g, (m, lead, c) => lead + c.toUpperCase());
         // Among the corrected candidates the level allows, the shortest: fixing typos can
         // cost as many tokens as Trim saves ("btwn ram n rom plz" -> "between RAM and
         // ROM"), and falling back to the Fix text then put "please" back in.

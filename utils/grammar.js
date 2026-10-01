@@ -239,6 +239,12 @@ const PromptMeterGrammar = {
             "who's ", "'whose' should be 'who's' (who is)"],
         [/(?<!\b(?:some|any|the|your|my|his|her|our|their|good|this|that|much|of|for|need|needs|want|get|give|an?|great|useful|free|expert|more|no)\s)\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
         [/\bto\s+advice\b/gi, 'to advise', "'advice' (noun) should be 'advise' (verb)"],
+        // "i a facing" / "i an going": "am" with a letter dropped, before an -ing verb.
+        [/\b(i)\s+an?\s+(?=[a-z]{2,}ing\b)/gi, (m, i) => (i === 'i' ? 'I' : i) + ' am ', "'I a' should be 'I am'"],
+        // "different kind of", "many type of": a plural quantifier takes the plural.
+        [/(?<!\b(?:a|an|one|each|every|this|that|same|any)\s)\b(different|various|several|many|multiple|all|these|those|other|two|three|four|five|few)\s+(kind|type|sort|form|category|variety|way|reason|cause|symptom|example|method|step|stage|use|benefit|advantage|disadvantage)\s+of\b/gi,
+            (m, q, noun) => q + ' ' + ({ category: 'categories', variety: 'varieties' }[noun.toLowerCase()] || noun + 's') + ' of',
+            "a plural quantifier takes a plural noun"],
         [/\b(on|about|know|decide|choose|sure|idea|wondering|tell\s+me|ask|see)\s+witch\b(?!\s+(?:hunts?|craft|hats?|doctors?|trials?))/gi, '$1 which', "'witch' should be 'which'"],
         [/(?<!\b(?:the|today's|bad|good|nice|this)\s)\bweather\s+(?=(?:to|or\s+not|i|you|we|he|she|they|it)\b)/gi, 'whether ', "'weather' should be 'whether'"],
         [/^(me|him|her)\s+and\s+(him|her|me)\s+(?=(?:went|are|were|did|have|go|got|had|will|can)\b)/i,

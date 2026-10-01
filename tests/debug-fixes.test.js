@@ -287,7 +287,7 @@ check('three edit levels map to the three tiers', St2.STRICTNESS.fixes === 'cons
 
 // Live ChatGPT testing: worst-case prompts at Trim, exact expected output.
 [
-    ['wat is teh diffrence btwn ram n rom plz explian in simpel words', 'What is the difference between RAM and ROM explain in simple words'],
+    ['wat is teh diffrence btwn ram n rom plz explian in simpel words', 'What is the difference between RAM and ROM explain simply'],
     ['cn u rite a email to my profesor askin for extention on asignment due tmrw', 'Write an email to my professor asking for extension on assignment due tomorrow'],
     ['how 2 make biryani at home step by step 4 beginers', 'How to make biryani at home step by step 4 beginners'],
     ['its raining alot and i could of gone out but i didnt', "It's raining a lot and I could have gone out but I didn't"],
