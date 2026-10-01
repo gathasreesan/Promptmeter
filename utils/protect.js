@@ -33,6 +33,10 @@ const PromptMeterProtect = {
         // --- Explicit code markers -------------------------------------------------
         { name: 'fenced-code', rx: /```[\s\S]*?```/g },
         { name: 'fenced-code-tilde', rx: /~~~[\s\S]*?~~~/g },
+        // Triple quotes delimit a passage the same way a fence does: "the passage
+        // denoted by triple backticks: '''Once upon a time ...'''" had its text edited.
+        { name: 'triple-single', rx: /'''[\s\S]*?(?:'''|$)/g },
+        { name: 'triple-double', rx: /"""[\s\S]*?(?:"""|$)/g },
         { name: 'inline-code', rx: /`[^`\n]+`/g },
         // Indented block: a run of consecutive lines each starting with 4 spaces or a tab
         { name: 'indented-code', rx: /^(?:[ ]{4,}|\t)[^\n]*(?:\n(?:[ ]{4,}|\t)[^\n]*)*/gm },
@@ -48,6 +52,12 @@ const PromptMeterProtect = {
         // prompt the extension silently does nothing for.
         { name: 'stack-frame', rx: /^[ \t]*at\s+\S[^\n]*?(?:\([^)\n]*\)|:\d+(?::\d+)?)[ \t]*$/gm },
         { name: 'exception', rx: /\b[A-Z]\w*(?:Error|Exception|Warning)\b[^\n]*/g },
+
+        // --- Abbreviations ----------------------------------------------------------
+        // Their dots are not sentence ends. Unmasked, "(i.e. where you were born" was
+        // capitalised to "I.e. Where", split into two sentences, and the half before it
+        // dropped; "e.g. use numpy" came back as "E. G. Use".
+        { name: 'abbreviation', rx: /\b(?:i\.e\.|e\.g\.|etc\.|vs\.|cf\.|a\.m\.|p\.m\.|approx\.|incl\.|u\.s\.|u\.k\.|ph\.d\.|dr\.|mr\.|mrs\.|ms\.|st\.|fig\.)(?=\s|,|\)|$)/gi },
 
         // --- Locators --------------------------------------------------------------
         { name: 'url', rx: /\b(?:https?|ftp|file|ws|wss):\/\/[^\s<>"']+/gi },

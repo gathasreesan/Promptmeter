@@ -679,11 +679,21 @@ const PromptMeterCondense = {
         const leanedOn = (index) => index + 1 < classified.length
             && REFERS_BACK.test(classified[index + 1].text);
 
+        // A question that only makes sense with what came before it ("What could be the
+        // reason?", "How do I fix it?") makes every earlier sentence its subject.
+        // "For some reasons I can't open my company's website. I'm sure my internet is
+        // working fine. What could be the reason?" was cut to the last sentence alone.
+        const DEPENDENT_ASK = /\b(?:the\s+(?:reason|cause|problem|issue|fix|solution)|what\s+(?:should|can|could)\s+i\s+do|how\s+(?:do|can|should)\s+i\s+(?:fix|solve|stop|handle)\s+(?:it|this|that)|why\s+(?:is|does|did|would)\s+(?:it|this|that)|what(?:'s|\s+is)\s+(?:wrong|happening|going\s+on))\b/i;
+        const dependent = classified.some((entry) => entry.info.core && DEPENDENT_ASK.test(entry.text));
+        // A sentence stating a problem is the situation being asked about, not backstory.
+        const PROBLEM = /\b(?:can'?t|cannot|won'?t|doesn'?t|isn'?t|not\s+working|unable|error|fails?|failed|failing|broken|crash(?:es|ed|ing)?|stuck|freez(?:es|ing)|slow|issue|problem|bug)\b/i;
+
         const kept = classified.filter((entry, index) => {
             // A sentence that asks, constrains, or holds protected content is the
             // user's request. The rules keep it and the model is never asked.
             if (entry.info.core) return true;
             if (leanedOn(index)) return true;
+            if (dependent || PROBLEM.test(entry.text)) return true;
 
             if (entry.info.lowValue) {
                 // Rules say drop. The model may veto.

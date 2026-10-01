@@ -289,7 +289,7 @@ check('three edit levels map to the three tiers', St2.STRICTNESS.fixes === 'cons
 [
     ['wat is teh diffrence btwn ram n rom plz explian in simpel words', 'What is the difference between RAM and ROM explain in simple words'],
     ['cn u rite a email to my profesor askin for extention on asignment due tmrw', 'Write an email to my professor asking for extension on assignment due tomorrow'],
-    ['how 2 make biryani at home step by step 4 beginers', 'How to make biryani at home step by step for beginners'],
+    ['how 2 make biryani at home step by step 4 beginers', 'How to make biryani at home step by step 4 beginners'],
     ['its raining alot and i could of gone out but i didnt', "It's raining a lot and I could have gone out but I didn't"],
     ['should i by a iphone or a android phone for photography', 'Should I buy an iPhone or an Android phone for photography'],
     ['ok so like basically um i need like a recipe for like pasta you know', 'I need a recipe for pasta'],
@@ -330,6 +330,65 @@ check('three edit levels map to the three tiers', St2.STRICTNESS.fixes === 'cons
                 : /2 days/.test(input) ? /2 days/.test(got) : /can you not be so verbose/i.test(got);
     check('live, unchanged where it matters: ' + input.slice(0, 40), ok, got);
 });
+
+// Intense audit: invariants found broken on real prompts.
+[
+    ['Can you help me with my resume?', 'Help me with my resume.'],
+    ['If I were rich, what would I buy?', 'If I were rich, what would I buy?'],
+    ['e.g. use numpy for this', 'e.g. use NumPy for this'],
+    ['Hi Vicuna! How are you?', 'Hi Vicuna! How are you?'],
+    ['Equipment: [None, None, None, None]\nWhat should I craft?', 'Equipment: [None, None, None, None]\nWhat should I craft?'],
+    ['Send a text message to a designated contact.\nReceiver: John\nMessage: Hello, how are you?', 'Send a text message to a designated contact.\nReceiver: John\nMessage: Hello, how are you?'],
+    ['Arrange the following letters in the correct order to spell out a five letter word.\ng,o,t,o,p', 'Arrange the following letters in the correct order to spell out a five letter word.\ng,o,t,o,p'],
+    ["For some reasons I can't open my company's website. I'm sure my internet is working fine as google is open normally. What could be the reason?",
+        "For some reasons I can't open my company's website. I'm sure my internet is working fine as Google is open normally. What could be the reason?"],
+    ['pls what is phhotosynthesis', 'What is photosynthesis'],
+    ['nveer mind, explin photosynthesis instead', 'Never mind, explain photosynthesis instead'],
+].forEach(([input, want]) => {
+    const got = C.compress(input, { budgetMs: 1e5, maxMode: 'balanced' }).text;
+    check('audit: ' + input.slice(0, 40), got === want, got);
+});
+check('audit: "was like," keeps its like', /upbringing was like, who/.test(C.compress('Start with your life (i.e. where you were born, what your upbringing was like, who your parents were, etc).', { budgetMs: 1e5 }).text));
+check('audit: compress settles (running it on its own output changes nothing)',
+    ['I want to become better at mentoring. Could you describe at least 5 traits of a great mentor? Go in detail about each trait. Provide some examples as well.',
+        'hello hello hello is anyone there'].every((p) => {
+        const once = C.compress(p, { budgetMs: 1e5, maxMode: 'aggressive' }).text;
+        return C.compress(once, { budgetMs: 1e5, maxMode: 'aggressive' }).text === once;
+    }));
+check('audit: real words the lists lack are left alone', ['caching', 'memoization'].every((w) => Sp.correctWord(w) === null));
+
+// Round 2 personas: slight errors each persona makes, at Fix level.
+[
+    ["he don't know python very well, explain classes to him", "doesn't know"],
+    ['i need some advices on how to prepare for interview', 'some advice on'],
+    ['we discussed about the project yesterday, write minutes', 'discussed the project'],
+    ['he is married with a doctor, write a wedding wish', 'married to'],
+    ['i am knowing the basics of java, what next', 'I know the basics'],
+    ['one of my friend want to learn guitar', 'one of my friends wants'],
+    ['i have went to paris last year, write a travel blog intro', 'I went to Paris last year'],
+    ['write a email to my boss saying i will be late to day', 'late today'],
+    ['what is the different between affect and effect', 'the difference between'],
+    ['can you right a poem about the ocean', 'write a poem'],
+    ['lets meet at 5 pm, draft a calendar invite', "Let's meet"],
+    ['can you explain the defiantly important parts of the contract', 'definitely important'],
+    ['draft a non disclosure agreement between two companys', 'two companies'],
+    ['make a 4 week workout plan to loose 5 kg', 'lose 5 kg'],
+    ['create a lesson plan for teaching fractions to class 4 students, 40 minutes', 'class 4 students'],
+    ['give me a study timetable for neet preparation', 'NEET'],
+    ['is it ok to eat eggs everyday', 'is it ok to eat'],
+    ['which fertilizer is best for coconut trees in kerala', 'Kerala'],
+    ['HOW DO I MAKE THE LETTERS BIGGER ON MY PHONE', 'How do I make the letters bigger on my phone'],
+].forEach(([input, want]) => {
+    const got = C.compress(input, { budgetMs: 1e5, maxMode: 'conservative' }).text;
+    check('round 2: ' + input.slice(0, 40), got.toLowerCase().includes(want.toLowerCase())
+        && (want === want.toLowerCase() || got.includes(want)), got);
+});
+check('round 2: role labels keep their case',
+    /\nuser: /.test(C.compress('complete the answer. repeating is not allowed.\nuser: descriptive answer for python\nassistant:', { budgetMs: 1e5, maxMode: 'conservative' }).text));
+check('round 2: clear questions get no "unclear request" advice',
+    ['how many hours of sleep does an adult need', 'wifi keeps disconnecting every few minutes on my windows 11 laptop',
+        'is it safe to drink water from the tap in goa', 'the api returns 401 even tho the token is valid']
+        .every((p) => !A.analyze(p, []).findings.some((f) => /Does not clearly state/.test(f.explanation || ''))));
 
 check('wikipedia misspelling list is loaded', Sp.correctWord('compatable') === 'compatible'
     && Sp.correctWord('adres') === 'address', [Sp.correctWord('compatable'), Sp.correctWord('adres')]);

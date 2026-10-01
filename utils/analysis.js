@@ -323,7 +323,9 @@ const PromptMeterAnalysis = {
             const list = vague.map((w) => '"' + w + '"').join(', ');
             findings.push(this.finding({
                 category: 'ambiguity',
-                severity: 'suggestion',
+                // Opinion, not error: "a good movie", "filter is clean", "a professional
+                // email" are how people talk, and the model handles them fine.
+                severity: 'improvement',
                 text: vague[0],
                 start: first,
                 explanation: vague.length === 1
@@ -660,7 +662,11 @@ const PromptMeterAnalysis = {
                                     : 'structure',
                 // Heuristics, both: the card calls 'error' "definitely wrong", and a
                 // missed verb or a "this" pointing forward is not that.
-                severity: 'suggestion',
+                // "No output format" and "vague terms" are opinions about a prompt that
+                // already works: shown on every "write a goodnight message", they taught
+                // people to ignore the card. They stay in the report, off the card.
+                severity: (issue.id === 'missing-output-format' || issue.id === 'vague-specification')
+                    ? 'improvement' : 'suggestion',
                 // issue.label is the user-facing sentence; issue.metric is the rule's
                 // own definition and reads like documentation ("Fires when...").
                 explanation: issue.label,
