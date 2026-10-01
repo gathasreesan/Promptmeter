@@ -2,12 +2,38 @@ console.log("[PromptMeter] active on ChatGPT");
 // Lets background.js tell whether this tab already runs the current copy, so a reload
 // of the extension injects into open tabs that need it and skips the ones that do not.
 window.__promptMeterActive = true;
+// Whether THIS copy can still reach the extension. After a reload the dead copy and the
+// background worker's probe share this page scope, so the marker alone would make the
+// worker skip a tab whose only copy is dead.
+window.__promptMeterLive = () => typeof chrome !== 'undefined' && !!chrome.runtime && !!chrome.runtime.id;
 
 // True once the extension has been reloaded under this tab. This copy is then cut off
 // from chrome.* and a fresh copy, injected by background.js, owns the page: this one
 // must do nothing at all -- hiding "its" card would hide the new copy's card, which
 // shares the element id.
 const isOrphaned = () => typeof chrome !== 'undefined' && !!chrome.runtime && !chrome.runtime.id;
+
+// Each copy stamps the page; a newer copy overwrites the stamp. A dead copy that still
+// holds the stamp knows nothing replaced it, and says so instead of going silent.
+const PM_INSTANCE = String(Date.now()) + Math.random().toString(36).slice(2, 8);
+document.documentElement.dataset.promptmeterInstance = PM_INSTANCE;
+function noticeIfStale() {
+    if (document.documentElement.dataset.promptmeterInstance !== PM_INSTANCE) return;
+    if (document.getElementById('promptmeter-refresh-notice')) return;
+    const bar = document.createElement('div');
+    bar.id = 'promptmeter-refresh-notice';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;'
+        + 'background:#1f2933;color:#fff;font:14px/1.4 system-ui,sans-serif;padding:10px 14px;'
+        + 'border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center';
+    bar.textContent = 'PromptMeter was updated. Refresh this tab to keep using it.';
+    const button = document.createElement('button');
+    button.textContent = 'Refresh';
+    button.style.cssText = 'background:#3b82f6;color:#fff;border:0;border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit';
+    button.onclick = () => location.reload();
+    bar.appendChild(button);
+    document.body.appendChild(bar);
+}
 
 // Each util is loaded as its own content script, so one of them failing to parse leaves
 // the others running and the failure is easy to miss. Report what actually arrived.
@@ -336,7 +362,7 @@ function estimateDocumentTokens(pillText) {
 
 // 1. Monitor active typing inside the prompt box
 function handleInput(e) {
-    if (isOrphaned()) return;
+    if (isOrphaned()) { noticeIfStale(); return; }
     if (!isPromptMeterEnabled) {
         hideOptimizationCard();
         return;
@@ -796,7 +822,11 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
                 ${stats ? `
                 <div class="promptmeter-hero ${stats.saved < 0 ? 'promptmeter-hero-cost' : ''}"
                      title="${stats.saved < 0 ? 'This rewrite costs tokens' : stats.saved === 0 ? 'Corrections only; same length' : 'Tokens saved'}">
-                    ${stats.saved === 0
+                    ${meterOnly
+                        // Nothing to change: the live count is the whole message. It used
+                        // to read "Corrected · same length" over an empty card.
+                        ? `<span class="promptmeter-hero-value">${stats.originalTokens} ${stats.originalTokens === 1 ? 'token' : 'tokens'}</span><span class="promptmeter-hero-unit">already concise</span>`
+                        : stats.saved === 0
                         // A correction that saves nothing read "−0 tokens 0%".
                         ? '<span class="promptmeter-hero-value">Corrected</span><span class="promptmeter-hero-unit">same length</span>'
                         : `<span class="promptmeter-hero-value">${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.saved)} ${Math.abs(stats.saved) === 1 ? 'token' : 'tokens'}</span>
@@ -1212,7 +1242,13 @@ function analyzeAndOfferOptimization(text, keepOpen) {
     // A suggestion worth applying, or just the live count? Both show; only the first
     // gets the diff and the Apply button. Below MIN_METER_WORDS neither does: a card
     // hovering over a two-word prompt is in the way, not informative.
-    const meterOnly = tokensSaved <= 0 || optimized.trim() === text.trim();
+    // Meter-only means there is nothing to change -- not "nothing that saves tokens".
+    // A spelling or grammar fix often costs the same tokens ("and exam" -> "an exam"),
+    // and treating that as nothing to do hid every such correction behind "already
+    // concise". A rewrite that changes only the first letter's case is still nothing.
+    const sameText = (a, b) => a.trim().replace(/^./, (c) => c.toUpperCase())
+        === b.trim().replace(/^./, (c) => c.toUpperCase());
+    const meterOnly = sameText(optimized, text);
     if (meterOnly && text.trim().split(/\s+/).length < MIN_METER_WORDS) {
         hideOptimizationCard();
         return;

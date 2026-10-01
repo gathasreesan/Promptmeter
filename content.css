@@ -861,6 +861,7 @@
 .promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-preserve,
 .promptmeter-opt-card.promptmeter-meter-only .promptmeter-modes,
 .promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-apply,
+.promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-accept,
 .promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-copy,
 .promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-revert {
     display: none !important;
