@@ -333,7 +333,10 @@ const PromptMeterCondense = {
         // them strands the word as its own sentence, so they are excluded here.
         const hardStop = connective.split('|').filter(w => w !== 'now' && w !== 'also').join('|');
         const stop = `(?:${ask}|${hardStop})`;
-        const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’./+#-]+){0,10}`;
+        // A dot only inside a token ("Node.js", "3.5"): as a token's last character it
+        // is the sentence's full stop, and taking it glued the next sentence on --
+        // "...before and I am panicking lol. Can you give me" became "before give me".
+        const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’/+#-]+(?:\\.[A-Za-z0-9]+)*){0,10}`;
 
         // A context clause is recognised in exactly two positions: at the start of a
         // clause, optionally behind one or two lead-ins ("so basically my professor
@@ -429,10 +432,18 @@ const PromptMeterCondense = {
         for (let pass = 0; pass < 2; pass++) {
             for (const rx of this.situational) {
                 rx.lastIndex = 0;
-                out = out.replace(rx, match => {
+                out = out.replace(rx, (...args) => {
+                    // Offset and string are the last two arguments whatever groups
+                    // the pattern captures.
+                    const [match] = args;
+                    const offset = args[args.length - 2];
+                    const whole = args[args.length - 1];
                     // A clause holding protected content is never removed, however
                     // situational it looks -- the span may be what the question is about.
                     if (match.indexOf(this.MASK_OPEN) !== -1) return match;
+                    // Stopped short of a parenthetical: removing it would strand
+                    // "(worth 30% of my grade!) and I need..." at the front.
+                    if (/^\s*\(/.test(whole.slice(offset + match.length))) return match;
                     // Second opinion: the pattern matched, but if the model reads this
                     // clause as the instruction itself, leave it alone.
                     if (this.mlVetoesRemoval(match)) return match;
@@ -540,7 +551,10 @@ const PromptMeterCondense = {
             this.QUESTION_OPENER.test(trimmed) ||
             this.MID_ASK.test(trimmed) ||
             trimmed.indexOf('?') !== -1;
-        const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed);
+        // "Also between your and you're." continues the request before it; its words
+        // are function words, so it looked empty and was dropped.
+        const continues = /^(?:also|and also|plus|as well as|then)\b/i.test(trimmed);
+        const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed) || continues;
 
         // A short leftover that asks for nothing is a fragment, not a sentence -- unless
         // it is data, where being short is normal. "Quantity: 3" and "C++" are three
@@ -656,10 +670,20 @@ const PromptMeterCondense = {
             if (entry.info.core) entry.words.forEach(word => known.add(word));
         });
 
-        const kept = classified.filter(entry => {
+        // A sentence the next one leans on. "There's a girl in my class... It's normal,
+        // right?" and "Beavers live near rivers. What do they build?" lost their first
+        // sentence and left a pronoun pointing at nothing.
+        // Also "this view", "that claim" anywhere in the next sentence: "Renewable energy
+        // is the future. Give arguments for and against this view." lost its first half.
+        const REFERS_BACK = /^\W*(?:it|it's|its|this|that|these|those|they|they're|them|their|he|she|his|her|him)\b|\b(?:he|she|they|him|them|his|her|their)\b|\b(?:this|that|these|those)\s+(?:views?|opinions?|ideas?|claims?|statements?|points?|arguments?|approach|situation|problems?|issues?|case|topic|question|text|plan|belief|theory|assumption|stance|position)\b/i;
+        const leanedOn = (index) => index + 1 < classified.length
+            && REFERS_BACK.test(classified[index + 1].text);
+
+        const kept = classified.filter((entry, index) => {
             // A sentence that asks, constrains, or holds protected content is the
             // user's request. The rules keep it and the model is never asked.
             if (entry.info.core) return true;
+            if (leanedOn(index)) return true;
 
             if (entry.info.lowValue) {
                 // Rules say drop. The model may veto.
@@ -702,6 +726,15 @@ const PromptMeterCondense = {
         const minNewTerms = (options && options.minNewTerms) || this.MIN_NEW_TERMS;
 
         text = text.replace(/[ \t]+/g, ' ').trim();
+
+        // Every rule below reads English through [a-z]. A Malayalam or Japanese sentence
+        // has no content words to it, so it looked like pure narrative and was dropped:
+        // a three-sentence Malayalam request came back as its first sentence. Text this
+        // module cannot read is text it must not prune.
+        const letters = text.match(/\p{L}/gu) || [];
+        const latin = text.match(/\p{Script=Latin}/gu) || [];
+        if (letters.length && latin.length / letters.length < 0.65) return text;
+
         const wordCount = text.split(/\s+/).filter(Boolean).length;
         if (wordCount < minWords) return text;
 

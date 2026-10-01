@@ -539,7 +539,10 @@ if (PromptMeterML.isAvailable()) {
         ['Hello ChatGPT I hope you are doing well today', 'FILLER'],
         ['I have an exam tomorrow and I am really stressed', 'FILLER'],
         ['I would like you to please go ahead and', 'REDUNDANT'],
-        ['The report must include the data and the report must include the charts', 'REPETITIVE']
+        ['Like I told you already like I said', 'REPETITIVE'],
+        // Stuttered, but it names two requirements: dropping it would lose both, so
+        // the dataset labels it IMPORTANT, not REPETITIVE.
+        ['The report must include the data and the report must include the charts', 'IMPORTANT']
     ];
 
     for (const [text, expected] of expectations) {
@@ -833,7 +836,8 @@ stripped('tentative wrappers and their hedges are removed together',
 preserved('the instruction under a hedged wrapper survives',
     'so basically i was thinking maybe you could possibly help me understand how the ' +
     'internet actually works at a technical level',
-    ['understand how the internet', 'technical level']);
+    // The request survives in its standard form: "help me understand" -> "explain".
+    ['explain how the internet', 'technical level']);
 
 stripped('a hedge left at a clause start is cleared',
     'I was wondering if you could maybe explain recursion',
@@ -960,7 +964,7 @@ stripped('stacked hedges are removed with their wrapper',
     ['wondering', 'if you could', 'maybe', 'possibly']);
 preserved('the instruction under stacked hedges survives',
     'hey um so i was just wondering if you could maybe possibly help me understand recursion',
-    ['help me understand recursion']);
+    ['explain recursion']);
 
 // "if you could" mid-sentence is an ordinary conditional, not a request wrapper.
 untouched('a mid-sentence conditional is not a wrapper',

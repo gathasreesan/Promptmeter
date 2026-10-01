@@ -142,7 +142,18 @@ const PromptMeterGrammar = {
         'postgres': 'PostgreSQL', 'postgresql': 'PostgreSQL', 'sqlite': 'SQLite',
         'mongodb': 'MongoDB', 'redis': 'Redis', 'firebase': 'Firebase',
         'azure': 'Azure', 'powerpoint': 'PowerPoint',
+        'plantuml': 'PlantUML', 'plant uml': 'PlantUML', 'uml': 'UML',
         'photoshop': 'Photoshop', 'figma': 'Figma', 'chatgpt': 'ChatGPT',
+        'iphone': 'iPhone', 'ipad': 'iPad', 'macbook': 'MacBook', 'ios': 'iOS', 'youtube': 'YouTube',
+        'instagram': 'Instagram', 'whatsapp': 'WhatsApp', 'linkedin': 'LinkedIn', 'netflix': 'Netflix',
+        'spotify': 'Spotify', 'samsung': 'Samsung', 'dell': 'Dell', 'google': 'Google',
+        'australia': 'Australia', 'india': 'India', 'canada': 'Canada', 'japan': 'Japan',
+        'germany': 'Germany', 'france': 'France', 'italy': 'Italy', 'london': 'London', 'paris': 'Paris',
+        'dubai': 'Dubai', 'mumbai': 'Mumbai', 'delhi': 'Delhi', 'kerala': 'Kerala', 'kochi': 'Kochi',
+        'bangalore': 'Bangalore', 'chennai': 'Chennai', 'hyderabad': 'Hyderabad', 'america': 'America',
+        'europe': 'Europe', 'asia': 'Asia', 'africa': 'Africa',
+        'ram and rom': 'RAM and ROM', 'cpu': 'CPU', 'gpu': 'GPU', 'sql': 'SQL', 'html': 'HTML',
+        'css': 'CSS', 'json': 'JSON', 'api': 'API', 'pdf': 'PDF', 'sop': 'SOP',
         'openai': 'OpenAI', 'anthropic': 'Anthropic', 'microsoft': 'Microsoft',
         'english': 'English', 'spanish': 'Spanish', 'french': 'French',
         'german': 'German', 'hindi': 'Hindi', 'chinese': 'Chinese',
@@ -170,14 +181,39 @@ const PromptMeterGrammar = {
         // their / there / they're
         [/\bthere\s+(?=(?:own|house|home|car|books?|jobs?|names?|code|work|ideas?|answers?|team|parents|friends|kids|children|data|problems?)\b)/gi,
             'their ', "'there' (a place) should be 'their' (belonging to them)"],
-        [/\bthere\s+going\s+to\b/gi, "they're going to", "'there going' should be 'they're going'"],
+        [/\b(?:there|their)\s+going\s+to\b/gi, "they're going to", "'there/their going' should be 'they're going'"],
         [/\btheir\s+(?=(?:is|are|was|were)\b)/gi, 'there ', "'their' should be 'there' before is/are"],
         [/\bthey're\s+(?=(?:own|house|home|car|books?|jobs?|names?|code|work|ideas?|answers?|team|parents|friends|kids|children)\b)/gi,
             'their ', "'they're' (they are) should be 'their' (belonging to them)"],
         [/\bthier\b/gi, 'their', "'thier' is a misspelling of 'their'"],
+        // Live-tested homophones and verb forms. Each needs the context shown; none
+        // fires on the word alone.
+        [/\bthere\s+(?=(?:house|home|car|room|parents|friends?|kids|children|own|family|names?|work|school|teacher|money|phones?|way)\b)/gi,
+            'their ', "'there' should be 'their' (belonging to them)"],
+        [/\b(over|out|in|up|down|from)\s+their\b(?=\s*(?:[.,!?]|$))/gi, '$1 there', "'their' should be 'there' (a place)"],
+        [/\b(more|less|fewer|better|worse|rather|other|bigger|smaller|larger|higher|lower|faster|slower|older|younger|easier|harder|cheaper|longer|shorter|greater)\b([^.?!]{0,40}?)\bthen\b(?=\s+(?:expected|usual|before|ever|anyone|anything|everyone|i|me|you|he|she|we|they|him|her|us|them|the|a|an|that|this|it|\d))/gi,
+            '$1$2than', "'then' should be 'than' in a comparison"],
+        [/\b(had|have|has|having)\s+(knew|went|did|saw|took|ate|wrote|gave|broke|spoke|drove|began|drank|swam|ran|came|forgot|chose|stole|froze|rode|threw|grew|flew|hid|bit)\b/gi,
+            (m, aux, v) => aux + ' ' + ({ knew: 'known', went: 'gone', did: 'done', saw: 'seen', took: 'taken', ate: 'eaten', wrote: 'written', gave: 'given', broke: 'broken', spoke: 'spoken', drove: 'driven', began: 'begun', drank: 'drunk', swam: 'swum', ran: 'run', came: 'come', forgot: 'forgotten', chose: 'chosen', stole: 'stolen', froze: 'frozen', rode: 'ridden', threw: 'thrown', grew: 'grown', flew: 'flown', hid: 'hidden', bit: 'bitten' })[v.toLowerCase()],
+            "past participle after 'have'"],
+        [/\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
+            (m, s, v) => s + ' ' + (v.toLowerCase() === 'seen' ? 'saw' : 'did'), "'seen/done' needs 'have'; the past tense is 'saw/did'"],
+        [/(?<!\bhow\s)\b(the|these|those|my|your|our|their|his|her|both)\s+([a-z]+[^su\W]s)\s+is\b(?!\s+(?:this|that|it|[a-z]+ing)\b)/gi,
+            (m, det, noun) => /(?:ics|news|series|species|ss)$|^(?:datas|informations|advices|feedbacks|researches|knowledges|equipments|furnitures|luggages|softwares|homeworks|evidences)$/i.test(noun) ? m : `${det} ${noun} are`, "a plural subject takes 'are'"],
+        [/\bwhose\s+(?=(?:going|coming|doing|been|not|there|here|ready|next|online|available|[a-z]+ing)\b)/gi,
+            "who's ", "'whose' should be 'who's' (who is)"],
+        [/\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
+        [/\bto\s+advice\b/gi, 'to advise', "'advice' (noun) should be 'advise' (verb)"],
+        [/\b(on|about|know|decide|choose|sure|idea|wondering|tell\s+me|ask|see)\s+witch\b(?!\s+(?:hunts?|craft|hats?|doctors?|trials?))/gi, '$1 which', "'witch' should be 'which'"],
+        [/(?<!\b(?:the|today's|bad|good|nice|this)\s)\bweather\s+(?=(?:to|or\s+not|i|you|we|he|she|they|it)\b)/gi, 'whether ', "'weather' should be 'whether'"],
+        [/^(me|him|her)\s+and\s+(him|her|me)\s+(?=(?:went|are|were|did|have|go|got|had|will|can)\b)/i,
+            (m, a, b) => { const subj = { me: 'I', him: 'he', her: 'she' }; const x = [a, b].map((w) => subj[w.toLowerCase()]); const other = x.find((w) => w !== 'I') || x[0]; return `${other.charAt(0).toUpperCase() + other.slice(1)} and I `; },
+            "'me and him' as a subject should be 'he and I'"],
 
         // its / it's
-        [/\bits\s+(?=(?:a|an|the|not|been|going|important|possible|clear|better|worth|hard|easy|time|good|bad|fine|ready|done|correct|wrong|useful|working|broken|available|enough|still|just|only|really|very|too)\b)/gi,
+        // "true", "false", "about", "due", "okay", "so", "because" and "like" added from
+        // live testing: "its about the causes", "I believe its true".
+        [/\bits\s+(?=(?:a|an|the|not|been|going|raining|snowing|getting|taking|making|looking|happening|loading|crashing|more|important|possible|clear|better|worth|hard|easy|time|good|bad|fine|ready|done|correct|wrong|useful|working|broken|available|enough|still|just|only|really|very|too|true|false|about|due|okay|ok|so|because|like|my|your|our|their|his|her|always|never|already|over|late|nice|fun|cool|weird)\b)/gi,
             "it's ", "'its' (possessive) should be 'it's' (it is)"],
         [/\bit's\s+(?=(?:own|value|name|size|type|purpose|length|contents?|output|input|results?|performance|accuracy|behaviou?r|structure)\b)/gi,
             'its ', "'it's' (it is) should be 'its' (possessive)"],
@@ -197,6 +233,13 @@ const PromptMeterGrammar = {
         // is always wrong, while "than I can" is always right.
         [/\b(better|worse|faster|slower|more|less|larger|smaller|bigger|greater|higher|lower|cheaper|older|newer|easier|harder|rather|other|longer|shorter|stronger|weaker)\s+then\b/gi,
             '$1 than', "'then' should be 'than' after a comparison"],
+
+        // Feeling adjectives after a linking verb take the participle: "I always get
+        // confuse", "I am bore" -> confused, bored. Only this closed set, and only after
+        // get/am/is/are/feel, so the verb "confuse" in "do not confuse X" is untouched.
+        [/\b(get|gets|got|getting|am|is|are|was|were|feel|feels|felt|feeling|so|very|really)\s+(confuse|bore|tire|stress|scare|excite|annoy|frustrate|overwhelm|disappoint|embarrass|exhaust|surprise|amaze|satisfy|worry)\b(?!d|ed)/gi,
+            (m, verb, adj) => `${verb} ${adj.replace(/y$/i, 'i').replace(/e$/i, '')}ed`,
+            "a feeling after 'get' or 'am' takes the -ed form ('get confused', 'am stressed')"],
 
         // loose / lose
         [/\bloose\s+(?=(?:the|a|an|my|your|our|their|his|her|its|this|that|it|them|data|points?|money|time|track|weight|connection|access)\b)/gi,
@@ -269,6 +312,10 @@ const PromptMeterGrammar = {
             '$1', "'more $1' is a double comparative"],
         [/\bmost\s+(best|worst|fastest|slowest|easiest|hardest|simplest)\b/gi,
             '$1', "'most $1' is a double superlative"],
+        // "i dont no how to" is "know" misspelt, not a double negative: "no" followed
+        // by a question word or "if" cannot be a quantifier. Must run before the rule below.
+        [/\b(don'?t|doesn'?t|didn'?t)\s+no\b(?=\s+(?:how|what|why|where|when|who|which|whether|if|that|anything|much|about)\b)/gi,
+            '$1 know', "'no' should be 'know'"],
         // Double negatives. The negated quantifier becomes its positive-polarity form.
         [/\b(don'?t|doesn'?t|didn'?t|can'?t|won'?t|couldn'?t|shouldn'?t|wouldn'?t|isn'?t|aren'?t)\s+((?:have|get|see|know|want|need|do)\s+)?(no|none|nothing|never)\b/gi,
             (m, neg, verb, quantifier) => {
@@ -443,7 +490,10 @@ const PromptMeterGrammar = {
                     const before = whole.slice(0, offset).replace(/\s+$/, '');
                     const clauseStart = before === ''
                         || /[.!?,;:(\[{"'—-]$/.test(before)
-                        || /\b(?:and|but|or|so|because|since|although|though|while|if|that)$/i.test(before);
+                        // Not and/but/or: "problems that can be solved and that have
+                        // no fix" coordinates two relative clauses, and "that have"
+                        // agrees with "problems" -- it became "that has".
+                        || /\b(?:so|because|since|although|though|while|if)$/i.test(before);
                     if (!clauseStart) return match;
                 }
                 const singular = {
@@ -463,9 +513,14 @@ const PromptMeterGrammar = {
         // takes the bare infinitive -- so conjugating it produced "What could it is".
         // Inverted questions put the subject between the modal and its verb, which is
         // the one place this rule cannot read agreement off the pronoun alone.
-        out = out.replace(/(?<!\b(?:can|could|will|would|shall|should|may|might|must|to|do|does|did|don't|doesn't|didn't)\s)\b(he|she|it)\s+([a-z]+)\b/gi, (match, subject, word) => {
+        out = out.replace(/(?<!\b(?:can|could|will|would|shall|should|may|might|must|to|do|does|did|don't|doesn't|didn't)\s)\b(he|she|it)\s+([a-z]+)\b/gi, (match, subject, word, offset, str) => {
             const lower = word.toLowerCase();
             if (!this.VERBS.has(lower)) return match;
+            // "it" after a verb or preposition is the object, not the subject: "explain
+            // it like I am 5" became "explain it likes", "make it work" -> "make it works".
+            const prev = (str.slice(0, offset).match(/([a-z']+)\s*$/i) || [])[1];
+            if (subject.toLowerCase() === 'it' && prev && (this.VERBS.has(prev.toLowerCase())
+                || /^(?:with|for|about|on|in|to|of|from|like|than|into|onto|at|by|make|let|keep|get|have|help|see|watch)$/i.test(prev))) return match;
             if (this.AMBIGUOUS_PAST.has(lower)) return match;
             const fixed = this.thirdPerson(lower);
             if (fixed === lower) return match;
@@ -548,8 +603,21 @@ const PromptMeterGrammar = {
 
         // "a apple" -> "an apple". The exceptions are words whose spelling and sound
         // disagree: "a user" and "a European" start with a consonant sound.
-        out = out.replace(/\b([Aa])\s+([aeiou]\w+)/g, (match, article, word, offset, whole) => {
-            if (/^(?:user|useful|unique|union|united|universal|university|unicode|utility|european|one|once)/i.test(word)) return match;
+        // Each exception list serves both directions: "university" also means "an
+        // university" -> "a university", and "honest" also means "a honest" -> "an
+        // honest". Each direction used to know only the other's list.
+        const consonantSound = /^(?:user?s?\b|useful|usual|uni(?![nmd])|utility|europe|one\b|once)/i;
+        const silentH = /^(?:hour|honest|honou?r|heir)/i;
+        // An acronym or model name is read letter by letter, so its article follows
+        // the letter's NAME: "an M2", "an FBI agent", "an SQL query", "a GPU".
+        // "an M2" was being "corrected" to "a M2".
+        const soundsVowel = (word) => /^[A-Z](?:[A-Z0-9]|$)/.test(word)
+            ? /^[AEFHILMNORSX]/.test(word)
+            : /^[aeiou]/i.test(word) ? !consonantSound.test(word) : silentH.test(word);
+
+        out = out.replace(/\b([Aa])\s+([a-z]\w+)/g, (match, article, word, offset, whole) => {
+            const vowelSound = soundsVowel(word);
+            if (!vowelSound) return match;
 
             // A capital "A" in the middle of a sentence is a label, not an article.
             // "Class A ordinary shares" was becoming "Class An ordinary shares", and so
@@ -567,8 +635,9 @@ const PromptMeterGrammar = {
         });
 
         // "an book" -> "a book", with the reverse exceptions: "an hour", "an honest".
-        out = out.replace(/\b([Aa])n\s+([b-df-hj-np-tv-z]\w+)/gi, (match, article, word) => {
-            if (/^(?:hour|honest|honou?r|heir)/i.test(word)) return match;
+        out = out.replace(/\b([Aa])n\s+([a-z]\w+)/gi, (match, article, word) => {
+            const vowelSound = soundsVowel(word);
+            if (vowelSound) return match;
             issues.push({ type: 'article', label: `"an ${word}" should be "a ${word}"` });
             return `${article} ${word}`;
         });

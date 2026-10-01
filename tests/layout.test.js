@@ -279,8 +279,12 @@ check('preview.html uses every class the card renders (' + cardClasses.size + ' 
 // One figure carries the saving. It used to be an 11px chip among four other 11px
 // chips, so the number the card exists to show had no more weight than the mode label.
 const heroSize = property('.promptmeter-hero-value', 'font-size');
-check('the saving is the largest figure on the card',
-    heroSize !== null && parseInt(heroSize, 10) >= 20, 'font-size: ' + heroSize);
+// The saving is a compact chip since the restyle; what it must keep is emphasis:
+// semibold, in the success colour, so it is the first thing read in the header.
+check('the saving is emphasised (semibold, success colour)',
+    parseInt(property('.promptmeter-hero-value', 'font-weight') || '0', 10) >= 600
+    && (property('.promptmeter-hero', 'color') || '').indexOf('--color-success') !== -1,
+    'font-size: ' + heroSize);
 check('the saving uses tabular numerals so it does not jog as it changes',
     (property('.promptmeter-hero-value', 'font-variant-numeric') || '').indexOf('tabular') !== -1);
 
@@ -330,10 +334,13 @@ if (jsWidth && cssWidth) {
         parseInt(cssWidth, 10) === Number(jsWidth[1]),
         'css ' + cssWidth + ' vs js ' + jsWidth[1]);
 }
-// Wide enough to match the composer it sits over. ChatGPT's is around 768px, and a card
-// narrower than that reads as a tooltip stuck on top of the prompt box.
-check('the card is at least as wide as a typical composer',
-    jsWidth !== null && Number(jsWidth[1]) >= 760, jsWidth && jsWidth[1]);
+// The card sizes to its content (user request: smaller, fitted to the prompt). The cap
+// must still leave a long suggestion room to wrap sensibly, and short ones get a
+// compact minimum that is not tooltip-narrow.
+const jsMin = /CARD_MIN_WIDTH\s*=\s*(\d+)/.exec(JS);
+check('the full width still gives long prompts room', jsWidth !== null && Number(jsWidth[1]) >= 600, jsWidth && jsWidth[1]);
+check('the compact width is not tooltip-narrow', jsMin !== null && Number(jsMin[1]) >= 420, jsMin && jsMin[1]);
+check('the width is chosen from the content', /dataset\.fitWidth\s*=/.test(JS));
 
 // 2. A card wider than the window cannot be rescued by clamping its left edge -- that
 //    pins the left and lets the right run off screen. At 580 this could not happen on any

@@ -3,14 +3,13 @@
   "name": "PromptMeter",
   "version": "1.0",
   "description": "Trims wasted tokens from your prompts, on your machine.",
-
-  "permissions": ["storage"],
-
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*"
   ],
-
   "content_scripts": [
     {
       "matches": [
@@ -27,6 +26,7 @@
         "utils/ml-model.js",
         "utils/ml-classifier.js",
         "utils/condense.js",
+        "utils/attested-words.js",
         "utils/spelling.js",
         "utils/grammar.js",
         "utils/tokenizer.js",
@@ -43,18 +43,30 @@
       ]
     }
   ],
-
   "web_accessible_resources": [
     {
-      "resources": ["utils/tiktoken.bundle.js"],
+      "resources": [
+        "utils/tiktoken.bundle.js",
+        "fonts/inter-latin.woff2"
+      ],
       "matches": [
         "https://chatgpt.com/*",
         "https://chat.openai.com/*"
       ]
     }
   ],
-
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    },
+    "default_title": "PromptMeter"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }

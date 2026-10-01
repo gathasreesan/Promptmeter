@@ -54,7 +54,7 @@ instead of 3,443, which is both a smaller download and a slightly better model.
 | `IMPORTANT` | The instruction, its constraints, its subject matter | *The output must be valid JSON* |
 | `FILLER` | Greetings, mood, backstory, sign-offs | *I have an exam tomorrow and I am really stressed* |
 | `REDUNDANT` | Wordy wrappers and tautologies that say nothing alone | *I would like you to please go ahead and* |
-| `REPETITIVE` | Restates something the prompt already said | *The report must include the data and the report must include the charts* |
+| `REPETITIVE` | Restates something the prompt already said, adding nothing | *Like I told you already like I said* |
 
 ---
 
@@ -186,7 +186,7 @@ on their own.
 
 | File | Role |
 | :--- | :--- |
-| `dataset/phrases.csv` | 621 labeled phrases, human-written — **the only training data that ships** |
+| `dataset/phrases.csv` | 1,227 labeled phrases with span offsets: 621 human-written (`seed`, `curated`) and 606 assistant-written (`annotated`) — **the only training data that ships** |
 | `dataset/expand.py` | Corpus generator — **an experiment that did not pay off**; see above |
 | `train.py` | Trains, evaluates, exports |
 | `metrics.json` | Full generated report |
@@ -290,11 +290,18 @@ span **and its context**, and the schema is one row per span. Two spans with ide
 text are correctly labeled differently depending on what came before them, so the CSV as
 it stands cannot express the label it claims to hold.
 
-The existing corpus quietly sidesteps this by only containing the self-contained kind —
-*explain recursion, explain recursion again* — where the repetition is visible inside the
-span. Those are learnable. The other kind (*and again, no external dependencies*, which
-is only repetitive because the prompt said it earlier) is not learnable from the span
-alone, and the classifier will guess.
+`phrases.csv` now carries that context. Besides `text,label,source` it has `context` (the
+earlier turn a REPETITIVE span restates), `prompt` (the whole prompt the span came from)
+and `start`/`end` (the span's character offsets in `prompt`). `train.py` still reads
+`text` and `label` only.
+
+A stutter inside a span is NOT enough for REPETITIVE. *Translate it translate this text*
+is the only statement of the task; the optimizer drops every removable span, so labeling
+it REPETITIVE taught the model to delete the request. Such rows are IMPORTANT. REPETITIVE
+is kept for spans that add nothing: markers (*like I told you already like I said*) and
+restatements of what `context` already holds (*again, no external dependencies*). The
+second kind is only partly learnable from the span alone; the classifier guesses, and a
+guess of IMPORTANT is the safe direction.
 
 **Backward-compatible solution, implemented in the generator, not yet in training.**
 `synthetic_10000.csv` carries a fourth column, `context`, holding the earlier text the

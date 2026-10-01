@@ -31,6 +31,11 @@ const readChartTokens = () => {
         primary: token('--color-primary', '#1c5d20'),
         carbon: token('--color-carbon', '#EF6C00'),
         carbonFill: token('--chart-carbon-fill', 'rgba(239, 108, 0, 0.25)'),
+        series1: token('--chart-series-1', '#2a78d6'),
+        series2: token('--chart-series-2', '#eb6834'),
+        surface: token('--bg-card', '#FFFFFF'),
+        // The page's own stack: a bare 'Inter' is never loaded here and fell back to serif.
+        font: token('--font-body', 'system-ui, sans-serif'),
         border: token('--border-color', '#E3E8E4'),
         textSecondary: token('--text-secondary', '#5A6470'),
         textMuted: token('--text-muted', '#6E7781')
@@ -91,8 +96,110 @@ const Icon = ({ name, size = 16, className = '' }) => {
 
 const TABS = [
     { id: 'overview', label: 'Overview' },
-    { id: 'queries', label: 'Queries Log' },
-    { id: 'insights', label: 'Advisor Insights' }
+    { id: 'queries', label: 'History' },
+    { id: 'insights', label: 'Insights' },
+    { id: 'settings', label: 'Dictionary & Reports' },
+    { id: 'logs', label: 'Logs' }
+];
+
+// Colour by level through the existing status tokens; the word is always shown too.
+const LEVEL_COLOR = { error: 'var(--color-error)', warn: 'var(--color-warning)', info: 'var(--text-muted)' };
+
+const LogsTab = () => {
+    const [entries, setEntries] = useState([]);
+    const [onlyProblems, setOnlyProblems] = useState(false);
+    const [query, setQuery] = useState('');
+
+    const load = () => PromptMeterStorage.getLog(setEntries);
+    useEffect(() => {
+        load();
+        // Live: the content script flushes every couple of seconds.
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.onChanged) return undefined;
+        const onChange = (changes, area) => { if (area === 'local' && changes.eventLog) setEntries(changes.eventLog.newValue || []); };
+        chrome.storage.onChanged.addListener(onChange);
+        return () => chrome.storage.onChanged.removeListener(onChange);
+    }, []);
+
+    const q = query.toLowerCase();
+    const shown = entries.slice().reverse()
+        .filter(e => !onlyProblems || e.lvl === 'error' || e.lvl === 'warn')
+        .filter(e => !q || (e.k + ' ' + e.m + ' ' + JSON.stringify(e.d || {})).toLowerCase().includes(q));
+    const problems = entries.filter(e => e.lvl === 'error' || e.lvl === 'warn').length;
+
+    return (
+        <Panel>
+            <PanelHeader title={`Event log (${entries.length}, ${problems} problems)`}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input className="search-input" placeholder="Filter…" value={query}
+                           onChange={(e) => setQuery(e.target.value)} aria-label="Filter log" />
+                    <label style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center', color: 'var(--text-secondary)' }}>
+                        <input type="checkbox" checked={onlyProblems} onChange={(e) => setOnlyProblems(e.target.checked)} />
+                        Problems only
+                    </label>
+                    <button className="btn-secondary" disabled={!entries.length}
+                            onClick={() => downloadFile(`promptmeter-${today()}.log`, PromptMeterStorage.formatLog(entries))}>
+                        Download .log
+                    </button>
+                    <button className="btn-secondary" disabled={!entries.length}
+                            onClick={() => downloadFile(`promptmeter-${today()}.jsonl`, entries.map(e => JSON.stringify(e)).join('\n'))}>
+                        .jsonl
+                    </button>
+                    <button className="btn-danger" disabled={!entries.length} onClick={() => {
+                        if (window.confirm('Delete the whole event log?')) PromptMeterStorage.clearLog(load);
+                    }}><Icon name="trash" size={14} /> Clear</button>
+                </div>
+            </PanelHeader>
+            <p className="settings-note">
+                What PromptMeter did and what went wrong, newest first: suggestions shown, applies, reverts,
+                captured turns, skipped error replies, and any failure. Kept on this computer only, the last
+                {' '}{PromptMeterStorage.LOG_MAX} entries.
+            </p>
+            <div className="table-scroll">
+                <table className="data-table">
+                    <thead><tr><th>Time</th><th>Level</th><th>Event</th><th style={{ width: '55%' }}>Details</th></tr></thead>
+                    <tbody>
+                        {shown.length === 0
+                            ? <tr><td className="cell-empty" colSpan="4">No entries{onlyProblems ? ' with problems' : ''} yet.</td></tr>
+                            : shown.slice(0, 300).map((e, i) => (
+                                <tr key={e.t + ':' + i}>
+                                    <td style={{ whiteSpace: 'nowrap' }}>{formatTimestamp(e.t)}</td>
+                                    <td style={{ color: LEVEL_COLOR[e.lvl] || LEVEL_COLOR.info, fontWeight: 700, textTransform: 'uppercase', fontSize: 11 }}>{e.lvl}</td>
+                                    <td style={{ whiteSpace: 'nowrap' }}>{e.k}</td>
+                                    <td>{e.m}{e.d ? <span style={{ color: 'var(--text-muted)' }}> {JSON.stringify(e.d)}</span> : null}</td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            </div>
+        </Panel>
+    );
+};
+
+// Saves text as a file. A Blob URL, so nothing leaves the machine and no download
+// permission is needed. The BOM makes Excel read the file as UTF-8.
+const downloadFile = (filename, text) => {
+    const url = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+const HISTORY_COLUMNS = [
+    ['timestamp', 'Time'], ['prompt', 'Prompt sent'], ['originalPrompt', 'Prompt before PromptMeter'],
+    ['wasOptimized', 'Optimized'], ['promptTokens', 'Prompt tokens'], ['responseTokens', 'Response tokens'],
+    ['totalTokens', 'Total tokens'], ['tokensSaved', 'Tokens saved'], ['efficiencyScore', 'Efficiency score'],
+    ['carbon', 'CO2 (g)'], ['carbonSaved', 'CO2 saved (g)'], ['response', 'Response']
+];
+
+const REPORT_COLUMNS = [
+    ['timestamp', 'Time'], ['category', 'Category'], ['finding', 'Finding'], ['word', 'Word'],
+    ['prompt', 'Prompt'], ['suggestion', 'Suggestion']
 ];
 
 const CHART_RANGES = ['daily', 'weekly', 'monthly'];
@@ -101,33 +208,45 @@ const CHART_RANGES = ['daily', 'weekly', 'monthly'];
 const RATINGS = [
     {
         min: 90,
-        name: "Optimal Eco-Prompter",
+        name: "Efficient",
         color: COLOR.primary,
         wash: 'var(--wash-success)',
         washStrong: 'var(--wash-success-strong)',
-        description: "Splendid! Your prompting structure avoids greetings and polite fillers, maximizing reasoning tokens while minimizing your carbon footprint."
+        description: "Your prompts are direct and carry little filler."
     },
     {
         min: 70,
-        name: "Eco-Conscious Prompter",
+        name: "Good",
         color: COLOR.warning,
         wash: 'var(--wash-warning)',
         washStrong: 'var(--wash-warning-strong)',
-        description: "Great start. You can save up to 15% more token computations by avoiding polite phrasing (please, thank you) and eliminating redundant formatting constraints."
+        description: "Some filler remains. Dropping greetings and repeated constraints would save up to 15% more tokens."
     },
     {
         min: 0,
-        name: "High Impact Prompter",
+        name: "Needs work",
         color: COLOR.error,
         wash: 'var(--wash-error)',
         washStrong: 'var(--wash-error-strong)',
-        description: "Your prompt queries are carrying redundant weights, greetings, and repetitive phrases. ACCEPT the coach's suggestions to optimize your compute score."
+        description: "Prompts carry greetings, repetition and filler. Applying the suggested rewrites will raise this score."
     }
 ];
 
 // Severities map to CSS classes (.sev-warning / .sev-success / .sev-info) which carry
 // the fill, border and pill colour for both themes.
 const SEVERITIES = ['warning', 'success', 'info'];
+
+/**
+ * Grams of CO2 at a readable scale. Savings are fractions of a milligram per prompt,
+ * so toFixed(1) printed "0.0g" for every real history.
+ */
+const formatGrams = (grams) => {
+    const g = Number(grams) || 0;
+    if (g <= 0) return '0 g';
+    if (g < 0.001) return '<1 mg';
+    if (g < 1) return `${Math.round(g * 1000)} mg`;
+    return `${g.toFixed(1)} g`;
+};
 
 /** Hand-curated dataset shown when there is no real history to display yet. */
 const getMockHistory = () => {
@@ -140,6 +259,13 @@ const getMockHistory = () => {
 
         const multiplier = (i % 3 === 0) ? 1.4 : (i % 2 === 0) ? 0.9 : 1.1;
         const isOpt = i % 3 === 0;
+        // Derived, not typed: the hand-written figures had 120 total tokens beside
+        // 10 + 154 prompt and response, and 0.45 g "saved" for 10 tokens -- 125x the
+        // calculator's rate -- so the demo showed more carbon saved than was used.
+        const promptTokens = isOpt ? 10 : Math.round(20 * multiplier);
+        const responseTokens = Math.round(110 * multiplier);
+        const footprint = PromptMeterCalculator.calculate(promptTokens + responseTokens);
+        const tokensSaved = isOpt ? 10 : 0;
 
         return {
             prompt: isOpt
@@ -149,15 +275,15 @@ const getMockHistory = () => {
                 ? "Hey ChatGPT!! I was just wondering if you could please kindly write write a python script to parse server logs? Thanks a lot in advance!"
                 : null,
             response: `Here is a lightweight Python script that parses server logs using regex...`,
-            promptTokens: isOpt ? 10 : Math.round(20 * multiplier),
-            responseTokens: Math.round(110 * multiplier),
-            totalTokens: isOpt ? 120 : Math.round(130 * multiplier),
-            electricity: parseFloat((isOpt ? 0.120 : 0.130 * multiplier).toFixed(4)),
-            carbon: parseFloat((isOpt ? 0.043 : 0.047 * multiplier).toFixed(4)),
+            promptTokens: promptTokens,
+            responseTokens: responseTokens,
+            totalTokens: promptTokens + responseTokens,
+            electricity: footprint.electricity,
+            carbon: footprint.carbon,
             efficiencyScore: isOpt ? 100 : Math.round(68 + (i * 3.2) % 22),
             wasOptimized: isOpt,
-            tokensSaved: isOpt ? 10 : 0,
-            carbonSaved: isOpt ? 0.45 : 0,
+            tokensSaved: tokensSaved,
+            carbonSaved: PromptMeterCalculator.savings(tokensSaved).carbon,
             attachedImages: (i === 1 || i === 4) ? 1 : 0,
             attachedDocs: (i === 2 || i === 7) ? 1 : 0,
             attachedLinks: i === 3 ? 1 : 0,
@@ -202,28 +328,37 @@ const bucketLabel = (date, range) => {
     return date.toLocaleDateString(undefined, { year: '2-digit', month: 'short' });
 };
 
-/** Groups history into { labels, carbon, tokens } series for the chart. */
+/** Groups history into { labels, sent, saved, carbon } series for the chart. */
 const buildSeries = (history, range) => {
     const groups = new Map();
 
     history.forEach(item => {
         const label = bucketLabel(new Date(item.timestamp), range);
-        const group = groups.get(label) || { carbon: 0, tokens: 0 };
+        const group = groups.get(label) || { sent: 0, saved: 0, carbon: 0 };
+        group.sent += item.totalTokens || 0;
+        group.saved += item.tokensSaved || 0;
         group.carbon += item.carbon || 0;
-        group.tokens += item.totalTokens || 0;
         groups.set(label, group);
     });
 
+    const values = [...groups.values()];
     return {
         labels: [...groups.keys()],
-        carbon: [...groups.values()].map(g => parseFloat(g.carbon.toFixed(3))),
-        tokens: [...groups.values()].map(g => g.tokens)
+        sent: values.map(g => g.sent),
+        saved: values.map(g => g.saved),
+        carbon: values.map(g => g.carbon)
     };
 };
 
+/**
+ * Tokens sent, with tokens saved stacked on top: the whole bar is what the period
+ * would have cost without PromptMeter. One axis. The old chart plotted carbon and
+ * tokens on two -- but carbon is tokens times a constant, so it drew one quantity
+ * twice at two scales. Carbon moved to the tooltip, where it is a derived figure.
+ */
 const chartConfig = (series) => {
     const C = readChartTokens();
-    const axisTicks = (color) => ({ color: color, font: { family: 'Inter', size: 10 } });
+    const ticks = { color: C.textMuted, font: { family: C.font, size: 10 } };
 
     return {
         type: 'bar',
@@ -231,45 +366,53 @@ const chartConfig = (series) => {
             labels: series.labels,
             datasets: [
                 {
-                    label: 'Carbon Footprint (g CO₂)',
-                    data: series.carbon,
-                    backgroundColor: C.carbonFill,
-                    borderColor: C.carbon,
-                    borderWidth: 1.5,
-                    borderRadius: 4,
-                    yAxisID: 'y'
+                    label: 'Tokens sent',
+                    data: series.sent,
+                    backgroundColor: C.series1,
+                    // The 2px surface-coloured edge is the gap between stacked fills.
+                    borderColor: C.surface,
+                    borderWidth: { top: 2 },
+                    borderSkipped: 'bottom',
+                    maxBarThickness: 40,
+                    stack: 'tokens'
                 },
                 {
-                    label: 'Tokens Consumed',
-                    data: series.tokens,
-                    type: 'line',
-                    borderColor: C.primary,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointBackgroundColor: C.primary,
-                    tension: 0.15,
-                    yAxisID: 'y1'
+                    label: 'Tokens saved',
+                    data: series.saved,
+                    backgroundColor: C.series2,
+                    borderRadius: { topLeft: 4, topRight: 4 },
+                    borderSkipped: 'bottom',
+                    maxBarThickness: 40,
+                    stack: 'tokens'
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: { color: C.textSecondary, font: { family: 'Inter', size: 11, weight: '600' } }
+                    align: 'start',
+                    labels: { color: C.textSecondary, boxWidth: 10, boxHeight: 10, font: { family: C.font, size: 11, weight: '600' } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`,
+                        footer: (items) => {
+                            const i = items[0].dataIndex;
+                            return `CO₂ used: ${formatGrams(series.carbon[i])}`;
+                        }
+                    }
                 }
             },
             scales: {
-                x: { grid: { color: C.border }, ticks: axisTicks(C.textMuted) },
+                x: { stacked: true, grid: { display: false }, ticks: ticks },
                 y: {
-                    type: 'linear', display: true, position: 'left',
-                    grid: { color: C.border }, ticks: axisTicks(C.carbon)
-                },
-                y1: {
-                    type: 'linear', display: true, position: 'right',
-                    grid: { drawOnChartArea: false }, ticks: axisTicks(C.primary)
+                    stacked: true, beginAtZero: true,
+                    grid: { color: C.border }, border: { display: false },
+                    ticks: Object.assign({ precision: 0 }, ticks)
                 }
             }
         }
@@ -292,13 +435,11 @@ const PanelHeader = ({ icon, title, children }) => (
     </div>
 );
 
-const KpiCard = ({ label, value, unit, accent }) => (
-    <div className={`glass-panel kpi-card${accent ? ' kpi-accent' : ''}`}>
+const KpiCard = ({ label, value, sub, positive }) => (
+    <div className="kpi-card">
         <div className="kpi-label">{label}</div>
-        <div className="kpi-value" style={unit ? { color: COLOR.carbon } : undefined}>
-            {value}
-            {unit && <span className="kpi-unit">{unit}</span>}
-        </div>
+        <div className={`kpi-value${positive ? ' kpi-positive' : ''}`}>{value}</div>
+        {sub && <div className="kpi-sub">{sub}</div>}
     </div>
 );
 
@@ -446,7 +587,7 @@ const QueryRow = ({ item, onDelete }) => {
     const score = typeof item.efficiencyScore === 'number' ? item.efficiencyScore : null;
     const rating = (score !== null && RATINGS.find(r => score >= r.min))
         || RATINGS[RATINGS.length - 1];
-    const scoreColor = score !== null && score >= 90 ? COLOR.success : rating.color;
+    const scoreColor = score !== null && score >= 90 ? 'var(--text-primary)' : rating.color;
 
     const [expanded, setExpanded] = useState(false);
     const hasComparison = Boolean(item.originalPrompt && item.originalPrompt !== item.prompt);
@@ -464,19 +605,17 @@ const QueryRow = ({ item, onDelete }) => {
                         aria-expanded={expanded}
                         onClick={() => setExpanded(!expanded)}
                     >
-                        <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={13} /> {expanded ? 'Hide' : 'Compare'} original vs optimized
+                        <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={13} /> {expanded ? 'Hide' : 'Show'} original
                     </button>
                 )}
             </td>
             <td className="cell-numeric">{item.totalTokens.toLocaleString()}</td>
-            <td className="cell-numeric" style={{ color: COLOR.carbon }}>{item.carbon.toFixed(2)}g</td>
+            <td className="cell-numeric cell-muted">{formatGrams(item.carbon)}</td>
             <td className="align-center">
-                {item.wasOptimized ? (
-                    <span className="pill" style={{ '--pill-color': COLOR.primary, fontSize: 11 }}>
-                        -{item.carbonSaved.toFixed(2)}g
-                    </span>
+                {item.wasOptimized && item.tokensSaved > 0 ? (
+                    <span className="cell-saved">−{item.tokensSaved}</span>
                 ) : (
-                    <span style={{ color: COLOR.textMuted }}>-</span>
+                    <span style={{ color: COLOR.textMuted }}>–</span>
                 )}
             </td>
             <td className="align-right">
@@ -530,32 +669,19 @@ const ThemeSwitch = ({ value, onChange }) => (
 
 const OverviewTab = ({ stats, weeklyChallenge, currentStreak, filterMode, setFilterMode, chartRef }) => (
     <div>
-        <div className="kpi-grid">
-            <KpiCard label="Logged Queries" value={stats.totalQueries} />
-            <KpiCard label="Total Tokens" value={stats.totalTokens.toLocaleString()} />
-            <KpiCard label="Carbon Footprint" value={stats.totalCarbon.toFixed(1)} unit="g CO₂" />
-            <KpiCard label="Avg Efficiency" value={`${stats.avgEfficiency}%`} accent />
+        <div className="kpi-grid glass-panel">
+            <KpiCard label="Prompts" value={stats.totalQueries.toLocaleString()} />
+            <KpiCard label="Tokens sent" value={stats.totalTokens.toLocaleString()}
+                     sub={`${formatGrams(stats.totalCarbon)} CO₂`} />
+            <KpiCard label="Tokens saved" value={stats.totalTokensSaved.toLocaleString()} positive
+                     sub={`${formatGrams(stats.totalCarbonSaved)} CO₂ avoided`} />
+            <KpiCard label="Avg efficiency" value={`${stats.avgEfficiency}%`} />
         </div>
 
         <div className="split-main">
             <div className="stack">
                 <Panel>
-                    <div className="row-between" style={{ marginBottom: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Icon name="trophy" size={16} />
-                            <h3 className="panel-title">{weeklyChallenge.title}</h3>
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: COLOR.primary }}>
-                            Saved: {weeklyChallenge.currentValue} / 2.0g target
-                        </div>
-                    </div>
-                    <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${weeklyChallenge.progress}%` }} />
-                    </div>
-                </Panel>
-
-                <Panel>
-                    <PanelHeader title="Environmental Footprint Over Time">
+                    <PanelHeader title="Tokens over time">
                         <Segmented options={CHART_RANGES} value={filterMode} onChange={setFilterMode} />
                     </PanelHeader>
                     <div style={{ height: 260, position: 'relative' }}>
@@ -565,21 +691,19 @@ const OverviewTab = ({ stats, weeklyChallenge, currentStreak, filterMode, setFil
             </div>
 
             <div className="stack">
-                <Panel className="panel-accent" style={{ textAlign: 'center' }}>
-                    <div className="streak-mark"><Icon name="flame" size={26} /></div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.textSecondary, marginBottom: 4 }}>
-                        Coaching Streak
-                    </div>
-                    <div className="kpi-value" style={{ fontSize: 30, color: COLOR.streak }}>
-                        {currentStreak} Days
-                    </div>
-                </Panel>
-
                 <Panel>
-                    <h4 className="section-label">Saved by Coach</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <StatRow label="Tokens Saved" value={stats.totalTokensSaved} color={COLOR.primary} />
-                        <StatRow label="Carbon Saved" value={`${stats.totalCarbonSaved.toFixed(1)}g`} color={COLOR.carbon} />
+                    <h3 className="panel-title" style={{ marginBottom: 16 }}>This week</h3>
+                    <div className="goal-line">
+                        <span>Weekly goal</span>
+                        <span>{weeklyChallenge.currentValue} of {weeklyChallenge.targetLabel}</span>
+                    </div>
+                    <div className="progress-track">
+                        <div className="progress-fill" style={{ width: `${weeklyChallenge.progress}%` }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
+                        <StatRow label="Streak" value={`${currentStreak} ${currentStreak === 1 ? 'day' : 'days'}`} />
+                        <StatRow label="Tokens saved" value={stats.totalTokensSaved.toLocaleString()} />
+                        <StatRow label="CO₂ avoided" value={formatGrams(stats.totalCarbonSaved)} />
                     </div>
                 </Panel>
             </div>
@@ -587,19 +711,24 @@ const OverviewTab = ({ stats, weeklyChallenge, currentStreak, filterMode, setFil
     </div>
 );
 
-const QueriesTab = ({ rows, hasHistory, searchTerm, setSearchTerm, onClearAll, onDelete }) => (
+const QueriesTab = ({ rows, hasHistory, searchTerm, setSearchTerm, onClearAll, onDelete, onExport, isMockData }) => (
     <Panel>
-        <PanelHeader title="Queries Log">
+        <PanelHeader title="History">
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <input
                     type="text"
                     className="search-input"
-                    placeholder="Search queries..."
+                    placeholder="Search prompts"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                {/* Disabled on the sample data: exporting the demo would look like the user's history. */}
+                <button className="btn-secondary" onClick={onExport} disabled={!hasHistory || isMockData}
+                        title={isMockData ? 'This is sample data; nothing of yours to export yet' : 'Download the rows shown as CSV'}>
+                    Export CSV
+                </button>
                 {hasHistory && (
-                    <button className="btn-danger" onClick={onClearAll}><Icon name="trash" size={14} /> Clear all logs</button>
+                    <button className="btn-danger" onClick={onClearAll}>Clear history</button>
                 )}
             </div>
         </PanelHeader>
@@ -611,10 +740,10 @@ const QueriesTab = ({ rows, hasHistory, searchTerm, setSearchTerm, onClearAll, o
                         <th>Date</th>
                         <th style={{ width: '50%' }}>Prompt</th>
                         <th className="align-right">Tokens</th>
-                        <th className="align-right">Carbon</th>
-                        <th className="align-center">Savings</th>
+                        <th className="align-right">CO₂</th>
+                        <th className="align-center">Saved</th>
                         <th className="align-right">Score</th>
-                        <th className="align-center">Actions</th>
+                        <th className="align-center"><span className="sr-only">Delete</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -645,8 +774,8 @@ const InsightsTab = ({ avgEfficiency, rating, recommendations, badges, currentSt
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
-                            AI Sustainability Coach Dashboard
+                        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                            Prompt health
                         </h2>
                         <span className="rating-tag">{rating.name}</span>
                     </div>
@@ -660,43 +789,122 @@ const InsightsTab = ({ avgEfficiency, rating, recommendations, badges, currentSt
                 <div className="stack">
                     <RecommendationList
                         icon="warning"
-                        title="Critical Optimization Warnings"
+                        title="Warnings"
                         items={criticalFixes}
                         emptyMessage="No warnings. Your prompts are running efficiently."
                     />
                     <RecommendationList
                         icon="check"
-                        title="Efficiency Best Practices"
+                        title="Suggestions"
                         items={bestPractices}
-                        emptyMessage="No diagnostics logs available yet. Make more queries to generate tips."
+                        emptyMessage="Nothing yet. Suggestions appear after a few prompts."
                     />
                 </div>
 
                 <div className="stack">
                     <Panel>
                         <div className="panel-header" style={{ marginBottom: 16 }}>
-                            <h3 className="panel-title">Eco Milestones</h3>
+                            <h3 className="panel-title">Milestones</h3>
                         </div>
                         <div className="badge-grid">
                             {badges.map(badge => <BadgeTile key={badge.id} badge={badge} />)}
                         </div>
                     </Panel>
 
-                    <Panel className="panel-accent" style={{ padding: 20 }}>
-                        <h4 className="section-label" style={{ fontSize: 11, marginBottom: 12 }}>
-                            Coaching Summary
-                        </h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
-                            <StatRow label="Active Streak:" value={`${currentStreak} Days`} />
-                            <StatRow
-                                label="Eco-Badges Unlocked:"
-                                value={`${badges.filter(b => b.unlocked).length} / ${badges.length}`}
-                                color={COLOR.primary}
-                            />
+                    <Panel>
+                        <h3 className="panel-title" style={{ marginBottom: 14 }}>Summary</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <StatRow label="Streak" value={`${currentStreak} ${currentStreak === 1 ? 'day' : 'days'}`} />
+                            <StatRow label="Milestones" value={`${badges.filter(b => b.unlocked).length} of ${badges.length}`} />
                         </div>
                     </Panel>
                 </div>
             </div>
+        </div>
+    );
+};
+
+const SettingsTab = () => {
+    const [dictionary, setDictionary] = useState([]);
+    const [reports, setReports] = useState([]);
+    const [draft, setDraft] = useState('');
+
+    const load = () => PromptMeterStorage.getSettings({ dictionary: [], fixReports: [] }, (res) => {
+        setDictionary(res.dictionary || []);
+        setReports(res.fixReports || []);
+    });
+    useEffect(load, []);
+
+    const addWord = (event) => {
+        event.preventDefault();
+        if (!draft.trim()) return;
+        PromptMeterStorage.addToDictionary(draft, setDictionary);
+        setDraft('');
+    };
+
+    return (
+        <div className="stack">
+            <Panel>
+                <PanelHeader title="Personal dictionary" />
+                <p className="settings-note">
+                    Words PromptMeter will never spell-correct: names, product terms, your own jargon.
+                    Add them here or with <b>Always keep</b> under a correction's <b>Why?</b>.
+                </p>
+                <form onSubmit={addWord} style={{ display: 'flex', gap: 10 }}>
+                    <input className="search-input" placeholder="Add a word, e.g. Kubernetes"
+                           value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Word to add" />
+                    <button className="btn-secondary" type="submit" disabled={!draft.trim()}>Add</button>
+                </form>
+                <div className="word-chips">
+                    {dictionary.length === 0
+                        ? <span className="settings-note">No words yet.</span>
+                        : dictionary.map(word => (
+                            <span className="word-chip" key={word}>
+                                {word}
+                                <button aria-label={`Remove ${word}`} title="Remove"
+                                        onClick={() => PromptMeterStorage.removeFromDictionary(word, setDictionary)}>×</button>
+                            </span>
+                        ))}
+                </div>
+            </Panel>
+
+            <Panel>
+                <PanelHeader title={`Reported fixes (${reports.length})`}>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button className="btn-secondary" disabled={!reports.length}
+                                onClick={() => downloadFile(`promptmeter-reports-${today()}.csv`,
+                                    PromptMeterStorage.toCSV(reports, REPORT_COLUMNS))}>
+                            Export CSV
+                        </button>
+                        <button className="btn-danger" disabled={!reports.length} onClick={() => {
+                            if (!window.confirm('Delete every reported fix?')) return;
+                            PromptMeterStorage.clearFixReports(load);
+                        }}><Icon name="trash" size={14} /> Clear</button>
+                    </div>
+                </PanelHeader>
+                <p className="settings-note">
+                    Corrections you marked as wrong with <b>Report this as wrong</b>. They stay on this
+                    computer; the export is how they become training data for the next model.
+                </p>
+                <div className="table-scroll">
+                    <table className="data-table">
+                        <thead>
+                            <tr><th>When</th><th>Finding</th><th style={{ width: '45%' }}>Prompt</th></tr>
+                        </thead>
+                        <tbody>
+                            {reports.length === 0
+                                ? <tr><td className="cell-empty" colSpan="3">Nothing reported yet.</td></tr>
+                                : reports.slice().reverse().slice(0, 50).map(r => (
+                                    <tr key={r.timestamp + r.finding}>
+                                        <td>{formatTimestamp(r.timestamp)}</td>
+                                        <td>{r.finding}</td>
+                                        <td>{r.prompt}</td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Panel>
         </div>
     );
 };
@@ -777,9 +985,11 @@ export default function App() {
     const visibleRows = history
         // The original text is searched too, so a phrase the coach removed still finds
         // the turn it was removed from.
+        // `|| ''` on every field: one stored turn missing its response used to throw
+        // here and blank the whole Queries tab.
         .filter(item =>
-            item.prompt.toLowerCase().includes(query) ||
-            item.response.toLowerCase().includes(query) ||
+            (item.prompt || '').toLowerCase().includes(query) ||
+            (item.response || '').toLowerCase().includes(query) ||
             (item.originalPrompt || '').toLowerCase().includes(query))
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -804,15 +1014,8 @@ export default function App() {
         <div className="app-shell">
             <div className="sidebar">
                 <div className="sidebar-brand">
-                    <div>
-                        <div className="brand-name">
-                            PromptMeter
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10, fontWeight: 700, color: COLOR.primary }}>
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLOR.primary, display: 'inline-block' }} />
-                            COACH ACTIVE
-                        </div>
-                    </div>
+                    <img src="../icons/icon32.png" alt="" width="24" height="24" className="brand-mark" />
+                    <div className="brand-name">PromptMeter</div>
                 </div>
 
                 <div className="sidebar-nav">
@@ -829,7 +1032,7 @@ export default function App() {
 
                 <div className="sidebar-footer">
                     <ThemeSwitch value={theme} onChange={handleThemeChange} />
-                    Version 1.0.0
+                    <div className="version">Version 1.0</div>
                 </div>
             </div>
 
@@ -853,8 +1056,15 @@ export default function App() {
                         setSearchTerm={setSearchTerm}
                         onClearAll={handleClearHistory}
                         onDelete={handleDeleteTurn}
+                        isMockData={isMockData}
+                        onExport={() => downloadFile(`promptmeter-history-${today()}.csv`,
+                            PromptMeterStorage.toCSV(visibleRows, HISTORY_COLUMNS))}
                     />
                 )}
+
+                {activeTab === 'settings' && <SettingsTab />}
+
+                {activeTab === 'logs' && <LogsTab />}
 
                 {activeTab === 'insights' && (
                     <InsightsTab

@@ -66,6 +66,11 @@ const PromptMeterProtect = {
         // --- Material the user marked as verbatim ----------------------------------
         { name: 'double-quoted', rx: /"[^"\n]{1,300}"/g },
         { name: 'smart-quoted', rx: /“[^”\n]{1,300}”/g },
+        // Single quotes too: "correct my sentence: 'Ich habe gestern...'" had "habe"
+        // corrected to "have", and a passage sent for proofreading was proofread
+        // before the model saw it. Not touching a letter on the outside, so the
+        // apostrophes in "it's" and "students' books" are never taken for quotes.
+        { name: 'single-quoted', rx: /(?<![\w'’])'[^'\n]{3,300}'(?![\w'’])/g },
 
         // --- Templates, variables, flags -------------------------------------------
         { name: 'handlebars', rx: /\{\{[^}\n]+\}\}/g },

@@ -1223,6 +1223,48 @@ const PromptMeterSpelling = {
         return this.rank.has(word);
     },
 
+    /**
+     * True when the word is a regular inflection or a British spelling of a known word.
+     *
+     * The dictionary lists base forms, so "caching" was unknown and went to "coaching",
+     * "colour" to "color", "organise" to "organize" -- even in a prompt asking for
+     * British spelling. A word that is a known word plus a regular suffix, or a known
+     * American spelling written the British way, is not a typo.
+     */
+    formOfKnown: function (word) {
+        const spellings = [word,
+            word.replace(/our(s|ed|ing|ite|ites|able)?$/, 'or$1'),
+            word.replace(/is(e|es|ed|ing|ation|ations)$/, 'iz$1'),
+            word.replace(/ys(e|es|ed|ing)$/, 'yz$1'),
+            word.replace(/tre(s)?$/, 'ter$1'),
+            word.replace(/ogue(s)?$/, 'og$1'),
+            word.replace(/ence$/, 'ense')];
+        const stems = (w) => {
+            const out = [];
+            const add = (stem) => { if (stem.length >= 3) out.push(stem, stem + 'e'); };
+            let m;
+            if ((m = /^(.+)ies$/.exec(w))) out.push(m[1] + 'y');
+            if ((m = /^(.+)ied$/.exec(w))) out.push(m[1] + 'y');
+            if ((m = /^(.+?)(ing|ed|er|est|es)$/.exec(w))) {
+                // A one-vowel, one-consonant stem doubles before these endings: "bet"
+                // gives "better", never "beter". Counting the undoubled spelling as a
+                // form of "bet" is what left "beter", "leter", "geting" uncorrected.
+                if (/^[^aeiou]*[aeiou][^aeiouwxy]$/.test(m[1])) out.push(m[1] + 'e');
+                else add(m[1]);
+                if (/(.)\1$/.test(m[1])) add(m[1].slice(0, -1));     // running -> run
+            }
+            if ((m = /^(.{4,})(s|ly)$/.exec(w))) out.push(m[1]);
+            return out;
+        };
+        // The other direction: "confuse" is unlisted but "confused" is not, so the
+        // base form went to its own past tense ("do not confused").
+        const grown = word.length >= 4
+            && [word + 's', word + 'd', word + 'ed', word.replace(/e$/, '') + 'ing']
+                .some((w) => this.known(w));
+        return grown || spellings.some((w, i) => (i > 0 && w !== word && this.known(w))
+            || stems(w).some((stem) => this.known(stem)));
+    },
+
     /** True when every character of `part` appears in `whole`, in order. */
     isSubsequence: function (part, whole) {
         let i = 0;
@@ -1303,7 +1345,12 @@ const PromptMeterSpelling = {
         // the key beside it. Anything else at equal length is a different word.
         if (word.length === candidate.length) {
             return this.isTransposition(word, candidate) ||
-                this.isNeighbourSubstitution(word, candidate);
+                this.isNeighbourSubstitution(word, candidate) ||
+                // Only the vowels moved: "explane" for "explain", "leson" is not this
+                // (different length). Consonants are the evidence and all of them match.
+                // The first vowel must match too, or "canda" became "conda".
+                (word.length >= 5 && this.skeleton(word) === this.skeleton(candidate)
+                    && (word.match(/[aeiou]/) || [])[0] === (candidate.match(/[aeiou]/) || [])[0]);
         }
 
         // A longer typo may not lose its trailing letter. Sweeping words that end in a
@@ -1368,7 +1415,8 @@ const PromptMeterSpelling = {
      */
     resolve: function (word) {
         if (word.length < this.MIN_LENGTH) return null;
-        if (this.known(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        if (Object.prototype.hasOwnProperty.call(this.misspellings, word)) return this.misspellings[word];
 
         // A skeleton of one consonant carries almost no evidence -- "bee" reduces to "b",
         // which it shares with "be", "by", "buy" and a dozen others, and the ranking then
@@ -1606,6 +1654,19 @@ PromptMeterSpelling.keyNeighbours = (function () {
     });
     return map;
 }());
+
+// Words real users typed that the dictionary lacks (utils/attested-words.js, built by
+// ml/build_attested.js). Exempt from correction, never a correction TARGET -- they are
+// kept out of the indexes below, so this list can only ever stop a change. Without it
+// "toes" became "ties", "bot" became "both" and "risky" became "ricky".
+PromptMeterSpelling.attested = new Set(((typeof PM_ATTESTED_WORDS !== 'undefined')
+    ? PM_ATTESTED_WORDS
+    : (typeof require !== 'undefined' ? require('./attested-words.js').PM_ATTESTED_WORDS : '')
+).split(' ').filter(Boolean));
+// Known misspellings with their fix (same generated file). Looked up before ranking.
+PromptMeterSpelling.misspellings = (typeof PM_MISSPELLINGS !== 'undefined')
+    ? PM_MISSPELLINGS
+    : (typeof require !== 'undefined' ? require('./attested-words.js').PM_MISSPELLINGS || {} : {});
 
 PromptMeterSpelling.rank = new Map();
 PromptMeterSpelling.skeletonIndex = new Map();

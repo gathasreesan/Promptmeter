@@ -206,5 +206,69 @@ check('warnings name the mode and what was lost',
         result.tokens.original + ' -> ' + result.tokens.optimized);
 });
 
+// ---------------------------------------------------------------------------
+// Why a prompt did not change: five outcomes that look the same in the text
+// ---------------------------------------------------------------------------
+const S = K.STATUS;
+const statusOf = (prompt, name, expected) => {
+    const result = K.compress(prompt, { budgetMs: 1e5 });
+    check(name + ' -> ' + expected, result.status === expected,
+        result.status + ': ' + result.reason);
+    return result;
+};
+
+// Repetitive exam prompt. Every sentence asks to "explain", so condense() held them all
+// as core and the aggressive tier came out identical to balanced. The restated
+// sentence goes now; the topics, the table and the exam context do not.
+const DBMS = 'Please please explain normalization in DBMS for my exam. I have an exam tomorrow on DBMS and I really need to understand normalization in DBMS. Can you please explain 1NF, 2NF, 3NF and BCNF in DBMS with examples? Please explain each normal form with an example table so I can prepare for my DBMS exam. Basically I just want you to explain normalization clearly for the exam.';
+const dbms = statusOf(DBMS, 'repetitive DBMS prompt', S.SUCCESSFUL);
+check('DBMS: the aggressive tier exists and is the one chosen', dbms.mode === 'aggressive', dbms.mode);
+check('DBMS: the shortest valid candidate wins', dbms.candidates
+    .filter((c) => c.valid).every((c) => c.tokens >= dbms.tokens.optimized));
+check('DBMS: every normal form and the table survive',
+    ['1NF', '2NF', '3NF', 'BCNF', 'table'].every((w) => dbms.text.indexOf(w) !== -1), dbms.text);
+
+// Already tight. Nothing is shorter, so "unchanged" here is the right answer -- and
+// the maths is not skipped as code: a padded version of it does compress.
+const MATH = 'Minimize f(x, y) = x^2 + 3y^2 - 2xy + 4x subject to x + y <= 10, x >= 0 and y >= 0. Use the Lagrange multiplier method and the KKT conditions, show every step, and verify that the solution is a global minimum by checking the Hessian.';
+check('math prompt is unchanged', statusOf(MATH, 'tight optimisation prompt', S.ALREADY_OPTIMAL).text === MATH);
+statusOf('Hi! I hope you are well. ' + MATH + ' Thanks so much in advance!',
+    'padded optimisation prompt is not skipped as technical', S.SUCCESSFUL);
+
+// Malayalam. It used to come back as its first sentence -- the sum-of-evens function
+// and the request for an explanation both gone -- and validate, because every check
+// reads [a-z] and found nothing to object to.
+const ML = 'ദയവായി എനിക്ക് പൈത്തണിൽ ഒരു ഫംഗ്ഷൻ എഴുതാൻ സഹായിക്കാമോ? ഒരു ലിസ്റ്റിലെ എല്ലാ ഇരട്ട സംഖ്യകളുടെയും തുക കണ്ടെത്തുന്ന ഒരു ഫംഗ്ഷൻ എഴുതുക. ദയവായി കോഡിന് വിശദീകരണം നൽകുക.';
+check('Malayalam prompt comes back whole',
+    statusOf(ML, 'Malayalam prompt', S.UNSUPPORTED_LANGUAGE).text === ML);
+check('condense no longer prunes a script it cannot read',
+    PromptMeterCondense.condense(ML) === ML);
+
+// Constraint-heavy creative prompt: nothing to cut, every rule stays.
+const STORY = 'Write a short story of exactly 300 words about a lighthouse keeper. It must be written in second person, present tense. Do not use the word "ocean". Include exactly three lines of dialogue, end with a question, and never name the keeper. The tone must be melancholic but hopeful.';
+check('creative prompt is unchanged',
+    statusOf(STORY, 'constraint-heavy story prompt', S.ALREADY_OPTIMAL).text === STORY);
+const paddedStory = statusOf('Hey! I have always loved lighthouses. ' + STORY + ' Thanks a lot!',
+    'padded story prompt', S.SUCCESSFUL);
+check('padded story keeps its constraints', paddedStory.text.indexOf(STORY) !== -1, paddedStory.text);
+
+// Shorter candidates exist but each drops a requirement said politely. These used to
+// validate: "to not mention" matched no constraint pattern.
+const haiku = statusOf('Can you write a haiku about rain? I would like it to not mention water at all. I hope that makes sense and I appreciate your help very much.',
+    'polite negative constraint', S.UNSAFE_COMPRESSION);
+check('unsafe: the original is returned', haiku.text === haiku.original);
+check('unsafe: the reason names the lost constraint', /mention/.test(haiku.reason), haiku.reason);
+rejects('a requirement wrapped in "appreciate it if" is caught',
+    'Write me a short story. I would really appreciate it if the story had a twist ending.',
+    'Write me a short story.', 'constraint');
+
+// A throw inside generation is a failure, not "already optimal".
+const realAnalyze = PromptMeterAnalysis.analyze;
+PromptMeterAnalysis.analyze = () => { throw new Error('boom'); };
+const broken = statusOf(WORDY, 'generation throws', S.FAILED);
+PromptMeterAnalysis.analyze = realAnalyze;
+check('failed: the original is returned and the error kept',
+    broken.text === WORDY && /boom/.test(broken.reason), broken.reason);
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

@@ -339,11 +339,17 @@ const PromptMeterAnalysis = {
         }
 
         // A pronoun opening the prompt has nothing behind it to refer to.
+        // Unless it points forward: "Fix this: `code`" and "Rewrite this to sound
+        // professional: "..."" name their material after the colon or in the quote.
         const opener = masked.match(/^\s*(?:make|fix|improve|change|update|rewrite|do)\s+(it|this|that|them|these|those)\b/i);
-        if (opener) {
+        const pointsForward = opener && (/:\s*\S/.test(masked.slice(opener[0].length))
+            || /```|`[^`]+`|"[^"]{3,}"|\n\s*\n/.test(prompt));
+        if (opener && !pointsForward) {
             findings.push(this.finding({
                 category: 'ambiguity',
-                severity: 'error',
+                // A suggestion, not an error: in a chat, "make it shorter" usually
+                // means the previous reply, which this prompt cannot see.
+                severity: 'suggestion',
                 text: opener[1],
                 start: opener.index,
                 explanation: '"' + opener[1] + '" is the first thing the prompt mentions, '
@@ -363,6 +369,19 @@ const PromptMeterAnalysis = {
     // the same request as "make a website", and without it the detector missed every
     // prompt that described what it wanted before naming it.
     BUILD_REQUEST: /\b(?:create|build|make|write|design|develop|implement)\s+(?:a|an|the|me\s+a)?\s*(?:\w+\s+){0,4}?(website|web\s?app|app|application|api|service|dashboard|game|bot|script|tool|system|platform)\b/i,
+
+    /**
+     * "an API", "a website", "a URL": the article by sound, the word as typed when it
+     * is an acronym. The message used to read "asks for a app" and "a api".
+     */
+    withArticle: function (noun) {
+        const acronym = /^[A-Z]{2,}$/.test(noun);
+        const word = acronym ? noun : noun.toLowerCase();
+        const vowelSound = acronym
+            ? /^[AEFHILMNORSX]/.test(word)
+            : /^[aeiou]/.test(word) && !/^(?:uni|use|usu|eu|one)/.test(word);
+        return (vowelSound ? 'an ' : 'a ') + word;
+    },
 
     /**
      * Context the answer depends on and the prompt did not supply.
@@ -385,7 +404,7 @@ const PromptMeterAnalysis = {
                     severity: 'suggestion',
                     text: build[0],
                     start: build.index,
-                    explanation: 'The prompt asks for a ' + build[1].toLowerCase()
+                    explanation: 'The prompt asks for ' + this.withArticle(build[1])
                         + ' without saying what it is for. What it does changes almost '
                         + 'every decision in the answer.',
                     confidence: 0.6,
@@ -639,8 +658,9 @@ const PromptMeterAnalysis = {
                             : issue.id === 'vague-specification' ? 'ambiguity'
                                 : issue.id === 'no-clear-request' ? 'ambiguity'
                                     : 'structure',
-                severity: issue.id === 'dangling-reference' || issue.id === 'no-clear-request'
-                    ? 'error' : 'suggestion',
+                // Heuristics, both: the card calls 'error' "definitely wrong", and a
+                // missed verb or a "this" pointing forward is not that.
+                severity: 'suggestion',
                 // issue.label is the user-facing sentence; issue.metric is the rule's
                 // own definition and reads like documentation ("Fires when...").
                 explanation: issue.label,
@@ -705,7 +725,7 @@ const PromptMeterAnalysis = {
         // it belongs in the corrected output too -- "teh teh teh" spell-corrects to
         // "the the the", which is still not English. Numbers are excluded: two
         // adjacent identical numbers are usually one value ("1 1/2").
-        fixed = fixed.replace(/\b(?!\d)(\w+)(\s+\1\b)+/gi, '$1');
+        fixed = PM_A_OPTIMIZER.collapseAdjacentRepeats(fixed);
 
         return PM_A_PROTECT.unmask(fixed, masked.spans);
     },

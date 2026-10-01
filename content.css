@@ -15,7 +15,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     width: 90%;
-    max-width: 780px;
+    max-width: 680px;
     max-height: 78vh;
     display: flex;
     flex-direction: column;
@@ -27,7 +27,9 @@
        second line half a pixel away from it on fractional-DPI displays. */
     border: none;
     border-radius: var(--radius-card-lg);
-    padding: var(--space-5);
+    padding: 14px var(--space-4) var(--space-4);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
     /* Two layers: a tight contact shadow under a wide ambient one. A single blurred
        shadow reads as a drop shadow; this reads as a surface sitting above the page. */
     box-shadow: var(--shadow-card);
@@ -35,7 +37,11 @@
     font-family: var(--font-body);
     z-index: 999999;
     opacity: 0;
-    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Size and position ease too, so the card glides when the composer grows or the
+       content changes instead of jumping. */
+    transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                width 0.22s cubic-bezier(0.16, 1, 0.3, 1), left 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1), top 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
     box-sizing: border-box;
 }
@@ -64,7 +70,7 @@
 /* Anchored to the measured composer: JS supplies left and width, so the centring
    half-translate must not be applied on top of them. */
 .promptmeter-opt-card.promptmeter-anchored {
-    transform: translateY(20px);
+    transform: translateY(10px) scale(0.985);
 }
 
 .promptmeter-opt-card.promptmeter-anchored.visible {
@@ -74,11 +80,11 @@
 .promptmeter-opt-header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-3);
-    border-bottom: 1px solid var(--divider-color);
     padding-bottom: var(--space-3);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--divider-color);
     flex: 0 0 auto;
 }
 
@@ -86,33 +92,65 @@
    leaf glyph and a "Sustainability Coach" tagline, which is a lot of branding for a
    panel that interrupts someone mid-sentence. */
 .promptmeter-opt-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--text-secondary);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: var(--space-2);
 }
 
-/* A 6px dot instead of the leaf glyph and the display face. It marks the panel as ours
-   in the corner of the eye and says nothing else. */
+/* The PromptMeter mark, inlined as a data URI so the card needs no web-accessible
+   resource on the host page. 18px: large enough to read as the gauge, small enough to
+   sit on the label's baseline. */
 .promptmeter-opt-title::before {
     content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-primary);
+    width: 16px;
+    height: 16px;
     flex: 0 0 auto;
+    border-radius: 4px;
+    background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232E7D32'/%3E%3Cstop offset='1' stop-color='%2315461A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='120' height='120' rx='28' fill='url(%23bg)'/%3E%3Cpath d='M26 84 A38 38 0 0 1 102 84' fill='none' stroke='%23FFFFFF' stroke-opacity='0.28' stroke-width='12' stroke-linecap='round'/%3E%3Cpath d='M26 84 A38 38 0 0 1 84.9 52.3' fill='none' stroke='%23A5D6A7' stroke-width='12' stroke-linecap='round'/%3E%3Cpath d='M64 84 L88 57' stroke='%23FFFFFF' stroke-width='9' stroke-linecap='round'/%3E%3Ccircle cx='64' cy='84' r='10' fill='%23FFFFFF'/%3E%3Cpath d='M86 104 C86 92 96 86 108 86 C108 98 100 106 86 104 Z' fill='%23C8E6C9'/%3E%3Cpath d='M88 102 L103 90' stroke='%232E7D32' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Edit level, on the card itself: compare the levels on the prompt in front of you. */
+.promptmeter-modes {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    margin-right: auto;
+    border-radius: var(--radius-btn);
+    background: var(--bg-secondary);
+}
+
+.promptmeter-mode {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.promptmeter-mode:hover { color: var(--text-primary); }
+
+.promptmeter-mode[aria-checked="true"] {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .promptmeter-opt-metrics {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: var(--space-1);
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: var(--space-3);
     min-width: 0;
 }
 
@@ -121,31 +159,32 @@
    label beside it. Nothing else on the card competes with this now, and the rest of the
    numbers moved to the caption line below. */
 .promptmeter-hero {
-    display: flex;
+    display: inline-flex;
     align-items: baseline;
     gap: var(--space-2);
-    color: var(--color-primary);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--wash-success);
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
 }
 
 .promptmeter-hero-value {
-    font-family: var(--font-heading);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
 .promptmeter-hero-unit {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
 }
 
 /* A rewrite that costs tokens. The user may reasonably decline it -- a correct spelling
    is longer than a wrong one -- so it is stated in the error colour rather than hidden. */
-.promptmeter-hero-cost { color: var(--color-error); }
+.promptmeter-hero-cost { color: var(--color-error); background: var(--wash-error); }
 
 /* Everything that is context rather than the headline. */
 .promptmeter-metric-line {
@@ -161,7 +200,7 @@
    competing with the title. Separated by a middot instead of borders. */
 .promptmeter-metric {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 12px;
     font-variant-numeric: tabular-nums;
 }
 .promptmeter-metric + .promptmeter-metric::before {
@@ -175,8 +214,8 @@
 .promptmeter-opt-diff {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    margin-bottom: var(--space-4);
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -205,21 +244,19 @@
 }
 
 .promptmeter-diff-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-muted);
 }
 
 .promptmeter-diff-label-after {
-    color: var(--color-primary);
+    color: var(--text-secondary);
 }
 
 .promptmeter-diff-box {
-    font-size: 13px;
-    line-height: 1.55;
-    padding: var(--space-3) var(--space-4);
+    font-size: 13.5px;
+    line-height: 1.6;
+    padding: 10px var(--space-3);
     border-radius: var(--radius-btn);
     word-break: break-word;
     border: 1px solid var(--border-color);
@@ -233,7 +270,7 @@
    where that colour actually belongs. */
 .promptmeter-diff-original {
     background: var(--surface-sunken);
-    border-color: var(--border-color);
+    border-color: transparent;
     color: var(--text-secondary);
 }
 
@@ -241,24 +278,39 @@
    the original, ordinary text weight, and marked by a gradient rail rather than a flat
    border. A 2px solid bar is a border; a rail that fades along its length reads as an
    indicator pointing at the content. */
+/* The suggestion: the one bordered surface, plain text on the card colour. */
 .promptmeter-diff-optimized {
-    background: var(--surface-raised);
+    background: var(--bg-card);
     color: var(--text-primary);
-    position: relative;
-    border-color: var(--rec-border-success);
-    box-shadow: var(--shadow-sm);
-    padding-left: calc(var(--space-4) + 2px);
+    border-color: var(--border-color);
 }
 
-.promptmeter-diff-optimized::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: var(--space-2);
-    bottom: var(--space-2);
-    width: 3px;
-    border-radius: 0 3px 3px 0;
-    background: var(--rail-accent);
+/* Per-word diff, written by diffWords() in content.js. Colour is not the only cue, for
+   readers who cannot tell the red from the green: removals are struck through and
+   additions underlined. The tokens were defined, and contrast-tested, long before
+   anything used them. */
+.promptmeter-diff-del,
+.promptmeter-diff-ins {
+    border-radius: 3px;
+    padding: 1px 1px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.promptmeter-diff-del {
+    background: var(--diff-removed-bg);
+    color: var(--diff-removed-text);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
+.promptmeter-diff-ins {
+    background: var(--diff-added-bg);
+    color: var(--diff-added-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 /* Grammar findings. The pill in the header carries the count; this panel names the
@@ -277,19 +329,15 @@
    a panel that is already inside a bordered card gives the card three nested
    rectangles; the recessed surface says "inside this" with no extra line at all. */
 .promptmeter-opt-grammar {
-    margin-bottom: var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-btn);
-    border: 1px solid var(--divider-color);
-    background: var(--surface-sunken);
+    margin-bottom: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--divider-color);
     flex: 0 0 auto;
 }
 
 .promptmeter-grammar-title {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-muted);
     margin-bottom: var(--space-2);
 }
@@ -298,8 +346,9 @@
     margin: 0;
     padding-left: 0;
     list-style: none;
-    font-size: 12px;
-    line-height: 1.55;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
 }
 
 .promptmeter-grammar-list li {
@@ -316,31 +365,27 @@
 /* Scope advice. Styled apart from the grammar panel because it is not an edit already
    applied to the preview -- it is a judgement only the user can act on. */
 .promptmeter-opt-scope {
-    margin-bottom: var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-btn);
-    border: 1px solid var(--divider-color);
-    border-left: 3px solid var(--color-warning);
-    background: var(--wash-warning);
+    margin-bottom: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--divider-color);
     flex: 0 0 auto;
 }
 
 /* Amber, not red. This panel is a judgement the user may disagree with -- the prompt is
    large, or asks several things at once -- and red says the prompt is broken. */
 .promptmeter-scope-title {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-warning);
     margin-bottom: var(--space-2);
 }
 
 .promptmeter-scope-list {
     margin: 0;
     padding-left: var(--space-4);
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
 }
 
 .promptmeter-opt-actions {
@@ -355,11 +400,14 @@
    primary and Ignore is a quiet ghost -- which also stops a misclick applying a rewrite
    nobody wanted. */
 .promptmeter-opt-btn {
-    padding: var(--space-2) var(--space-4);
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 var(--space-3);
     border-radius: var(--radius-btn);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
     cursor: pointer;
     box-sizing: border-box;
     transition: background var(--dur-fast) var(--ease-out),
@@ -403,11 +451,14 @@
 .promptmeter-btn-key {
     display: inline-block;
     margin-left: var(--space-2);
-    font-size: 10px;
-    font-weight: 600;
-    font-family: var(--font-mono);
+    padding: 1px var(--space-1);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 500;
+    font-family: var(--font-body);
     letter-spacing: 0;
-    opacity: 0.65;
+    color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------------------------
@@ -482,8 +533,10 @@
 
 /* The diff scrolls when the composer is tall; a thin scrollbar keeps it from
    looking like a second panel. */
-.promptmeter-opt-diff {
+.promptmeter-opt-card,
+.promptmeter-opt-card * {
     scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
 }
 
 /* Respect the viewer's motion setting for the card's own entrance, which the
@@ -501,9 +554,9 @@
    an estimate of something the extension cannot fully observe, so it reads as context
    rather than as a measurement competing with the token counts. */
 .promptmeter-opt-headroom {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
     font-variant-numeric: tabular-nums;
     flex: 0 0 auto;
 }
@@ -585,15 +638,17 @@
    title attribute carries the meaning for anyone who cannot use colour. */
 .promptmeter-severity {
     display: inline-block;
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     margin-right: var(--space-2);
+    position: relative;
+    top: -1px;
     vertical-align: middle;
     flex: 0 0 auto;
 }
 
-.promptmeter-severity-error { background: var(--color-error); }
+.promptmeter-severity-error { background: var(--text-disabled); }
 .promptmeter-severity-suggestion { background: var(--color-warning); }
 .promptmeter-severity-improvement { background: var(--text-disabled); }
 
@@ -610,8 +665,8 @@
 .promptmeter-keep {
     flex: 0 0 auto;
     font: inherit;
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     padding: 2px var(--space-2);
     border-radius: var(--radius-pill);
     border: 1px solid var(--btn-secondary-border);
@@ -625,6 +680,47 @@
 
 .promptmeter-grammar-list li:hover .promptmeter-keep,
 .promptmeter-keep:focus-visible { opacity: 1; }
+
+/* "Why?" stays visible while its panel is open, so the row still says what opened it. */
+.promptmeter-why { margin-left: var(--space-1); }
+.promptmeter-why[aria-expanded="true"] { opacity: 1; color: var(--text-primary); }
+
+.promptmeter-grammar-list li.promptmeter-why-panel {
+    display: block;
+    margin: 0 0 var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-btn);
+    background: var(--bg-secondary);
+    border: 0;
+}
+
+.promptmeter-why-panel p {
+    margin: 0 0 var(--space-2);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.promptmeter-why-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.promptmeter-why-btn {
+    font: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px var(--space-2);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--btn-secondary-border);
+    background: var(--btn-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.promptmeter-why-btn:hover:not(:disabled) { color: var(--text-primary); }
+.promptmeter-why-btn:disabled { cursor: default; opacity: 0.7; }
 
 .promptmeter-keep:hover {
     color: var(--text-primary);
@@ -647,12 +743,10 @@
 /* Why a shorter rewrite was not used. Sits with the headroom line rather than in the
    corrections panel, because it is about what did NOT happen. */
 .promptmeter-opt-preserve {
-    font-size: 11px;
-    color: var(--text-secondary);
-    background: var(--wash-warning);
-    border-radius: var(--radius-btn);
-    padding: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-4);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
     flex: 0 0 auto;
 }
 
@@ -693,8 +787,8 @@
    panels take their full share and squeezed the diff -- the suggestion the card exists
    to show -- into whatever was left over. Now they total 52vh, which leaves the diff a
    majority of the card even in the worst case. */
-.promptmeter-opt-scope,
-.promptmeter-opt-grammar { max-height: 16vh; }
+.promptmeter-opt-grammar { max-height: 22vh; }
+.promptmeter-opt-scope { max-height: 16vh; }
 .promptmeter-opt-headroom,
 .promptmeter-opt-preserve { max-height: 6vh; }
 
@@ -711,5 +805,48 @@
    reads the wrong number. */
 .promptmeter-grammar-list li + li,
 .promptmeter-scope-list li + li {
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+/* Compact card (content.js adds .promptmeter-compact when the room left is under
+   CARD_COMPACT). A short window cannot fit every panel, and what got squeezed out was
+   the suggestion itself. Only the essentials remain: the header with its saving and
+   fix count, the suggested text, and the buttons. */
+.promptmeter-opt-card.promptmeter-compact .promptmeter-diff-row:first-child,
+.promptmeter-opt-card.promptmeter-compact .promptmeter-opt-headroom,
+.promptmeter-opt-card.promptmeter-compact .promptmeter-opt-preserve,
+.promptmeter-opt-card.promptmeter-compact .promptmeter-opt-scope,
+.promptmeter-opt-card.promptmeter-compact .promptmeter-opt-grammar {
+    display: none;
+}
+
+.promptmeter-opt-card.promptmeter-compact .promptmeter-opt-header {
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+
+/* In compact mode the suggestion is the one thing that must not be squeezed: live on a
+   529px window it was cut to half a line behind a scrollbar. The secondary metric line
+   goes instead (the headline saving stays), which returns the height the diff needs
+   without changing how the diff flexes. */
+.promptmeter-opt-card.promptmeter-compact .promptmeter-metric-line {
+    display: none;
+}
+
+/* Content refreshed while the card is open: a quick fade, not a snap. */
+@keyframes promptmeter-refresh {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
+}
+
+.promptmeter-opt-card.promptmeter-refreshed .promptmeter-opt-diff,
+.promptmeter-opt-card.promptmeter-refreshed .promptmeter-hero {
+    animation: promptmeter-refresh 0.18s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .promptmeter-opt-card.promptmeter-refreshed .promptmeter-opt-diff,
+    .promptmeter-opt-card.promptmeter-refreshed .promptmeter-hero {
+        animation: none;
+    }
 }

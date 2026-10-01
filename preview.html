@@ -94,14 +94,14 @@
         transform: none;
         opacity: 1;
         pointer-events: auto;
-        width: 780px;
+        width: 680px;
         max-width: 100%;
         max-height: none;
     }
     /* Mirrors the real popup: utils/tokens.css + style.css are loaded above, so only the
        shell's own box is restated here. */
     .popup-shell {
-        width: 280px;
+        width: 300px;
         padding: var(--space-4);
         background: var(--bg-primary);
         border-top: 1px solid var(--border-color);
@@ -129,6 +129,7 @@
             <div class="promptmeter-opt-card pm-tokens visible">
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-modes" role="radiogroup" aria-label="Edit level"><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Fix</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="true">Trim</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Condense</button></div>
                     <div class="promptmeter-opt-metrics">
                         <div class="promptmeter-hero">
                             <span class="promptmeter-hero-value">&minus;20%</span>
@@ -141,7 +142,7 @@
                                 <span class="promptmeter-count-to">~331</span>
                             </span>
                             <span class="promptmeter-metric" title="Estimated">~0.041 g CO&#8322;</span>
-                            <span class="promptmeter-metric promptmeter-metric-mode" title="Compression mode">balanced</span>
+                            <span class="promptmeter-metric promptmeter-metric-mode" title="The shortest rewrite that kept every number, name, requirement and quoted passage">trimmed</span>
                             <span class="promptmeter-metric promptmeter-metric-grammar">2 fixed</span>
                         </div>
                     </div>
@@ -149,14 +150,14 @@
                 <div class="promptmeter-opt-diff">
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label">What you wrote</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-original">hey so i was wondering if u could possibly maybe help me out, i wan to starst online classess and i have no idea where to begin honestly. thanks so much in advance!!</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original"><span class="promptmeter-diff-del">hey so i was wondering if u could possibly maybe help me out, i wan to starst</span> online <span class="promptmeter-diff-del">classess and i have no idea where to begin honestly. thanks so much in advance!!</span></div>
                     </div>
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Help me start online classes. Where do I begin?</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized"><span class="promptmeter-diff-ins">Help me start</span> online <span class="promptmeter-diff-ins">classes. Where do I begin?</span></div>
                     </div>
                 </div>
-                <div class="promptmeter-opt-preserve">A shorter rewrite was rejected: it would have changed constraint, numbers.</div>
+                <div class="promptmeter-opt-preserve">A shorter version was held back because it would have lost a requirement or a number.</div>
                 <div class="promptmeter-opt-headroom promptmeter-headroom-warn">Context: about 78% used, ~1,540 tokens left of 8,192 &middot; Context is filling up. Consider starting a new chat soon.</div>
                 <div class="promptmeter-opt-scope">
                     <div class="promptmeter-scope-title">Worth splitting up</div>
@@ -166,7 +167,7 @@
                     </ul>
                 </div>
                 <div class="promptmeter-opt-grammar">
-                    <div class="promptmeter-grammar-title">Errors corrected</div>
+                    <div class="promptmeter-grammar-title">Corrected, and worth a look</div>
                     <ul class="promptmeter-grammar-list">
                         <li>
                             <span class="promptmeter-severity promptmeter-severity-error" title="Definitely wrong: a rule that does not depend on context"></span>
@@ -190,6 +191,7 @@
                 </div>
                 <div class="promptmeter-opt-actions">
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Revert</button>
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Copy</button>
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
@@ -203,6 +205,7 @@
             <div class="promptmeter-opt-card pm-tokens visible">
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-modes" role="radiogroup" aria-label="Edit level"><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Fix</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="true">Trim</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Condense</button></div>
                     <div class="promptmeter-opt-metrics">
                         <div class="promptmeter-hero promptmeter-hero-cost">
                             <span class="promptmeter-hero-value">+14%</span>
@@ -220,14 +223,15 @@
                 <div class="promptmeter-opt-diff">
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label">What you wrote</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-original">Explan how fnite automata work</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original"><span class="promptmeter-diff-del">Explan</span> how <span class="promptmeter-diff-del">fnite</span> automata work</div>
                     </div>
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Explain how finite automata work</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized"><span class="promptmeter-diff-ins">Explain</span> how <span class="promptmeter-diff-ins">finite</span> automata work</div>
                     </div>
                 </div>
                 <div class="promptmeter-opt-actions">
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Copy</button>
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
@@ -241,6 +245,7 @@
             <div class="promptmeter-opt-card pm-tokens visible">
                 <div class="promptmeter-opt-header">
                     <div class="promptmeter-opt-title">PromptMeter</div>
+                    <div class="promptmeter-modes" role="radiogroup" aria-label="Edit level"><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Fix</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="true">Trim</button><button type="button" role="radio" class="promptmeter-mode" aria-checked="false">Condense</button></div>
                     <div class="promptmeter-opt-metrics">
                         <div class="promptmeter-hero">
                             <span class="promptmeter-hero-value">&minus;4%</span>
@@ -258,11 +263,11 @@
                 <div class="promptmeter-opt-diff">
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label">What you wrote</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-original">Build a complete production ready platform that handles students, teachers, courses, attendance, billing, analytics and a mobile app, with tests and documentation and CI.</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-original">Build a <span class="promptmeter-diff-del">complete</span> production <span class="promptmeter-diff-del">ready</span> platform <span class="promptmeter-diff-del">that handles</span> students, teachers, courses, attendance, billing, analytics and a mobile app, with <span class="promptmeter-diff-del">tests and documentation</span> and CI.</div>
                     </div>
                     <div class="promptmeter-diff-row">
                         <div class="promptmeter-diff-label promptmeter-diff-label-after">Suggested</div>
-                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Build a production platform handling students, teachers, courses, attendance, billing, analytics and a mobile app, with tests, docs and CI.</div>
+                        <div class="promptmeter-diff-box promptmeter-diff-optimized">Build a production platform <span class="promptmeter-diff-ins">handling</span> students, teachers, courses, attendance, billing, analytics and a mobile app, with <span class="promptmeter-diff-ins">tests, docs</span> and CI.</div>
                     </div>
                 </div>
                 <div class="promptmeter-opt-headroom promptmeter-headroom-critical">Context: about 96% used, ~280 tokens left of 8,192 &middot; Very little context left. Start a new chat to keep the full history.</div>
@@ -274,6 +279,7 @@
                     </ul>
                 </div>
                 <div class="promptmeter-opt-actions">
+                    <button class="promptmeter-opt-btn promptmeter-btn-ignore">Copy</button>
                     <button class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
                     <button class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
                 </div>
@@ -301,13 +307,23 @@
                         <span>Watching your prompts</span>
                     </div>
                     <div class="stats-preview">
-                        <div class="stat-box stat-box-carbon">
-                            <span class="stat-label">Carbon Footprint</span>
-                            <span class="stat-value">4.2g</span>
+                        <div class="stat-box stat-box-saved">
+                            <span class="stat-label">Tokens saved</span>
+                            <span class="stat-value">1,284</span>
+                            <span class="stat-sub">462 mg CO₂ avoided</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-label">Avg Efficiency</span>
+                            <span class="stat-label">Prompts improved</span>
+                            <span class="stat-value">37</span>
+                            <span class="stat-sub">of 112 logged</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Avg efficiency</span>
                             <span class="stat-value stat-good">94%</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Day streak</span>
+                            <span class="stat-value">6 days</span>
                         </div>
                     </div>
                     <button class="dashboard-btn">Open Dashboard</button>
@@ -336,13 +352,23 @@
                         <span>Paused</span>
                     </div>
                     <div class="stats-preview">
-                        <div class="stat-box stat-box-carbon">
-                            <span class="stat-label">Carbon Footprint</span>
-                            <span class="stat-value">18.7g</span>
+                        <div class="stat-box stat-box-saved">
+                            <span class="stat-label">Tokens saved</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-sub">no CO₂ saved yet</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-label">Avg Efficiency</span>
+                            <span class="stat-label">Prompts improved</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-sub">of 9 logged</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Avg efficiency</span>
                             <span class="stat-value stat-poor">61%</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Day streak</span>
+                            <span class="stat-value">0 days</span>
                         </div>
                     </div>
                     <button class="dashboard-btn">Open Dashboard</button>
