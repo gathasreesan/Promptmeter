@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "esbuild src/index.js --bundle --minify --loader:.js=jsx --loader:.jsx=jsx --outfile=dist/bundle.js",
-    "watch": "esbuild src/index.js --bundle --loader:.js=jsx --loader:.jsx=jsx --outfile=dist/bundle.js --watch --sourcemap"
+    "watch": "esbuild src/index.js --bundle --loader:.js=jsx --loader:.jsx=jsx --outfile=dist/bundle.js --watch --sourcemap",
+    "build:tiktoken": "esbuild src/tiktoken.entry.js --bundle --format=esm --minify --outfile=../utils/tiktoken.bundle.js"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -12,6 +13,7 @@
     "chart.js": "^4.4.3"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5"
+    "esbuild": "^0.21.5",
+    "js-tiktoken": "^1.0.15"
   }
 }
