@@ -390,6 +390,37 @@ check('round 2: clear questions get no "unclear request" advice',
         'is it safe to drink water from the tap in goa', 'the api returns 401 even tho the token is valid']
         .every((p) => !A.analyze(p, []).findings.some((f) => /Does not clearly state/.test(f.explanation || ''))));
 
+// The screenshot case and its relatives: two-letter drops, words that are real but
+// wrong in context, tool names, two requests typed as one.
+[
+    ['expalin a diffent type of ml+flat explain ai', 'Explain a different type of ML+flat. Explain AI'],
+    ['write a pyhton progam to revrse a strng', 'Write a Python program to reverse a string'],
+    ['tell me abut nural netwroks and deep lerning', 'Tell me about neural networks and deep learning'],
+    ['how dose a compter work', 'How does a computer work'],
+    ['whats the diffcult part of lerning calculas', "What's the difficult part of learning calculus"],
+    ['pls explan the informtion in this tabel', 'Explain the information in this table'],
+    ['explain recursion give examples', 'Explain recursion. Give examples'],
+    ['write a function that sorts a list in python', 'Write a function that sorts a list in Python'],
+    ['Please explain this again. I did not understand. Please explain this again simply.', 'Explain this again. Explain this again simply.'],
+].forEach(([input, want]) => {
+    const got = C.compress(input, { budgetMs: 1e5, maxMode: 'balanced' }).text;
+    check('similar: ' + input.slice(0, 40), got === want, got);
+});
+check('similar: tool names are not typos', ['deno', 'vite', 'pnpm', 'kubectl'].every((w) => Sp.correctWord(w) === null));
+check('similar: two-letter drops resolve', [['diffent', 'different'], ['probly', 'probably'], ['diffcult', 'difficult'], ['informtion', 'information']]
+    .every(([t, w]) => Sp.correctWord(t) === w));
+
+// Title-case typos: capitalised words mid-sentence were skipped as names.
+const para = 'Artificial Inelligence + Machine Learing ar important technologies in today’s world. AI can help students + teachers sae tie, but it can also creat problems - especially when peple depend on it too mch. Technology > traditional mehods in sme situations, while traditional learning > technology in othrs.';
+const paraOut = C.compress(para, { budgetMs: 1e5, maxMode: 'conservative' }).text;
+check('title case: every typo in the screenshot paragraph fixed',
+    ['Artificial Intelligence', 'Machine Learning are important', 'save time', 'create problems', 'people depend', 'too much',
+        'traditional methods', 'some situations', 'in others'].every((w) => paraOut.includes(w)), paraOut);
+check('title case: names are never corrected',
+    ['Valentina', 'Angelin', 'Sreesan', 'Adwaith', 'Rajagiri', 'Matthews', 'Harrison', 'Kathryn', 'Thiruvananthapuram']
+        .every((n) => C.compress('Please write a short note to ' + n + ' about the meeting.', { budgetMs: 1e5, maxMode: 'conservative' }).text.includes(n)));
+check('title case: AR stays AR', C.compress('the AR headset is new', { budgetMs: 1e5 }).text.includes('AR headset'));
+
 check('wikipedia misspelling list is loaded', Sp.correctWord('compatable') === 'compatible'
     && Sp.correctWord('adres') === 'address', [Sp.correctWord('compatable'), Sp.correctWord('adres')]);
 check('undoubled stem is not a form of the word', Sp.correctWord('beter') === 'better');

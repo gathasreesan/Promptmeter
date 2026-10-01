@@ -156,6 +156,7 @@ const PromptMeterGrammar = {
         'css': 'CSS', 'json': 'JSON', 'api': 'API', 'pdf': 'PDF', 'sop': 'SOP',
         // Exams, products and names live testing turned up ("neet" became "nest").
         'neet': 'NEET', 'jee': 'JEE', 'upsc': 'UPSC', 'cbse': 'CBSE', 'icse': 'ICSE',
+        'deno': 'Deno', 'node.js': 'Node.js', 'knn': 'KNN', 'svm': 'SVM', 'llm': 'LLM', 'llms': 'LLMs',
         'nasa': 'NASA', 'seo': 'SEO', 'fps': 'FPS', 'gst': 'GST', 'ceo': 'CEO', 'faq': 'FAQ',
         'ui': 'UI', 'ux': 'UX', 'pc': 'PC', 'hr': 'HR', 'apa': 'APA', 'mla': 'MLA',
         'minecraft': 'Minecraft', 'valorant': 'Valorant', 'elden ring': 'Elden Ring', 'fortnite': 'Fortnite',
@@ -206,6 +207,12 @@ const PromptMeterGrammar = {
         [/\bthey're\s+(?=(?:own|house|home|car|books?|jobs?|names?|code|work|ideas?|answers?|team|parents|friends|kids|children)\b)/gi,
             'their ', "'they're' (they are) should be 'their' (belonging to them)"],
         [/\bthier\b/gi, 'their', "'thier' is a misspelling of 'their'"],
+        [/\bsave\s+tie\b/gi, 'save time', "'save tie' should be 'save time'"],
+        // Real words typed for others, where the neighbours decide: "tell me abut",
+        // "how dose a computer work".
+        [/\b(me|you|us|talk|talking|think|know|ask|learn|more|all|something|anything|nothing|much|questions?|info|information|story|care|worry|sure)\s+abut\b/gi, '$1 about', "'abut' should be 'about'"],
+        [/\b(how|what|why|where|when|who|which|it|he|she|this|that)\s+dose\b(?!\s+of\b)/gi, '$1 does', "'dose' should be 'does'"],
+        [/^dose\s+(?=(?:it|this|that|he|she|a|an|the|anyone|someone|my|your)\b)/i, 'Does ', "'dose' should be 'does'"],
         // Dictation and autocorrect slips, each pinned to a context that decides it.
         [/(?<!\bday\s)\bto\s+(day|morrow|night)\b(?!\s+(?:to|by|after|\d))/gi, (m, w) => 'to' + w.toLowerCase(), "'to day' should be one word"],
         [/\bthe\s+different\s+(?=between\b)/gi, 'the difference ', "'different' should be 'difference' here"],

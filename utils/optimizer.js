@@ -56,6 +56,10 @@ const PromptMeterOptimizer = {
         "knowed": "knew", "throwed": "threw", "growed": "grew", "choosed": "chose",
         "fighted": "fought", "maked": "made", "taked": "took", "gived": "gave",
         "loosing": "losing",
+        // Two candidates one edit away, decided by what people mean: "reverse a strng"
+        // is a string, "learning calculas" is calculus.
+        "strng": "string", "stirng": "string", "strin": "string", "calculas": "calculus",
+        "calculous": "calculus", "algoritm": "algorithm", "algoritms": "algorithms",
         // Uncountable nouns pluralised ("some advices"): the plural is not a word.
         "advices": "advice", "informations": "information", "equipments": "equipment",
         "furnitures": "furniture", "luggages": "luggage", "homeworks": "homework",
@@ -346,6 +350,10 @@ const PromptMeterOptimizer = {
     // same shape, and the first is far more likely in the prompts this extension sees.
     // It stays penalised by the chatSlang score rule, just never rewritten.
     contextualSlangRules: [
+        // "ar" for "are" and "sae" for "save", only where the neighbours decide it.
+        { word: "(?<=\\b(?:they|we|you|these|those|there|which|who|[a-z]{3,}s)\\s)ar(?=\\s+[a-z])", replacement: 'are' },
+        { word: "(?<=\\b[A-Za-z]{3,}\\s)ar(?=\\s+(?:important|good|bad|not|very|so|the|a|an|used|going|more|less|essential|useful|different|similar|available|easy|hard)\\b)", replacement: 'are' },
+        { word: "(?<![\\w-])[Ss]ae(?=\\s+(?:time|tie|money|energy|space|lives|life|file|files|it|the|my|your|data|work|effort))", replacement: 'save' },
         { word: "(?<![\\w-])[Cc]n(?=\\s+(?:u|you|i|we|someone|anyone|it)\\b)", replacement: 'can' },
         { word: "(?<![\\w-])[Rr]ite(?=\\s+(?:a|an|me|the|my|this|it|some|code|program|essay|email|letter|story|poem|function|script|report)\\b)", replacement: 'write' },
         // Digits for words. Only where no number can be meant: "how 2 make",
@@ -356,7 +364,7 @@ const PromptMeterOptimizer = {
         { word: "(?<=\\b(?:between|both)\\s+[A-Za-z]{2,}\\s)n(?=\\s+[A-Za-z]{2,})", replacement: 'and' },
         {
             word: 'u', replacement: 'you',
-            before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and|are|were|r|love|miss)$/i,
+            before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and|are|were|r|love|miss|want|need|tell|told|ask|asked|help|show|give|let|see|for|with)$/i,
             after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?|doing|going|feeling|free|sure|ok|okay)\b/i
         },
         {
@@ -757,7 +765,7 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
         // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
         // "my dear friend" its "dear".
-        /(?<=^|[.!?]|\n)\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s\-\u2013\u2014]*)/gi,
         /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
         /\b(?:so\s+basically\s+what\s+happened\s+was|to\s+give\s+you\s+a\s+little\s+background(?:\s+context)?|as\s+you\s+might\s+already\s+know|i\s+was\s+sitting(?:\s+at\s+my\s+computer)?\s+thinking(?:\s+and)?)\b(?:[,!.\s]*)/gi,
@@ -784,7 +792,7 @@ const PromptMeterOptimizer = {
 
         // Not before a verb of belief: "Can you believe X?" is not a request wrapper,
         // and stripping it left "Believe X?".
-        /(?<=^|[.!?]|[,;]|\n)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b(?!\s+(?:believe|imagine|guess|tell\s+(?:if|whether)|see\s+why|not)\b)\s*/gim,
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>)(?:\s+also)?)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b(?!\s+(?:believe|imagine|guess|tell\s+(?:if|whether)|see\s+why|not)\b)\s*/gim,
         /\b(?:please|plea+se+|ples+a+s+e*|pl+z+|pl+s+)\b\s*/gi,
         // (?!\w) after the alternation is load-bearing. \b anchors only the START, and
         // the trailing [,!.\s]* is happy to match nothing, so "ty" matched the first two
@@ -796,7 +804,10 @@ const PromptMeterOptimizer = {
         // Only when it addresses the assistant: at a sentence start or as a trailing
         // vocative. Unanchored it removed the subject of "ask the right question to
         // ChatGPT" and the "GPT" of "GPT-4o".
-        /(?<=^|[.!?\n])\s*(?:chatgpt|chat\s*gpt|gpt)\b(?!-)(?:[,!.:\s]*)/gi,
+        /(?<=^|[.!?\n]|(?:^|\s)(?:[+&|]|->|=>))\s*(?:chatgpt|chat\s*gpt|gpt)\b(?!-)(?:[,!.:\s]*)/gi,
+        // A greeting tacked on at the very end: "explain recursion hey chatgpt thanks".
+        // Only with an assistant name after it, so "say hi" or "hey" in a quote survive.
+        /[,\s]+(?:hello|hi+|he+y+|yo+)\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant)\b[,!.\s]*(?=$)/gi,
         /,\s*(?:chatgpt|chat\s*gpt)\s*(?=[.!?]?\s*$)/gi
     ],
 
@@ -883,6 +894,39 @@ const PromptMeterOptimizer = {
     // Repairs run after stripping. Removing a phrase from the middle of a sentence can
     // strand the connective that introduced it ("... because about marketing"), so these
     // rules tidy up the joins rather than the content.
+    /**
+     * Drops a relative clause the writer abandoned and restarted.
+     *
+     * People rewrite mid-sentence without deleting the false start: "exam tomorrow which
+     * is exam which is dma" is one clause begun, thought better of, and begun again. The
+     * adjacent-duplicate rule cannot see it, because the two copies of "which is" are not
+     * adjacent -- the abandoned clause sits between them.
+     *
+     * The guard is that the abandoned middle must say nothing new. Every content word in
+     * it has to have appeared already, so "which is exam" goes only because "exam" was
+     * written moments earlier, while "the tool which is free which is open source" keeps
+     * both clauses: "free" is new information and dropping it would lose a constraint.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    collapseRestartedClauses: function (text) {
+        if (typeof text !== 'string' || text.indexOf(' ') === -1) return text;
+
+        const RESTART = /\b(which|that|who)\s+(is|are|was|were)\s+([^.;!?]{1,40}?)\s+\1\s+\2\b/gi;
+        return text.replace(RESTART, (match, rel, be, middle, offset, whole) => {
+            const words = (middle.toLowerCase().match(/[a-z][a-z']*/g) || [])
+                .filter((w) => w.length > 1 && !this.ENGLISH_STRONG.test(w));
+            // Nothing but function words in the middle is not evidence of a restart; it
+            // is more likely a parse this rule has no business touching.
+            if (words.length === 0) return match;
+
+            const before = whole.slice(0, offset).toLowerCase();
+            const seen = (w) => new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(before);
+            return words.every(seen) ? (rel + ' ' + be) : match;
+        });
+    },
+
     connectiveRepairs: [
         // A conjunction left immediately before a preposition lost its clause -- but
         // only where a removal can have left it: at a clause start. Mid-sentence,
@@ -1061,11 +1105,28 @@ const PromptMeterOptimizer = {
         if (!text) return "";
         let str = text;
 
+        // Is this English at all? Decided once, on the text as it arrived, and applied to
+        // every table below that rewrites words.
+        //
+        // Step 3b already asked this, because an English dictionary on German text
+        // "corrects" bitte to bite. The hardcoded tables in steps 1 and 3 needed the same
+        // guard and did not have it, so they ran on every language: "mich" is an entry in
+        // spellingTypos meaning "much", "liste" an entry meaning "list", and German
+        // prompts came back with "die mich neugierig anschauen" rewritten to "die much
+        // neugierig anschauen" and "eine Liste mit Geburtstagen" to "eine list mit
+        // Geburtstagen". A table of English prompt vocabulary is no safer on German than
+        // an English dictionary is; it is just smaller.
+        //
+        // Below four words the vocabulary test has too little to go on -- one typo in
+        // "explain fnite automata" is a third of it -- so short prompts are still corrected.
+        const englishEnough = this.looksEnglishVocabulary(str) ||
+            (str.match(/\S+/g) || []).length < 4;
+
         // 1. Dictionary typos (spelling + politeness variants). Each substitution is
         //    named rather than summarised, so the card reads the same whether a word was
         //    fixed from this table or worked out by the spelling corrector below.
         this.compiled.typos.lastIndex = 0;
-        str = str.replace(this.compiled.typos, match => {
+        if (englishEnough) str = str.replace(this.compiled.typos, match => {
             const replacement = this.compiled.typoMap[match.toLowerCase()];
             if (replacement === undefined) return match;
             if (issues && replacement.toLowerCase() !== match.toLowerCase()) {
@@ -1104,8 +1165,10 @@ const PromptMeterOptimizer = {
         // 3. Chat slang and SMS abbreviation expansion. The contextual pass is separate
         //    because its one- and two-letter keys need the guards in that method.
         str = this.normalizeShouting(str);
-        str = this.replaceAll(str, this.compiled.slang, this.chatSlangMap, false);
-        str = this.expandContextualSlang(str);
+        if (englishEnough) {
+            str = this.replaceAll(str, this.compiled.slang, this.chatSlangMap, false);
+            str = this.expandContextualSlang(str);
+        }
 
         // 3b. Open-ended typo correction. Runs after the tables above so a known
         //     abbreviation is expanded by name rather than guessed at, and before the
@@ -1459,6 +1522,95 @@ const PromptMeterOptimizer = {
      * @param {string} text
      * @returns {boolean} False when the English-only rules should stay silent.
      */
+    // English function words that other European languages do not share. Hoisted out of
+    // looksEnglish so the table gate below tests against the same list rather than a copy
+    // that can drift. Words shared with other languages ("a", "in", "is", "me", "no",
+    // "de") are deliberately absent.
+    ENGLISH_STRONG: /^(?:the|you|your|can|could|would|should|what|how|why|which|this|that|with|and|for|of|i|my|it|are|was|were|do|does|did|not|from|about|please|pls|plz|explain|write|make|give|tell|to|there|their|they|going|will|have|has|had|we|when|where|who|that's|it's|i'm|what's|don't|can't|you're|i've|didn't|doesn't)$/,
+
+    /**
+     * A weaker language test than looksEnglish, for the fixed vocabulary tables.
+     *
+     * looksEnglish decides whether to run the open-ended corrector and the compressor,
+     * and is deliberately strict: it demands a STRONG English function word, because
+     * counting fixable typos alone let Italian and Indonesian through. That strictness
+     * is wrong for the tables in this file, which are a closed list of chat shorthand.
+     * "A room w/o windows is dark" and "Tmrw is mi exm teach me ML" are both plainly
+     * English and both fail the STRONG test -- the first because splitting "w/o" leaves
+     * two one-letter tokens, the second because its English words are the ones STRONG
+     * deliberately omits for being shared with other languages.
+     *
+     * So the tables get the vocabulary ratio on its own: recognisably English by word,
+     * without the function-word requirement. German still fails it by a wide margin,
+     * which is all the tables need to stop rewriting "mich" to "much".
+     *
+     * @param {string} text
+     * @returns {boolean}
+     */
+    looksEnglishVocabulary: function (text) {
+        if (typeof text !== 'string' || !text.trim()) return false;
+
+        const letters = text.replace(/[^\p{L}]/gu, '');
+        if (letters.length >= 8) {
+            const latin = (letters.match(/\p{Script=Latin}/gu) || []).length;
+            if (latin / letters.length < 0.65) return false;
+        }
+
+        const words = (text.toLowerCase().match(/[a-z']+/g) || []);
+        if (words.length === 0) return false;
+
+        const shorthand = (word) => Object.prototype.hasOwnProperty.call(this.chatSlangMap || {}, word)
+            || Object.prototype.hasOwnProperty.call(this.politenessTypos || {}, word);
+        // An acronym is evidence of English context, not against it. Without this,
+        // "AI + ML + DL + NLP are importnt" scored 1/6 and the tables were skipped, so
+        // "importnt" went uncorrected -- the prompt looked foreign because almost every
+        // token in it was an initialism.
+        const acronym = (word) => Object.prototype.hasOwnProperty.call(this.techAcronymMap || {}, word);
+
+        // One- and two-letter tokens are evidence either way and should not dilute the
+        // ratio. "a + b + c" is three tokens of pure arithmetic; counting them as
+        // not-English made a sentence of maths and typos look like another language.
+        const informative = words.filter((w) => w.length >= 3);
+        const scored = informative.length ? informative : words;
+
+        // A word the corrector can repair is English that was typed badly: "a + b + c teh
+        // diffrence" is entirely typos and arithmetic, and without this it reads as
+        // another language and nothing gets fixed. But it is weak evidence -- German
+        // "mich" and "und" are one letter from "much" and "and" -- so it counts towards
+        // the floor and the all-fixable case only, never towards the clear-majority bar.
+        let known = 0;
+        let near = 0;
+        for (const word of scored) {
+            if (this.ENGLISH_MARKERS.has(word) ||
+                (PM_SPELL && PM_SPELL.known && PM_SPELL.known(word)) ||
+                shorthand(word) || acronym(word)) {
+                known++;
+                near++;
+            } else if (PM_SPELL && word.length >= 3 && PM_SPELL.correctWord && PM_SPELL.correctWord(word)) {
+                near++;
+            }
+        }
+
+        const ratio = known / scored.length;
+        const nearRatio = near / scored.length;
+        if (nearRatio < 0.34) return false;
+        // Every informative word is English or a repairable English typo. Foreign prose
+        // never gets here: "neugierig", "anschauen", "aiuto" are neither.
+        if (nearRatio === 1 && scored.length >= 2) return true;
+
+        // The ratio alone cannot separate the two things that sit either side of this
+        // line. "can u pls explain how stupd gatha is wawa ass greatt bootiful" scores
+        // 0.42, and so does "ob Emily und Mia die mich neugierig anschauen mit mir
+        // duschen duerfen" -- the German only reaches 0.42 because "Emily", "Mia",
+        // "und", "die" and "mit" are all entries in an English dictionary.
+        //
+        // What separates them is function words. The English one is built from "can",
+        // "pls", "explain", "how"; the German has none of these, because the list
+        // deliberately omits everything the two languages share. So: a clear majority of
+        // recognisable words, or at least one word English does not lend out.
+        return ratio >= 0.6 || words.some((w) => this.ENGLISH_STRONG.test(w));
+    },
+
     looksEnglish: function (text) {
         if (typeof text !== 'string' || !text.trim()) return false;
 
@@ -1470,7 +1622,7 @@ const PromptMeterOptimizer = {
             if (latin / letters.length < 0.65) return false;
         }
 
-        const words = (text.toLowerCase().match(/[a-z']+/g) || []);
+        let words = (text.toLowerCase().match(/[a-z']+/g) || []);
         if (words.length === 0) return false;
 
         // 2. Vocabulary. Latin script alone decides nothing -- Portuguese and German
@@ -1490,7 +1642,7 @@ const PromptMeterOptimizer = {
         // "mille" corrected to "mile"); requiring a real English function word stops
         // that. Words shared with other European languages ("a", "in", "is", "me",
         // "no", "de") are deliberately not on this list.
-        const STRONG = /^(?:the|you|your|can|could|would|should|what|how|why|which|this|that|with|and|for|of|i|my|it|are|was|were|do|does|did|not|from|about|please|pls|plz|explain|write|make|give|tell|to|there|their|they|going|will|have|has|had|we|when|where|who|that's|it's|i'm|what's|don't|can't|you're|i've|didn't|doesn't)$/;
+        const STRONG = this.ENGLISH_STRONG;
         // Without one, the prompt still counts when nearly every word is English or a
         // fixable English typo and at least two are dictionary words: "nveer mind,
         // explin photosynthesis instead" and "that's wrong, try aggain" were skipped
@@ -1506,15 +1658,25 @@ const PromptMeterOptimizer = {
         const shorthand = (word) => Object.prototype.hasOwnProperty.call(this.chatSlangMap || {}, word)
             || Object.prototype.hasOwnProperty.call(this.spellingTypos || {}, word)
             || Object.prototype.hasOwnProperty.call(this.politenessTypos || {}, word);
+        // An acronym is English context, not evidence against it, and one- or two-letter
+        // tokens are evidence either way. Counting both against the ratio made
+        // "AI + ML + DL + NLP are importnt" score 2/6 = 0.33 against a 0.34 bar, so the
+        // corrector was skipped and "importnt" shipped uncorrected. Symbol-and-initialism
+        // prose is extremely common in real prompts.
+        const acronym = (word) => Object.prototype.hasOwnProperty.call(this.techAcronymMap || {}, word);
+        const informative = words.filter((w) => w.length >= 3);
+        const counted = informative.length ? informative : words;
         let known = 0;
-        for (const word of words) {
+        for (const word of counted) {
             if (this.ENGLISH_MARKERS.has(word) ||
+                acronym(word) ||
                 (PM_SPELL && PM_SPELL.known && PM_SPELL.known(word)) ||
                 shorthand(word) ||
                 (PM_SPELL && word.length >= 4 && PM_SPELL.correctWord && PM_SPELL.correctWord(word))) {
                 known++;
             }
         }
+        words = counted;
 
         // A third of the words being recognisable English is a low bar on purpose. The
         // cost of the two readings is asymmetric: calling English text non-English only
@@ -2158,7 +2320,15 @@ const PromptMeterOptimizer = {
         // Junk rules run first: they match longer, more specific phrases ("thanks in
         // advance") that the generic pleasantry rules ("thanks") would otherwise
         // consume half of, stranding the remainder.
+        // "um" is a filler in English and a word everywhere else: "around"/"in order to"
+        // in German, "one" in Portuguese. "Welche Regeln muss ich erfuellen um eine
+        // Liste" lost it and stopped being a sentence. The interjection rule is the
+        // junkStrippers entry that matches "um" itself.
+        const interjection = this.junkStrippers[1];
+        const englishFillers = this.looksEnglishVocabulary(optimized) ||
+            (optimized.match(/\S+/g) || []).length < 4;
         const strippers = this.junkStrippers
+            .filter((rx) => englishFillers || rx !== interjection)
             .concat(this.wrapperStrippers)
             .concat(this.conversationalStrippers);
         for (let pass = 0; pass < 2; pass++) {
@@ -2203,10 +2373,14 @@ const PromptMeterOptimizer = {
         // whitespace and duplicate words. This has to happen BEFORE condensing: the
         // condenser reads sentence openings, and "I  I wanted to ..." does not match
         // the patterns that "I wanted to ..." does.
+        optimized = this.collapseRestartedClauses(optimized);
         optimized = this.applyRules(optimized, this.connectiveRepairs);
         optimized = this.applyRules(optimized, this.adjectiveStacks);
         optimized = this.collapseAdjacentRepeats(optimized
             .replace(/[ \t]+/g, ' '))
+            // A removed sentence leaves its stop beside the previous one: "again. . Explain"
+            // closed up into "again.." and later grew a third dot.
+            .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
             // Closing the space before punctuation, except where that punctuation is
             // part of an operator. ! and ? open != and ?=, and : opens a ternary or a
             // time, so "a != b" was being closed up into "a!= b".
@@ -2236,6 +2410,13 @@ const PromptMeterOptimizer = {
             .replace(/^(?:[.,:;\u2013\u2014\s]|-(?![ \t]+\S))+/, '')
             .replace(/[ \t]+/g, ' ')
             .replace(/,(?:\s*,)+/g, ',')
+            // A removed phrase leaves the comma that introduced it stranded against
+            // whatever followed: "review this code for me, thanks so much:" loses the
+            // gratitude and closes up as "review this code for me,:". Every stripper
+            // ends in [,!.\s]* so it eats the punctuation TRAILING the phrase it
+            // removes, never the comma in front of it. Drop a comma or semicolon left
+            // sitting directly against another mark; the later mark is the real one.
+            .replace(/\s*[,;]\s*(?=[.:;!?])/g, '')
             // "... DBMS. And I really need to ...": the clause in front of the "and" was
             // removed as backstory, leaving a sentence that opens on a conjunction.
             .replace(/([.!?]\s+)(?:and|so|then)\s+(\w)/g, (m, lead, next) => lead + next.toUpperCase())
@@ -2247,6 +2428,12 @@ const PromptMeterOptimizer = {
             .replace(/,\s*like\s+(?=(?:what|how|why|when|where|which|who)\b)/gi, ', ')
             .replace(/\s+you\s+know(?=\s*[.?!]?\s*$)/gi, '')
             .replace(/\bto\s+by\b(?=\s*[.?!]?\s*$)/gi, 'to buy')
+            // A second request typed straight after the first with no break: "Explain a
+            // different type of ML explain AI". Only when the prompt itself opens with a
+            // request verb, and never after a word that makes the verb part of a clause
+            // ("to explain", "can you explain", "that explains").
+            .replace(/^((?:explain|write|give|list|tell|describe|compare|summari[sz]e|define)\b[^.?!\n]*?\b(?!(?:and|or|to|also|then|please|pls|you|u|me|i|we|they|can|could|would|will|should|must|just|now|so|that|which|who|how|why|what|not|don't|do|a|an|the|my|your|our|their|his|her|its|this|these|those|of|in|on|for|with|by|from|into|about|as|at|some|any|each|every|no|another|short|long|full|quick|brief|detailed|simple|new|shopping|to-do|todo|word|reading|price|wish|check|playlist)\b)[\w+#.]+)\s+(explain|write|give|list|tell|describe|compare|summari[sz]e|define)\s+(?=[a-z])/i,
+                (m, first, verb) => `${first}. ${verb.charAt(0).toUpperCase() + verb.slice(1)} `)
             // A filler span removed from a sign-off leaves its first word behind:
             // "I really appreciate it!" -> "I", "Many thanks!" -> "Many". A one-word
             // fragment after a finished sentence is debris, not content.
@@ -2258,6 +2445,9 @@ const PromptMeterOptimizer = {
                 (m, verb) => ', ' + verb.toLowerCase())
             // A removed sentence can leave its full stop beside the previous one.
             // Exactly two collapse; three are left alone, because that is an ellipsis.
+            // Stops separated by a space are never an ellipsis: "again. . Explain" (a
+            // sentence removed between them) became "again.... Explain".
+            .replace(/\.(?:[ \t]+\.)+(?!\.)/g, '.')
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
             .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             // A word stripped from the end of a sentence leaves its comma behind:

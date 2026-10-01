@@ -319,5 +319,126 @@ keeps('this is a non issue for us', 'non issue');
 keeps('the stat we need is the median', 'stat');
 keeps('I sent it to the com port', 'com port');
 
+// ---------------------------------------------------------------------------
+// The English vocabulary tables ran on every language. looksEnglish already guarded the
+// open-ended corrector -- "an English dictionary on German text corrects bitte to bite"
+// -- but spellingTypos and chatSlangMap were applied unconditionally, and they contain
+// "mich" -> "much" and "liste" -> "list". Measured over 6,000 real prompts, German came
+// back with "die mich neugierig anschauen" rewritten to "die much neugierig anschauen".
+// ---------------------------------------------------------------------------
+keeps('ob Emily und Mia die mich neugierig anschauen mit mir duschen duerfen', 'mich');
+keeps('Die Zeiten koennen morgens oder abends sein, je nachdem wann sie mich brauchen.', 'mich');
+keeps('Erstelle eine Zusammenfassung der Meinungen als Liste', 'Liste');
+keeps('Welche Regeln muss ich erfuellen um eine Liste mit Geburtstagen anzufertigen?', 'Liste');
+drops('Grazie mille per il tuo aiuto', 'mile');
+// ...while English, including messy English, is still corrected.
+keeps('A room w/o windows is dark', 'without');
+keeps('plz explain recursion tmrw', 'tomorrow');
+keeps('can u explain b4 the exam', 'before');
+keeps('i am havng an issue with my funciton', 'function');
+keeps('can u pls explain how stupd gatha is', 'stupid');
+
+// ---------------------------------------------------------------------------
+// Every stripper ends in [,!.\s]*, so it eats the punctuation that TRAILS the phrase it
+// removes but never the comma that introduced it: "review this code for me, thanks so
+// much:" closed up as "review this code for me,:".
+// ---------------------------------------------------------------------------
+dropsExact('review this code for me, thanks so much: def f(): pass', ',:');
+dropsExact('help me, please: y=2', ',:');
+dropsExact('summarize this, thanks in advance: z=3', ',:');
+dropsExact('fix it for me, thanks!: a=4', ',:');
+// ...without eating commas that are doing real work.
+keeps('list three things: speed, cost, accuracy', 'speed, cost, accuracy');
+keeps('the total was 1,000.50 dollars, explain the tax', '1,000.50');
+
+// ---------------------------------------------------------------------------
+// "dma" (Data Mining and Analysis) was rewritten to "dam". At three letters neither edit
+// distance nor edit shape can tell a typo from an acronym -- "dma"/"dam" and "teh"/"the"
+// are both single transpositions -- and techAcronymMap can only protect the acronyms
+// somebody remembered to list, never the user's own course codes or team initialisms.
+// Two independent signals settle it: how common the destination is, and whether the
+// letters kept their order.
+// ---------------------------------------------------------------------------
+keeps('explain dma', 'dma');
+keeps('teach me dma and dsa', 'dma');
+keeps('i have a dma exam tomorrow', 'dma');
+keeps('what is dma and dbms', 'dbms');
+drops('explain dma', 'dam');
+drops('teach me dma', 'dam');
+// Transposed three-letter initialisms in general, not just the one that was reported.
+drops('explain rma process', 'ram');
+drops('explain mpa degree', 'map');
+// ...while three-letter typos are still corrected, whether they are common words
+// ("teh" -> "the") or merely dropped vowels ("mch" -> "much", not a top-1000 word).
+keeps('teh cat sat', 'The');
+keeps('do you wan coffee or tea', 'want');
+keeps('people depend on it too mch', 'much');
+keeps('i adn you', 'and');
+
+// ---------------------------------------------------------------------------
+// "helao i has exam tomo which is exm which is which is dma so teach" came back with
+// "which is" still in it twice. The adjacent-duplicate rule could not see it: the two
+// surviving copies are not adjacent, because the clause the writer abandoned sits
+// between them. What makes it droppable is that the abandoned middle says nothing new.
+// ---------------------------------------------------------------------------
+equals('helao i has exam tomo which is exm which is which is dma so teach',
+       'I have exam tomorrow which is dma so teach');
+equals('i have an exam tomorrow which is exam which is dma',
+       'I have an exam tomorrow which is dma');
+equals('the file which is file which is corrupted', 'The file which is corrupted');
+equals('a function that is function that is broken', 'A function that is broken');
+// A middle that carries new information is a real clause and stays, both of them.
+keeps('the tool which is free which is open source', 'free');
+keeps('the tool which is free which is open source', 'open source');
+keeps('a library that is fast that is reliable', 'fast');
+keeps('the exam which is tomorrow which is dma', 'tomorrow');
+
+// ---------------------------------------------------------------------------
+// Prompts built around + & | > and initialisms went uncorrected: single letters and
+// acronyms dragged the English ratio under the bar, so both language gates skipped
+// the typo tables and the corrector.
+// ---------------------------------------------------------------------------
+equals('a + b + c teh diffrence', 'A + b + c the difference');
+equals('AI + ML + DL + NLP are importnt', 'AI + ML + DL + NLP are important');
+equals('a & b | c teh diffrence', 'A & b | c the difference');
+equals('stacks&queues wiht exmaples', 'Stacks&queues with examples');
+equals('data mining > ML in my opinon', 'Data mining > ML in my opinion');
+// Counting fixable typos as English must not let German through: "mich" is one
+// letter from "much" and "und" from "and".
+keeps('ob Emily und Mia die mich neugierig anschauen', 'mich');
+// "um" is a word outside English and only a filler inside it.
+keeps('Welche Regeln muss ich erfuellen um eine Liste anzufertigen?', 'erfuellen um eine');
+keeps('Explique a recursividade com um exemplo simples', 'com um exemplo');
+drops('um uh explain joins pls', 'um');
+
+// ---------------------------------------------------------------------------
+// A connector starts a new clause. "+ can u pls tell me" kept its wrapper because
+// the clause-start rules only knew . ! ? , ; and a newline.
+// ---------------------------------------------------------------------------
+equals('explain recursion + can u pls tell me teh diffrence between stacks and queues',
+       'Explain recursion + tell me the difference between stacks and queues');
+equals('data mining -> can u pls explian apriori algoritm', 'Data mining -> explain apriori algorithm');
+equals('notes on os & hey chatgpt can u add exmaples', 'Notes on OS & add examples');
+equals('i need notes on dbms + also can you plz explian normalisation wiht exmaples',
+       'I need notes on dbms + also explain normalisation with examples');
+equals('explain recursion hey chatgpt thanks', 'Explain recursion');
+equals('hey chatgpt so basically i want u to explain recursion', 'Explain recursion');
+// Not a wrapper, not a vocative: left alone.
+keeps('can you believe this + explain it', 'can you believe');
+keeps('vector u + vector v, find the angle', 'vector u');
+keeps('the hey chatgpt jingle is catchy', 'hey ChatGPT jingle');
+
+// ---------------------------------------------------------------------------
+// Typos the corrector let through: a missing doubled consonant read as a regular
+// inflection, and misspellings hiding in the attested-word list.
+// ---------------------------------------------------------------------------
+keeps('the error occured twice', 'occurred');
+keeps('from the begining please', 'beginning');
+keeps('fix this sentance', 'sentence');
+keeps('difference between stacks and queus', 'queues');
+// American spellings with a single l are words, not typos.
+keeps('the job was canceled', 'canceled');
+keeps('labeled data for training', 'labeled');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

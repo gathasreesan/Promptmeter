@@ -198,8 +198,8 @@ loadExactTokenizer();
         try { PromptMeterCompress.compress('Please explain how `x` works, thanks', { budgetMs: 100 }); }
         catch (e) { /* the real call reports its own errors */ }
     };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 3000 });
-    else setTimeout(run, 1500);
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 800 });
+    else setTimeout(run, 300);
 })();
 
 // Global enabled state (controlled by the popup on/off switch)
@@ -239,6 +239,8 @@ const loggedPromptSet = new Set(); // Prompt-response pairs already saved, to pr
 
 // State for typing suggestions
 let debounceTimer = null;
+const INPUT_DEBOUNCE_FIRST_MS = 120;
+const INPUT_DEBOUNCE_OPEN_MS = 220;
 let ignoredPromptText = "";
 let wasOptimized = false;
 let lastSavedTokens = 0;
@@ -337,7 +339,13 @@ function handleInput(e) {
     // the debounce -- select-all, delete, type fast, and the pause never sees it empty.
     if (undoStack.length && !readText(getPromptBox() || (e && e.target))) undoStack.length = 0;
 
-    // 450ms debounce. The text is read inside the callback so it is always the latest value.
+    // Short debounce: the analysis costs a few milliseconds, so the wait is only there
+    // to avoid re-rendering on every keystroke. The first appearance is the one the user
+    // waits for, so it gets the shortest pause; once the card is up, a little longer
+    // keeps it from flickering mid-word. The text is read inside the callback so it is
+    // always the latest value.
+    const open = document.getElementById("promptmeter-opt-card");
+    const delay = open && open.classList.contains('visible') ? INPUT_DEBOUNCE_OPEN_MS : INPUT_DEBOUNCE_FIRST_MS;
     debounceTimer = setTimeout(() => {
         const promptBox = getPromptBox();
         const currentText = promptBox ? readText(promptBox) : readText(e && e.target);
@@ -354,7 +362,7 @@ function handleInput(e) {
         }
 
         analyzeAndOfferOptimization(currentText);
-    }, 450);
+    }, delay);
 }
 
 // 2. Hide the optimization card
@@ -475,6 +483,10 @@ const SEVERITY_TITLE = {
     suggestion: 'Probably right, but the context could make it wrong',
     improvement: 'Was not wrong -- this is shorter or tidier'
 };
+
+// Below this many words the card is noise: there is nothing to measure yet and it only
+// covers the composer the user is still typing into.
+const MIN_METER_WORDS = 2;
 
 const CARD_GAP = 12;         // Clearance between the card and the top of the composer
 const CARD_MIN_HEIGHT = 140; // Below this the card is unreadable; it scrolls instead
@@ -688,7 +700,7 @@ const LOST_RULE_TEXT = {
 };
 
 // 3. Create and show the optimization overlay
-function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues, tokenStats, headroom, compression) {
+function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSaved, grammarIssues, scopeIssues, tokenStats, headroom, compression, meterOnly) {
     let card = document.getElementById("promptmeter-opt-card");
 
     // Nothing the card shows has changed since the last render: keep the DOM. A rebuild
@@ -697,7 +709,8 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     const signature = JSON.stringify([originalText, optimizedText,
         (grammarIssues || []).map(i => i.label || i.explanation), (scopeIssues || []).map(i => i.label),
         tokenStats && [tokenStats.originalTokens, tokenStats.optimizedTokens, tokenStats.exact],
-        headroom && headroom.percentUsed, compression && compression.mode, undoStack.length, strictness]);
+        headroom && headroom.percentUsed, compression && compression.mode, undoStack.length, strictness,
+        !!meterOnly]);
     if (card && card.classList.contains('visible') && card.dataset.signature === signature) {
         positionOptimizationCard(true);
         return;
@@ -772,9 +785,12 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
             <div class="promptmeter-opt-metrics">
                 ${stats ? `
                 <div class="promptmeter-hero ${stats.saved < 0 ? 'promptmeter-hero-cost' : ''}"
-                     title="${stats.saved < 0 ? 'This rewrite costs tokens' : 'Tokens saved'}">
-                    <span class="promptmeter-hero-value">${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.saved)} ${Math.abs(stats.saved) === 1 ? 'token' : 'tokens'}</span>
-                    <span class="promptmeter-hero-unit">${Math.abs(stats.percent)}%</span>
+                     title="${stats.saved < 0 ? 'This rewrite costs tokens' : stats.saved === 0 ? 'Corrections only; same length' : 'Tokens saved'}">
+                    ${stats.saved === 0
+                        // A correction that saves nothing read "−0 tokens 0%".
+                        ? '<span class="promptmeter-hero-value">Corrected</span><span class="promptmeter-hero-unit">same length</span>'
+                        : `<span class="promptmeter-hero-value">${stats.saved < 0 ? '+' : '−'}${Math.abs(stats.saved)} ${Math.abs(stats.saved) === 1 ? 'token' : 'tokens'}</span>
+                    <span class="promptmeter-hero-unit">${Math.abs(stats.percent)}%</span>`}
                 </div>` : ''}
                 <div class="promptmeter-metric-line">
                     ${stats ? `
@@ -1052,6 +1068,10 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         card.style.left = card.style.width = card.style.bottom = card.style.maxHeight = card.style.top = "";
     }
 
+    // Meter-only: the header carries the live count, and the diff, the mode tabs and the
+    // Apply/Copy buttons have nothing to act on, so CSS folds them away. The card is then
+    // a readout rather than a prompt to do something.
+    card.classList.toggle("promptmeter-meter-only", !!meterOnly);
     card.classList.add("visible");
 }
 
@@ -1114,11 +1134,11 @@ function analyzeAndOfferOptimization(text, keepOpen) {
         return;
     }
 
+    // No rewrite to offer. The card used to vanish here, and because three prompts in
+    // four have nothing to trim, that made it look broken: it appeared and disappeared
+    // with no pattern the user could learn. PromptMeter is a meter, so it stays up and
+    // reports the count. MIN_METER_WORDS keeps it off a half-typed first word.
     if (!optimized || optimized.trim() === text.trim()) {
-        if (!keepOpen) {
-            hideOptimizationCard();
-            return;
-        }
         optimized = text;
     }
 
@@ -1153,19 +1173,37 @@ function analyzeAndOfferOptimization(text, keepOpen) {
         ? PromptMeterHeadroom.report(conversationTokens, tokenStats.optimizedTokens)
         : null;
 
-    // Only interrupt for a worthwhile change: 2+ tokens saved, a 5% character
-    // reduction, or a grammatical error found. Grammar earns an interruption on its own
-    // because correcting it rarely saves a token -- "he go" becomes "he goes", which is
-    // longer -- yet an agreement or tense error is exactly the kind of thing that makes
-    // the model answer the wrong question and cost a whole extra turn.
-    const charSavingsPct = ((text.length - optimized.length) / text.length) * 100;
+    // Only interrupt for a change that pays for itself in tokens -- but any saving counts.
+    //
+    // The bar used to be 2 tokens OR a 5% character reduction, and measured over 3,000
+    // real prompts that threw away 13.9% of every saving the optimizer found: a one-token
+    // win inside a long prompt clears neither test, so "uh explain recursion to me" got
+    // the filler stripped and then the card was withheld. A saving the tool will not show
+    // is a saving the user never gets, and reporting one token honestly beats staying
+    // silent and looking broken.
+    //
+    // Grammar and scope findings used to earn an interruption on their own, on the
+    // reasoning that an agreement error can make the model answer the wrong question and
+    // cost a whole extra turn. That reasoning is sound, but it is not this tool's job,
+    // and in practice it is what made PromptMeter read as a spell checker: "whats the
+    // diffrence between let and var" became "What's the difference between let and var"
+    // for a saving of exactly zero tokens, and "write a function that sorts a list" was
+    // interrupted to capitalise one letter. A token meter that interrupts to fix
+    // capitalisation is a grammar checker wearing the wrong label.
+    //
+    // Findings still ride along on a card that has already earned its place -- they are
+    // passed to showOptimizationCard below and rendered there -- they just no longer
+    // summon one by themselves.
     // The threshold decides whether to OPEN the card, not whether to keep it open.
     // Applied on every pause, a saving hovering around two tokens switched the card
     // off and on as the user kept typing ("it goes off in between").
     const openCard = document.getElementById("promptmeter-opt-card");
     const alreadyShowing = !!(openCard && openCard.classList.contains('visible'));
-    if (!alreadyShowing && tokensSaved < 2 && charSavingsPct < 5.0 && grammarIssues.length === 0 &&
-        scopeIssues.length === 0) {
+    // A suggestion worth applying, or just the live count? Both show; only the first
+    // gets the diff and the Apply button. Below MIN_METER_WORDS neither does: a card
+    // hovering over a two-word prompt is in the way, not informative.
+    const meterOnly = tokensSaved <= 0 || optimized.trim() === text.trim();
+    if (meterOnly && text.trim().split(/\s+/).length < MIN_METER_WORDS) {
         hideOptimizationCard();
         return;
     }
@@ -1175,7 +1213,7 @@ function analyzeAndOfferOptimization(text, keepOpen) {
         ms: Math.round(performance.now() - analysisStarted), chars: text.length });
     showOptimizationCard(text, optimized, tokensSaved,
         PromptMeterCalculator.savings(tokensSaved).carbon, grammarIssues, scopeIssues,
-        tokenStats, headroom, compression);
+        tokenStats, headroom, compression, meterOnly);
 }
 
 // 5. Apply the optimized prompt text directly into ChatGPT's input area

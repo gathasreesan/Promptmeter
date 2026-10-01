@@ -850,3 +850,23 @@
         animation: none;
     }
 }
+
+/* Meter-only: no rewrite worth applying, so the card reports the live token count and
+   nothing else. Three prompts in four have nothing to trim, and a card that vanished for
+   all of them read as broken rather than as "nothing to do here". Folding the card down
+   to its header keeps the reading visible without implying there is an action to take. */
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-diff,
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-grammar,
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-scope,
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-preserve,
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-modes,
+.promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-apply,
+.promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-copy,
+.promptmeter-opt-card.promptmeter-meter-only #promptmeter-btn-revert {
+    display: none !important;
+}
+
+.promptmeter-opt-card.promptmeter-meter-only .promptmeter-opt-actions {
+    border-top: none;
+    padding-top: 0;
+}

@@ -41,6 +41,9 @@ const PM_C_PROTECT = (typeof PromptMeterProtect !== 'undefined')
 const PM_C_OPTIMIZER = (typeof PromptMeterOptimizer !== 'undefined')
     ? PromptMeterOptimizer
     : (typeof require !== 'undefined' ? require('./optimizer.js').PromptMeterOptimizer : null);
+const PM_C_SPELL = (typeof PromptMeterSpelling !== 'undefined')
+    ? PromptMeterSpelling
+    : (typeof require !== 'undefined' ? require('./spelling.js').PromptMeterSpelling : null);
 
 const PM_C_CONDENSE = (typeof PromptMeterCondense !== 'undefined')
     ? PromptMeterCondense
@@ -419,9 +422,14 @@ const PromptMeterCompress = {
         // names something, and has to survive (case-insensitively: "python" may become
         // "Python").
         const lowerCandidate = candidate.toLowerCase();
+        const has = (word) => new RegExp('(?:^|[^\\w])' + word.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            + '(?![\\w])').test(lowerCandidate);
         this.namesIn(original).forEach((name) => {
-            if (!new RegExp('(?:^|[^\\w])' + name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                + '(?![\\w])').test(lowerCandidate)) {
+            // A capitalised typo ("Machine Learing") looks like a name; its correction
+            // standing in its place is the word surviving, not a name lost.
+            const fixed = PM_C_SPELL && /^[A-Za-z]+$/.test(name) && PM_C_SPELL.correctWord(name.toLowerCase());
+            if (fixed && has(fixed)) return;
+            if (!has(name)) {
                 violations.push({ rule: 'name', detail: name });
             }
         });
