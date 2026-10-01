@@ -808,10 +808,15 @@ const PromptMeterCompress = {
             candidate.valid && candidate.tokens < originalTokens && allowed(candidate.mode)
             && (!settings.mode || candidate.mode === settings.mode));
 
-        // Shortest wins. Ties go to the gentler tier, which is the order they arrive in.
+        // Shortest wins; a token tie goes to the shorter text. With the real encoder
+        // "Please urgent ..." and "Urgent ..." cost the same (capitalising "Urgent"
+        // splits it in two), and keeping the gentler tier on a tie left the filler in.
         let chosen = null;
         usable.forEach((candidate) => {
-            if (!chosen || candidate.tokens < chosen.tokens) chosen = candidate;
+            if (!chosen || candidate.tokens < chosen.tokens
+                || (candidate.tokens === chosen.tokens && candidate.text.length < chosen.text.length)) {
+                chosen = candidate;
+            }
         });
 
         // Nothing shorter survived, but the prompt had typos or grammar errors. Fixing
