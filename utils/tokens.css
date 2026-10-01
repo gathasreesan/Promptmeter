@@ -1,0 +1,269 @@
+/**
+ * PromptMeter design tokens -- THE single definition. GENERATED from a table so the
+ * light and the two dark blocks stay in step; edit the values there, not here.
+ *
+ * SCOPED TO .pm-tokens, NOT :root. The card is injected into ChatGPT, which defines
+ * its own --bg-card and --border-color; tokens on :root would restyle their UI.
+ *
+ *     popup.html, dashboard/index.html   <html class="pm-tokens">
+ *     the injected card                  class="promptmeter-opt-card pm-tokens"
+ *
+ * Look: neutral greys, ink for the primary action, and colour only where it means
+ * something -- green for what was saved or added, red for what was removed.
+ */
+
+/* Inter, bundled (fonts/, 48 KB) so the extension looks the same offline and on every
+   OS. Registered under its own name so it never collides with a host page's "Inter". */
+@font-face {
+    font-family: 'PM Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter-latin.woff2') format('woff2');
+}
+
+.pm-tokens {
+    --rec-color: var(--rec-border-warning);
+    --rec-wash: var(--rec-wash-warning);
+    --pill-color: var(--color-warning);
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --radius-pill: 6px;
+    --radius-btn: 8px;
+    --radius-card: 12px;
+    --radius-card-lg: 14px;
+    --radius-sm: 6px;
+    --dur-fast: 120ms;
+    --dur-base: 180ms;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --font-body: 'PM Inter', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-heading: var(--font-body);
+    --tracking-label: 0;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --bg-primary: #FAFAFA;
+    --bg-secondary: #F4F4F5;
+    --bg-surface: #F4F4F5;
+    --bg-card: #FFFFFF;
+    --bg-hover-card: #FAFAFA;
+    --bg-sidebar: #FAFAFA;
+    --bg-hover: rgba(9, 9, 11, 0.045);
+    --bg-selected: #F4F4F5;
+    --border-color: #E4E4E7;
+    --divider-color: #EFEFF1;
+    --color-primary: #18181B;
+    --color-secondary: #52525B;
+    --color-mint: #A1A1AA;
+    --color-sage: #D4D4D8;
+    --color-success: #15803D;
+    --color-warning: #B45309;
+    --color-error: #DC2626;
+    --color-info: #2563EB;
+    --color-carbon: #3F3F46;
+    --color-streak: #3F3F46;
+    --text-primary: #09090B;
+    --text-secondary: #52525B;
+    --text-muted: #6B6B74;
+    --text-disabled: #A1A1AA;
+    --on-accent: #FFFFFF;
+    --btn-primary: #18181B;
+    --btn-primary-hover: #3F3F46;
+    --btn-secondary: #FFFFFF;
+    --btn-secondary-border: #E4E4E7;
+    --btn-secondary-hover: #F4F4F5;
+    --toggle-off: #D4D4D8;
+    --toggle-knob: #FFFFFF;
+    --disabled-bg: #F4F4F5;
+    --disabled-border: #E4E4E7;
+    --disabled-dot: #A1A1AA;
+    --wash-success: rgba(21, 128, 61, 0.07);
+    --wash-success-strong: rgba(21, 128, 61, 0.10);
+    --wash-warning: rgba(180, 83, 9, 0.06);
+    --wash-warning-strong: rgba(180, 83, 9, 0.09);
+    --wash-error: rgba(220, 38, 38, 0.06);
+    --wash-error-strong: rgba(220, 38, 38, 0.09);
+    --wash-info: rgba(37, 99, 235, 0.06);
+    --danger-wash: rgba(220, 38, 38, 0.07);
+    --danger-wash-hover: rgba(220, 38, 38, 0.12);
+    --danger-border: rgba(220, 38, 38, 0.24);
+    --rec-wash-success: transparent;
+    --rec-wash-warning: transparent;
+    --rec-wash-info: transparent;
+    --rec-border-success: #E4E4E7;
+    --rec-border-warning: #E4E4E7;
+    --rec-border-info: #E4E4E7;
+    --diff-removed-bg: rgba(220, 38, 38, 0.07);
+    --diff-removed-text: #B91C1C;
+    --diff-added-bg: rgba(21, 128, 61, 0.09);
+    --diff-added-text: #166534;
+    --chart-carbon-fill: rgba(63, 63, 70, 0.18);
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #eb6834;
+    --surface-sunken: #F4F4F5;
+    --surface-raised: #FFFFFF;
+    --edge-highlight: transparent;
+    --rail-accent: var(--color-success);
+    --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(37, 99, 235, 0.45);
+    --shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.04);
+    --shadow-premium: 0 1px 2px rgba(9, 9, 11, 0.04), 0 4px 12px rgba(9, 9, 11, 0.05);
+    --shadow-lifted: 0 8px 24px rgba(9, 9, 11, 0.08);
+    --shadow-card: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 1px 2px rgba(9, 9, 11, 0.04), 0 16px 40px -12px rgba(9, 9, 11, 0.18);
+    --shadow-btn: 0 1px 2px rgba(9, 9, 11, 0.10);
+    font-feature-settings: 'cv11', 'ss01';
+}
+
+/* Dark: by system preference unless light was chosen, and by an explicit dark choice. */
+@media (prefers-color-scheme: dark) {
+    .pm-tokens:not([data-theme="light"]) {
+        --bg-primary: #09090B;
+        --bg-secondary: #111113;
+        --bg-surface: #111113;
+        --bg-card: #18181B;
+        --bg-hover-card: #1C1C1F;
+        --bg-sidebar: #0C0C0E;
+        --bg-hover: rgba(255, 255, 255, 0.05);
+        --bg-selected: #1F1F23;
+        --border-color: #2A2A2F;
+        --divider-color: #232327;
+        --color-primary: #FAFAFA;
+        --color-secondary: #A1A1AA;
+        --color-mint: #52525B;
+        --color-sage: #3F3F46;
+        --color-success: #4ADE80;
+        --color-warning: #FBBF24;
+        --color-error: #F87171;
+        --color-info: #60A5FA;
+        --color-carbon: #D4D4D8;
+        --color-streak: #D4D4D8;
+        --text-primary: #FAFAFA;
+        --text-secondary: #A1A1AA;
+        --text-muted: #8B8B94;
+        --text-disabled: #52525B;
+        --on-accent: #09090B;
+        --btn-primary: #FAFAFA;
+        --btn-primary-hover: #D4D4D8;
+        --btn-secondary: #18181B;
+        --btn-secondary-border: #2A2A2F;
+        --btn-secondary-hover: #232327;
+        --toggle-off: #3F3F46;
+        --toggle-knob: #FAFAFA;
+        --disabled-bg: #1C1C1F;
+        --disabled-border: #2A2A2F;
+        --disabled-dot: #52525B;
+        --wash-success: rgba(74, 222, 128, 0.10);
+        --wash-success-strong: rgba(74, 222, 128, 0.14);
+        --wash-warning: rgba(251, 191, 36, 0.09);
+        --wash-warning-strong: rgba(251, 191, 36, 0.13);
+        --wash-error: rgba(248, 113, 113, 0.10);
+        --wash-error-strong: rgba(248, 113, 113, 0.14);
+        --wash-info: rgba(96, 165, 250, 0.10);
+        --danger-wash: rgba(248, 113, 113, 0.10);
+        --danger-wash-hover: rgba(248, 113, 113, 0.18);
+        --danger-border: rgba(248, 113, 113, 0.30);
+        --rec-wash-success: transparent;
+        --rec-wash-warning: transparent;
+        --rec-wash-info: transparent;
+        --rec-border-success: #2A2A2F;
+        --rec-border-warning: #2A2A2F;
+        --rec-border-info: #2A2A2F;
+        --diff-removed-bg: rgba(248, 113, 113, 0.12);
+        --diff-removed-text: #FCA5A5;
+        --diff-added-bg: rgba(74, 222, 128, 0.12);
+        --diff-added-text: #86EFAC;
+        --chart-carbon-fill: rgba(212, 212, 216, 0.18);
+        --chart-series-1: #3987e5;
+        --chart-series-2: #d95926;
+        --surface-sunken: #111113;
+        --surface-raised: #1F1F23;
+        --edge-highlight: transparent;
+        --rail-accent: var(--color-success);
+        --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(96, 165, 250, 0.55);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+        --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+        --shadow-lifted: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.3), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+        --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.pm-tokens[data-theme="dark"] {
+    --bg-primary: #09090B;
+    --bg-secondary: #111113;
+    --bg-surface: #111113;
+    --bg-card: #18181B;
+    --bg-hover-card: #1C1C1F;
+    --bg-sidebar: #0C0C0E;
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-selected: #1F1F23;
+    --border-color: #2A2A2F;
+    --divider-color: #232327;
+    --color-primary: #FAFAFA;
+    --color-secondary: #A1A1AA;
+    --color-mint: #52525B;
+    --color-sage: #3F3F46;
+    --color-success: #4ADE80;
+    --color-warning: #FBBF24;
+    --color-error: #F87171;
+    --color-info: #60A5FA;
+    --color-carbon: #D4D4D8;
+    --color-streak: #D4D4D8;
+    --text-primary: #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-muted: #8B8B94;
+    --text-disabled: #52525B;
+    --on-accent: #09090B;
+    --btn-primary: #FAFAFA;
+    --btn-primary-hover: #D4D4D8;
+    --btn-secondary: #18181B;
+    --btn-secondary-border: #2A2A2F;
+    --btn-secondary-hover: #232327;
+    --toggle-off: #3F3F46;
+    --toggle-knob: #FAFAFA;
+    --disabled-bg: #1C1C1F;
+    --disabled-border: #2A2A2F;
+    --disabled-dot: #52525B;
+    --wash-success: rgba(74, 222, 128, 0.10);
+    --wash-success-strong: rgba(74, 222, 128, 0.14);
+    --wash-warning: rgba(251, 191, 36, 0.09);
+    --wash-warning-strong: rgba(251, 191, 36, 0.13);
+    --wash-error: rgba(248, 113, 113, 0.10);
+    --wash-error-strong: rgba(248, 113, 113, 0.14);
+    --wash-info: rgba(96, 165, 250, 0.10);
+    --danger-wash: rgba(248, 113, 113, 0.10);
+    --danger-wash-hover: rgba(248, 113, 113, 0.18);
+    --danger-border: rgba(248, 113, 113, 0.30);
+    --rec-wash-success: transparent;
+    --rec-wash-warning: transparent;
+    --rec-wash-info: transparent;
+    --rec-border-success: #2A2A2F;
+    --rec-border-warning: #2A2A2F;
+    --rec-border-info: #2A2A2F;
+    --diff-removed-bg: rgba(248, 113, 113, 0.12);
+    --diff-removed-text: #FCA5A5;
+    --diff-added-bg: rgba(74, 222, 128, 0.12);
+    --diff-added-text: #86EFAC;
+    --chart-carbon-fill: rgba(212, 212, 216, 0.18);
+    --chart-series-1: #3987e5;
+    --chart-series-2: #d95926;
+    --surface-sunken: #111113;
+    --surface-raised: #1F1F23;
+    --edge-highlight: transparent;
+    --rail-accent: var(--color-success);
+    --ring-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(96, 165, 250, 0.55);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lifted: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.3), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+    --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Motion is a preference, not a decoration. */
+@media (prefers-reduced-motion: reduce) {
+    .pm-tokens {
+        --dur-fast: 0ms;
+        --dur-base: 0ms;
+    }
+}

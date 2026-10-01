@@ -1,151 +1,85 @@
-/* style.css */
+/* style.css -- the toolbar popup. Colours come from utils/tokens.css via
+   <html class="pm-tokens">.
 
-:root {
-  --bg-primary: #F7F9F4;
-  --bg-secondary: #EEF5EC;
-  --bg-card: #FFFFFF;
-  --border-color: #E3E8E4;
-  --color-primary: #1c5d20;
-  --color-secondary: #4CAF50;
-  --text-primary: #14181A;
-  --text-secondary: #5A6470;
-  --text-muted: #6E7781;
-  --bg-hover: rgba(46, 125, 50, 0.08);
-  --bg-selected: #E8F5E9;
-  --btn-primary: #1c5d20;
-  --btn-primary-hover: #164A19;
-  --color-carbon: #EF6C00;
-  --radius-card: 12px;
-  --radius-btn: 8px;
-  --shadow-premium: 0 1px 2px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06);
-  --toggle-off: #CFD8DC;
-  --toggle-knob: #FFFFFF;
-  --disabled-bg: #ECEFF1;
-  --disabled-border: #CFD8DC;
-  --disabled-dot: #90A4AE;
-  --on-accent: #FFFFFF;
-}
-
-/* Dark theme. Declared twice: under prefers-color-scheme for "auto" (guarded so an
-   explicit light choice still wins) and under [data-theme="dark"] for an explicit one. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-primary: #0F1511;
-    --bg-secondary: #17201A;
-    --bg-card: #1A231C;
-    --border-color: #2B3430;
-    --color-primary: #66BB6A;
-    --color-secondary: #81C784;
-    --text-primary: #E6EAE8;
-    --text-secondary: #A2ADB4;
-    --text-muted: #8B949E;
-    --bg-hover: rgba(102, 187, 106, 0.12);
-    --bg-selected: #1E2E20;
-    --btn-primary: #66BB6A;
-    --btn-primary-hover: #7CCB80;
-    --color-carbon: #FF9800;
-    --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
-    --toggle-off: #3A4A3D;
-    --toggle-knob: #E8EDE8;
-    --disabled-bg: #222D24;
-    --disabled-border: #2A3A2D;
-    --disabled-dot: #5C6960;
-    --on-accent: #0F1511;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg-primary: #0F1511;
-  --bg-secondary: #17201A;
-  --bg-card: #1A231C;
-  --border-color: #2B3430;
-  --color-primary: #66BB6A;
-  --color-secondary: #81C784;
-  --text-primary: #E6EAE8;
-  --text-secondary: #A2ADB4;
-  --text-muted: #8B949E;
-  --bg-hover: rgba(102, 187, 106, 0.12);
-  --bg-selected: #1E2E20;
-  --btn-primary: #66BB6A;
-  --btn-primary-hover: #7CCB80;
-  --color-carbon: #FF9800;
-  --shadow-premium: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.40);
-  --toggle-off: #3A4A3D;
-  --toggle-knob: #E8EDE8;
-  --disabled-bg: #222D24;
-  --disabled-border: #2A3A2D;
-  --disabled-dot: #5C6960;
-  --on-accent: #0F1511;
-}
+   One headline figure (tokens saved), three secondary figures in a divided row, one
+   button. No pills, no tinted panels, no uppercase captions: hierarchy comes from size
+   and weight, and colour is kept for what it means. */
 
 body {
-    width: 270px;
+    width: 300px;
     margin: 0;
-    padding: 16px;
-    background: var(--bg-primary);
+    background: var(--bg-card);
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    border-top: 3px solid var(--color-primary); /* green top accent */
+    font-family: var(--font-body);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
 }
 
 .popup-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
 }
 
+/* Header */
 .popup-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 12px;
+    gap: 10px;
+    padding: 14px var(--space-4);
+    border-bottom: 1px solid var(--divider-color);
 }
 
-.header-brand {
+.brand-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex: 0 0 auto;
+}
+
+.brand-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.popup-header h1 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.status-banner {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.popup-header h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: 'Sora', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: -0.02em;
-}
-
-.badge {
-    background: var(--bg-selected);
-    color: var(--color-primary);
-    padding: 2px 8px;
-    border-radius: var(--radius-btn);
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid rgba(46, 125, 50, 0.15);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.2s ease;
-}
-
-.badge.disabled {
-    background: var(--disabled-bg);
+    gap: 6px;
+    margin-top: 2px;
+    font-size: 12px;
     color: var(--text-muted);
-    border-color: var(--disabled-border);
 }
 
-/* Modern Toggle Switch */
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-success);
+    transition: background var(--dur-base) ease;
+}
+
+.status-banner.disabled .status-dot { background: var(--disabled-dot); }
+
+/* Toggle */
 .switch {
     position: relative;
     display: inline-block;
-    width: 38px;
-    height: 20px;
+    width: 32px;
+    height: 18px;
     flex-shrink: 0;
 }
 
 .switch input {
+    position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
@@ -153,229 +87,175 @@ body {
 
 .slider {
     position: absolute;
+    inset: 0;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--toggle-off);
-    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 999px;
+    background: var(--toggle-off);
+    transition: background var(--dur-base) var(--ease-out);
 }
 
-.slider:before {
-    position: absolute;
+.slider::before {
     content: "";
-    height: 14px;
+    position: absolute;
     width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--toggle-knob);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-input:checked + .slider {
-    background-color: var(--color-primary);
-}
-
-input:focus + .slider {
-    box-shadow: 0 0 1px var(--color-primary);
-}
-
-input:checked + .slider:before {
-    transform: translateX(18px);
-}
-
-.slider.round {
-    border-radius: 20px;
-}
-
-.slider.round:before {
+    height: 14px;
+    left: 2px;
+    top: 2px;
     border-radius: 50%;
+    background: var(--toggle-knob);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform var(--dur-base) var(--ease-out);
 }
 
-/* Status Banner */
-.status-banner {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-btn);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--color-primary);
-    transition: all 0.2s ease;
-    border: 1px solid rgba(46, 125, 50, 0.1);
-}
+input:checked + .slider { background: var(--color-primary); }
+input:checked + .slider::before { transform: translateX(14px); }
+[data-theme="dark"] input:checked + .slider::before { background: var(--bg-card); }
 
-.status-banner.disabled {
-    background: #ECEFF1;
-    color: var(--text-muted);
-    border-color: #CFD8DC;
-}
+/* The checkbox is sized to zero, so the ring goes on the track. */
+.switch input:focus-visible + .slider { box-shadow: var(--ring-focus); }
 
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    display: inline-block;
-    transition: background 0.2s ease;
-}
-
-.status-banner.disabled .status-dot {
-    background: var(--disabled-dot);
-}
-
-.stats-preview {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.stat-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-card); /* 18px aligned popup card rounding */
-    box-shadow: var(--shadow-premium);
-    padding: 14px 10px;
+/* Edit level */
+.levels {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 6px;
-    transition: transform 0.2s ease, border-color 0.15s ease;
+    padding: 14px var(--space-4);
+    border-bottom: 1px solid var(--divider-color);
 }
 
-.stat-box:hover {
-    border-color: var(--color-secondary);
-    transform: translateY(-1px);
+.level-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--radius-btn);
+    background: var(--bg-secondary);
+}
+
+.level-options button {
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.level-options button:hover { color: var(--text-primary); }
+
+.level-options button[aria-checked="true"] {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Headline figure */
+.hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-4) var(--space-4) 14px;
+}
+
+.hero-value {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    margin: 2px 0;
 }
 
 .stat-label {
-    font-size: 12px; /* Increased from 9px for typography balance */
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-muted);
-    font-weight: 600;
-    text-align: center;
 }
+
+.stat-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Secondary figures: one row, hairline dividers, no boxes */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 var(--space-4);
+    border-top: 1px solid var(--divider-color);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3) 0 var(--space-3) var(--space-3);
+    min-width: 0;
+}
+
+.stat:first-child { padding-left: 0; }
+.stat + .stat { border-left: 1px solid var(--divider-color); }
 
 .stat-value {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
     font-variant-numeric: tabular-nums;
-    font-size: 20px; /* Proportional value size */
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
 }
 
-/* Specific Carbon Indicator Stat Box override */
-.stat-box-carbon .stat-value {
-    color: var(--color-carbon) !important;
+/* Efficiency, set by popup.js as a class so the theme resolves it. Only a low
+   score earns a colour; a good one is just a number. */
+.stat-value.stat-good { color: var(--text-primary); }
+.stat-value.stat-fair { color: var(--color-warning); }
+.stat-value.stat-poor { color: var(--color-error); }
+
+.popup-empty {
+    margin: var(--space-3) var(--space-4) 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
 }
 
 .dashboard-btn {
-    background: var(--btn-primary);
-    color: var(--on-accent);
-    border: none;
+    margin: var(--space-4);
+    height: 34px;
+    border: 1px solid var(--btn-secondary-border);
     border-radius: var(--radius-btn);
-    padding: 11px;
-    font-size: 12px;
-    font-weight: 700;
+    background: var(--btn-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
-    width: 100%;
+    box-shadow: var(--shadow-sm);
+    transition: background var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
 }
 
 .dashboard-btn:hover {
-    background: var(--btn-primary-hover);
+    background: var(--btn-secondary-hover);
 }
 
-.dashboard-btn:active {
-    transform: scale(0.97);
-}
-/* The badge keeps its own disabled treatment */
-.badge.disabled {
-  background: var(--disabled-bg);
-  color: var(--text-muted);
-  border-color: var(--disabled-border);
+.dashboard-btn span {
+    color: var(--text-muted);
+    margin-left: 2px;
 }
 
-body {
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* ---------------------------------------------------------------------------
-   Focus, motion and numerals.
-
-   Three gaps that were the same in the popup, the card and the dashboard:
-
-   FOCUS      Nothing defined a focus style, and several controls set outline:none
-              or sit on a coloured fill, so tabbing through the UI showed nothing at
-              all. :focus-visible keeps the ring for keyboard users without putting
-              it back on every mouse click.
-   MOTION     Every transition ran regardless of the viewer's setting. A prompt tool
-              that animates on each keystroke is exactly the case the reduced-motion
-              preference exists for.
-   NUMERALS   Figures that update in place (token counts, scores, carbon) shifted
-              width as their digits changed, because the default numerals are
-              proportional. Tabular numerals hold the column still.
-   --------------------------------------------------------------------------- */
-
-:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-    border-radius: var(--radius-btn);
-}
-
-/* The ring is drawn outside the element, so a control flush against a panel edge
-   still shows it in full. */
-:where(button, a):focus-visible {
-    position: relative;
-    z-index: 1;
+:where(button, a, input):focus-visible {
+    outline: none;
+    box-shadow: var(--ring-focus);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
+    *, *::before, *::after {
         transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-/* ---------------------------------------------------------------------------
-   Popup corrections.
-   --------------------------------------------------------------------------- */
-
-/* The toggle's checkbox is sized to zero and hidden behind the track, so a focus
-   ring drawn on the input itself has nothing to outline. Keyboard users could tab
-   to the only control in the popup and see no indication at all. The ring goes on
-   the track instead. */
-.switch input:focus-visible + .slider {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
-/* transition: all animates layout properties too, so a hover could reflow the
-   badge. Only the painted properties need to move. */
-.badge {
-    transition: background var(--dur-fast, 120ms) ease,
-                color var(--dur-fast, 120ms) ease,
-                border-color var(--dur-fast, 120ms) ease;
-}
-
-/* Figures that update in place hold their column. */
-.stat-value,
-#popup-carbon,
-#popup-efficiency {
-    font-variant-numeric: tabular-nums;
-}
-
-/* The status dot pulsed forever. A permanent animation in a panel someone opens
-   for two seconds is noise, and it kept a compositor layer alive the whole time. */
-@media (prefers-reduced-motion: reduce) {
-    .status-dot {
-        animation: none;
+        animation-duration: 0.01ms !important;
     }
 }

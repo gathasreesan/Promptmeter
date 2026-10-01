@@ -20,7 +20,13 @@ const PromptMeterGamification = {
             if (!days[dateStr]) {
                 days[dateStr] = [];
             }
-            days[dateStr].push(item.efficiencyScore !== undefined ? item.efficiencyScore : 100);
+            // typeof, not !== undefined: an unscored turn now carries null, which
+            // passes an undefined check and then averages as zero.
+            days[dateStr].push(
+                typeof item.efficiencyScore === 'number' && isFinite(item.efficiencyScore)
+                    ? item.efficiencyScore
+                    : 100
+            );
         });
 
         const today = new Date();
@@ -30,7 +36,9 @@ const PromptMeterGamification = {
         const yesterdayStr = yesterday.toDateString();
 
         let activeCheckDate = null;
-        if (days[todayStr]) {
+        // Today only starts the count once it has earned credit: one weak first prompt
+        // used to zero a streak that today could still extend.
+        if (days[todayStr] && days[todayStr].some(score => score >= 90)) {
             activeCheckDate = today;
         } else if (days[yesterdayStr]) {
             activeCheckDate = yesterday;
@@ -67,37 +75,40 @@ const PromptMeterGamification = {
     checkBadges: function (history = []) {
         const totalCarbonSaved = history.reduce((sum, item) => sum + (item.carbonSaved || 0), 0);
         const currentStreak = this.calculateStreak(history);
-        const highEffCount = history.filter(item => (item.efficiencyScore || 100) >= 85).length;
+        // typeof, not `|| 100`: a genuine score of 0 is falsy and was counted as 100.
+        const score = item => typeof item.efficiencyScore === 'number' && isFinite(item.efficiencyScore)
+            ? item.efficiencyScore : 100;
+        const highEffCount = history.filter(item => score(item) >= 85).length;
         const avgEfficiency = history.length > 0
-            ? history.reduce((sum, item) => sum + (item.efficiencyScore || 100), 0) / history.length
+            ? history.reduce((sum, item) => sum + score(item), 0) / history.length
             : 100;
 
         return [
             {
                 id: "green_user",
-                name: "Green User",
-                description: "Maintain an average prompt efficiency of >= 90% over 5+ prompts.",
+                name: "Efficient",
+                description: "Average 90% efficiency or more over at least 5 prompts.",
                 icon: "check",
                 unlocked: history.length >= 5 && avgEfficiency >= 90
             },
             {
                 id: "carbon_crusader",
-                name: "Carbon Crusader",
-                description: "Save a total of 1.0g or more of CO₂ through prompt optimizations.",
+                name: "1 g CO₂ saved",
+                description: "Save 1 g of CO₂ in total through shorter prompts.",
                 icon: "trophy",
                 unlocked: totalCarbonSaved >= 1.0
             },
             {
                 id: "streak_starter",
-                name: "Streak Starter",
-                description: "Achieve a 3-day sustainability streak.",
+                name: "3-day streak",
+                description: "Use PromptMeter efficiently three days in a row.",
                 icon: "flame",
                 unlocked: currentStreak >= 3
             },
             {
                 id: "eco_champion",
-                name: "Eco Champion",
-                description: "Log 20+ queries with prompt efficiency >= 85%.",
+                name: "20 good prompts",
+                description: "Send 20 prompts scoring 85% or higher.",
                 icon: "trophy",
                 unlocked: highEffCount >= 20
             }
@@ -113,18 +124,22 @@ const PromptMeterGamification = {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Sum carbon saved inside the 7-day window
-        const carbonSavedThisWeek = history
-            .filter(item => new Date(item.timestamp) >= sevenDaysAgo)
-            .reduce((sum, item) => sum + (item.carbonSaved || 0), 0);
+        const week = history.filter(item => new Date(item.timestamp) >= sevenDaysAgo);
+        const tokensSavedThisWeek = week.reduce((sum, item) => sum + (item.tokensSaved || 0), 0);
+        const carbonSavedThisWeek = week.reduce((sum, item) => sum + (item.carbonSaved || 0), 0);
 
-        const targetCarbonSavings = 2.0; // 2 grams of CO2
-        const progress = Math.min(100, Math.round((carbonSavedThisWeek / targetCarbonSavings) * 100));
+        // Counted in tokens. The old target was 2 g of CO2, which at 0.36 mg a token
+        // is about 5,500 tokens a week -- some 550 improved prompts -- so the bar sat
+        // near zero for everyone. 500 tokens is roughly fifty improved prompts.
+        const targetTokens = 500;
+        const progress = Math.min(100, Math.round((tokensSavedThisWeek / targetTokens) * 100));
 
         return {
-            title: "Weekly Carbon Cut Challenge",
-            goal: `Save ${targetCarbonSavings.toFixed(1)}g of CO₂ this week`,
-            currentValue: `${carbonSavedThisWeek.toFixed(2)}g`,
+            title: "Weekly goal",
+            goal: `Save ${targetTokens} tokens this week`,
+            currentValue: `${tokensSavedThisWeek.toLocaleString()} tokens`,
+            targetLabel: `${targetTokens} tokens`,
+            carbonSaved: carbonSavedThisWeek,
             progress: progress,
             completed: progress >= 100
         };

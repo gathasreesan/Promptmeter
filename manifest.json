@@ -2,15 +2,14 @@
   "manifest_version": 3,
   "name": "PromptMeter",
   "version": "1.0",
-  "description": "AI Sustainability Coach",
-
-  "permissions": ["storage"],
-
+  "description": "Trims wasted tokens from your prompts, on your machine.",
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*"
   ],
-
   "content_scripts": [
     {
       "matches": [
@@ -18,6 +17,7 @@
         "https://chat.openai.com/*"
       ],
       "css": [
+        "utils/tokens.css",
         "content.css"
       ],
       "js": [
@@ -26,20 +26,47 @@
         "utils/ml-model.js",
         "utils/ml-classifier.js",
         "utils/condense.js",
+        "utils/attested-words.js",
         "utils/spelling.js",
         "utils/grammar.js",
         "utils/tokenizer.js",
         "utils/calculator.js",
+        "utils/headroom.js",
         "utils/storage.js",
+        "utils/modifiers.js",
         "utils/optimizer.js",
+        "utils/analysis.js",
+        "utils/compress.js",
         "utils/recommendations.js",
         "utils/gamification.js",
         "content.js"
       ]
     }
   ],
-
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "utils/tiktoken.bundle.js",
+        "fonts/inter-latin.woff2"
+      ],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ]
+    }
+  ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    },
+    "default_title": "PromptMeter"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }

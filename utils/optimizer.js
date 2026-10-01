@@ -28,6 +28,13 @@ const PM_SPELL = (typeof PromptMeterSpelling !== 'undefined')
 // Grammar detection and repair. Agreement, tense, confusables, pronoun case and
 // article errors all live there, so this file keeps only the vocabulary substitutions
 // (typos, slang, acronyms) that are specific to prompt text.
+// Adjective and redundancy compression. Its own file because deciding whether two
+// modifiers say the same thing is a vocabulary question, not a rules question, and
+// the lexicon is the whole of it.
+const PM_MODIFIERS = (typeof PromptMeterModifiers !== 'undefined')
+    ? PromptMeterModifiers
+    : (typeof require !== 'undefined' ? require('./modifiers.js').PromptMeterModifiers : null);
+
 const PM_GRAMMAR = (typeof PromptMeterGrammar !== 'undefined')
     ? PromptMeterGrammar
     : (typeof require !== 'undefined' ? require('./grammar.js').PromptMeterGrammar : null);
@@ -42,6 +49,13 @@ const PromptMeterOptimizer = {
 
     // Ordinary misspellings. The scoring pass derives its typo regex from these keys.
     spellingTypos: {
+        // Over-regularised past tenses ("buyed") and verbs mistaken for nouns.
+        "buyed": "bought", "thinked": "thought", "teached": "taught", "catched": "caught",
+        "bringed": "brought", "goed": "went", "eated": "ate", "runned": "ran",
+        "swimmed": "swam", "writed": "wrote", "speaked": "spoke", "drinked": "drank",
+        "knowed": "knew", "throwed": "threw", "growed": "grew", "choosed": "chose",
+        "fighted": "fought", "maked": "made", "taked": "took", "gived": "gave",
+        "loosing": "losing",
         "plesase": "please", "plese": "please", "pleae": "please", "pleese": "please",
         "pleas": "please", "pleaz": "please", "plise": "please", "plse": "please",
         "grmmmar": "grammar", "grmmar": "grammar", "grammer": "grammar",
@@ -55,6 +69,9 @@ const PromptMeterOptimizer = {
         "differnt": "different", "difrent": "different", "seperate": "separate",
         "recieve": "receive", "definitly": "definitely", "definately": "definitely",
         "tommorow": "tomorrow", "tomorow": "tomorrow",
+        // A German word, so the corpus-attested list protects it; but German prompts
+        // are never processed, and in English text "very mich" is always "much".
+        "mich": "much",
         "neccessary": "necessary", "necesary": "necessary",
         "algoritm": "algorithm", "datbase": "database", "databse": "database",
         "perforamnce": "performance", "sugest": "suggest",
@@ -83,7 +100,7 @@ const PromptMeterOptimizer = {
         "oyu": "you", "paramter": "parameter", "paremeter": "parameter", "pelase": "please",
         "plaese": "please", "pritn": "print", "prnit": "print", "quesiton": "question",
         "questoin": "question", "retrun": "return", "reutrn": "return", "satrt": "start",
-        "shoudl": "should", "starst": "start", "stat": "start", "strat": "start",
+        "shoudl": "should", "starst": "start", "strat": "start",
         "strign": "string", "taht": "that", "ther": "there", "thta": "that", "tihs": "this",
         "tuo": "to", "updat": "update", "waht": "what", "wan": "want", "watn": "want",
         "whta": "what", "wiht": "with", "witdh": "width", "wnat": "want", "wnt": "want",
@@ -156,7 +173,57 @@ const PromptMeterOptimizer = {
         "vaccum": "vacuum", "varaible": "variable", "varible": "variable", "varient": "variant",
         "vegtable": "vegetable", "vehical": "vehicle", "visable": "visible",
         "voluntier": "volunteer", "wether": "whether", "wich": "which", "widht": "width",
-        "wierd": "weird", "writting": "writing", "yeild": "yield"
+        "wierd": "weird", "writting": "writing", "yeild": "yield",
+
+        // Second batch, added after "teach me different types of ml" came back
+        // mangled and the tables were audited. Every key here was checked against
+        // PM_WORDS first: a typo key that is also a real word turns correct writing
+        // into a "correction", which is how "form" once became "from".
+        "accomodation": "accommodation", "acheivement": "achievement", "agressive":
+        "aggressive", "allready": "already", "amature": "amateur", "anual": "annual",
+        "apparant": "apparent", "aparently": "apparently", "arrangment": "arrangement",
+        "atleast": "at least", "auther": "author", "avaliable": "available", "availible":
+        "available", "beggining": "beginning", "cemetary": "cemetery", "cheif": "chief",
+        "comming": "coming", "commitee": "committee", "compatable": "compatible",
+        "conected": "connected", "consistantly": "consistently", "contian": "contain",
+        "convinient": "convenient", "decieve": "deceive", "definate": "definite",
+        "dependancy": "dependency", "desireable": "desirable", "develope": "develop",
+        "dieing": "dying", "diffrence": "difference", "dissagree": "disagree", "embarassed":
+        "embarrassed", "enviornmental": "environmental", "equiptment": "equipment",
+        "excercise": "exercise", "explicitely": "explicitly", "extremly": "extremely",
+        "freind": "friend", "garuntee": "guarantee", "generaly": "generally", "greatful":
+        "grateful", "happenning": "happening", "harrassment": "harassment", "hopefull":
+        "hopeful", "immediatly": "immediately", "indispensible": "indispensable",
+        "inevitible": "inevitable", "infinate": "infinite", "inteligence": "intelligence",
+        "intrest": "interest", "irrelevent": "irrelevant", "knowledgable": "knowledgeable",
+        "libary": "library", "maintainance": "maintenance", "mathamatics": "mathematics",
+        "medival": "medieval", "miniscule": "minuscule", "mispell": "misspell", "noticible":
+        "noticeable", "occassionally": "occasionally", "occuring": "occurring",
+        "oppurtunity": "opportunity", "orginal": "original", "parliment": "parliament",
+        "perfomance": "performance", "permanant": "permanent", "personaly": "personally",
+        "phenomonon": "phenomenon", "practial": "practical", "preformance": "performance",
+        "probaly": "probably", "proffesor": "professor", "quantitiy": "quantity",
+        "refering": "referring", "rember": "remember", "repetive": "repetitive",
+        "sacrafice": "sacrifice", "safty": "safety", "scedule": "schedule", "supress":
+        "suppress", "surprize": "surprise", "techniqe": "technique", "tommorrow":
+        "tomorrow", "usualy": "usually", "vacum": "vacuum", "vegetarain": "vegetarian",
+        "writen": "written", "arrya": "array", "aray": "array", "lsit": "list",
+        "dictionery": "dictionary", "intialize": "initialize", "authentification":
+        "authentication", "autentication": "authentication", "asyncronous": "asynchronous",
+        "synchronus": "synchronous", "paralell": "parallel", "compatiblity":
+        "compatibility", "configuraton": "configuration", "configuraion": "configuration",
+        "dependancies": "dependencies", "deployement": "deployment", "enviorment":
+        "environment", "excecute": "execute", "executeable": "executable", "extention":
+        "extension", "frontent": "frontend", "implmentation": "implementation",
+        "inheritence": "inheritance", "itterate": "iterate", "midleware": "middleware",
+        "migraton": "migration", "paramater": "parameter", "perfomrance": "performance",
+        "permision": "permission", "pluging": "plugin", "prefrence": "preference",
+        "proccessing": "processing", "querry": "query", "queyr": "query", "recurssion":
+        "recursion", "refernce": "reference", "repositry": "repository", "respose":
+        "response", "servcie": "service", "sturcture": "structure", "sytem": "system",
+        "temlate": "template", "threding": "threading", "tranaction": "transaction",
+        "validaton": "validation", "wieght": "weight", "seperated": "separated", "langauge":
+        "language", "lifecyle": "lifecycle", "sucessfull": "successful"
     },
 
     // Technical acronyms, matched case-sensitively so "AI" and "Js" are left alone.
@@ -169,17 +236,55 @@ const PromptMeterOptimizer = {
     // needs expanded -- "explain dsa to me" is already as short as that request gets.
     //
     // An entry may therefore never be longer than its key.
+    // Case normalisation only. Every value must be the same length as its key: an
+    // "expansion" like dsa -> "Data Structures & Algorithms" makes the prompt LONGER,
+    // which is the opposite of the job. tests/optimizer.test.js asserts this.
+    //
+    // Nothing here may be an ordinary English word. "rest", "ram" and "crud" were, and
+    // turned "write the rest of the story" into "write the REST of the story" and
+    // "ram the changes through" into "RAM the changes through". They now live in
+    // ambiguousAcronyms below, where a companion word has to vouch for them.
     techAcronymMap: {
-        "ai": "AI", "ml": "ML", "nlp": "NLP", "ui": "UI", "ux": "UX",
+        "ai": "AI", "ml": "ML", "dl": "DL", "nlp": "NLP", "llm": "LLM",
+        "cv": "CV", "nn": "NN", "cnn": "CNN", "rnn": "RNN", "lstm": "LSTM",
+        "gan": "GAN", "ocr": "OCR", "etl": "ETL",
+        "ui": "UI", "ux": "UX", "dom": "DOM", "jsx": "JSX", "tsx": "TSX",
         "api": "API", "apis": "APIs", "sql": "SQL", "json": "JSON",
-        "html": "HTML", "css": "CSS", "js": "JS", "dsa": "DSA", "db": "DB",
-        "xml": "XML", "csv": "CSV", "pdf": "PDF", "url": "URL", "http": "HTTP",
-        "https": "HTTPS", "rest": "REST", "crud": "CRUD", "orm": "ORM",
-        "jwt": "JWT", "cli": "CLI", "gui": "GUI", "ide": "IDE", "os": "OS",
-        "cpu": "CPU", "gpu": "GPU", "ram": "RAM", "sdk": "SDK", "npm": "npm",
+        "yaml": "YAML", "toml": "TOML", "html": "HTML", "css": "CSS",
+        "js": "JS", "ts": "TS", "dsa": "DSA", "db": "DB",
+        "xml": "XML", "csv": "CSV", "pdf": "PDF", "url": "URL", "uri": "URI",
+        "uuid": "UUID", "http": "HTTP", "https": "HTTPS", "grpc": "gRPC",
+        "graphql": "GraphQL", "orm": "ORM", "jwt": "JWT", "oauth": "OAuth",
+        "sso": "SSO", "cors": "CORS", "csrf": "CSRF", "xss": "XSS",
+        "cli": "CLI", "gui": "GUI", "ide": "IDE", "os": "OS", "vm": "VM",
+        "cpu": "CPU", "gpu": "GPU", "sdk": "SDK", "npm": "npm",
         "css3": "CSS3", "html5": "HTML5", "oop": "OOP", "tdd": "TDD",
-        "ci": "CI", "cd": "CD", "dns": "DNS", "ssl": "SSL", "tls": "TLS"
+        "mvc": "MVC", "mvp": "MVP", "qa": "QA",
+        "ci": "CI", "cd": "CD", "dns": "DNS", "ssl": "SSL", "tls": "TLS",
+        "ssh": "SSH", "ftp": "FTP", "tcp": "TCP", "udp": "UDP", "ip": "IP",
+        "cdn": "CDN", "pwa": "PWA", "ssr": "SSR", "csr": "CSR",
+        "aws": "AWS", "gcp": "GCP", "k8s": "K8s", "saas": "SaaS",
+        "paas": "PaaS", "iaas": "IaaS", "wasm": "WASM",
+        "jvm": "JVM", "jdk": "JDK", "apk": "APK", "ios": "iOS",
+        "png": "PNG", "jpg": "JPG", "gif": "GIF", "svg": "SVG", "ascii": "ASCII",
+        "bfs": "BFS", "dfs": "DFS", "lru": "LRU", "gcd": "GCD", "lcm": "LCM",
+        "seo": "SEO", "crm": "CRM", "erp": "ERP", "kpi": "KPI", "roi": "ROI",
+        "b2b": "B2B", "b2c": "B2C", "faq": "FAQ"
     },
+
+    // Acronyms that are also ordinary English words. Each needs a companion term
+    // beside it before the technical reading is safe to assume, so these are
+    // [pattern, replacement] pairs rather than dictionary keys. The companion is in a
+    // lookahead rather than consumed, so the acronym table still normalises it on the
+    // pass that follows.
+    ambiguousAcronyms: [
+        [/\brest(?=[ \t]+(?:api|apis|endpoint|endpoints|service|services|call|calls|client|architecture))/gi, 'REST'],
+        [/\bcrud(?=[ \t]+(?:operation|operations|app|application|api|endpoint|endpoints|interface))/gi, 'CRUD'],
+        [/\bram(?=[ \t]+(?:usage|size|memory|module|modules|stick|slot|speed|limit))/gi, 'RAM'],
+        [/\brag(?=[ \t]+(?:pipeline|pipelines|system|model|retrieval|app|application|setup|chatbot))/gi, 'RAG'],
+        [/\barm(?=[ \t]+(?:processor|processors|architecture|chip|chips|cpu|mac|macs|64))/gi, 'ARM'],
+        [/\bspa(?=[ \t]+(?:app|application|router|routing|framework|mode))/gi, 'SPA']
+    ],
 
     // Informal chat slang and SMS abbreviations, long enough to be unambiguous.
     //
@@ -213,8 +318,10 @@ const PromptMeterOptimizer = {
         "abt": "about", "ppl": "people", "smth": "something", "sth": "something",
         "tho": "though", "thru": "through", "nvm": "never mind",
         "b4": "before", "gr8": "great", "msg": "message", "msgs": "messages",
-        "thnx": "thanks", "tnx": "thanks", "thanx": "thanks",
-        "idk": "I do not know", "imo": "in my opinion", "btw": "by the way"
+        "thnx": "thanks", "tnx": "thanks", "thanx": "thanks", "btwn": "between", "bw": "between",
+        "idk": "I do not know", "imo": "in my opinion", "btw": "by the way",
+        // Modals. The corrector alone turned "shud" into "stud".
+        "shud": "should", "shld": "should", "wud": "would", "wld": "would", "cud": "could", "cld": "could"
     },
 
     // Very short abbreviations. These are the ones that genuinely corrupt technical text
@@ -235,10 +342,18 @@ const PromptMeterOptimizer = {
     // same shape, and the first is far more likely in the prompts this extension sees.
     // It stays penalised by the chatSlang score rule, just never rewritten.
     contextualSlangRules: [
+        { word: "(?<![\\w-])[Cc]n(?=\\s+(?:u|you|i|we|someone|anyone|it)\\b)", replacement: 'can' },
+        { word: "(?<![\\w-])[Rr]ite(?=\\s+(?:a|an|me|the|my|this|it|some|code|program|essay|email|letter|story|poem|function|script|report)\\b)", replacement: 'write' },
+        // Digits for words. Only where no number can be meant: "how 2 make",
+        // "what 2 do", "4 beginners", "thx 4 the help". The validator applies the
+        // same patterns (expandDigitWords) so the 2 and 4 are not "lost numbers".
+        { word: "(?<![\\d.,$])\\b2(?=\\s+(?:do|make|be|go|get|know|see|eat|buy|learn|write|find|use|fix|start|cook|say|ask|study|prepare|help|understand|solve|create|build|install|run|play|watch|read|talk|meet|pay|send|call|choose|pick|improve|reduce|lose|gain|apply|become)\\b)", replacement: 'to' },
+        { word: "(?<![\\d.,$])\\b4(?=\\s+(?:the|me|you|u|him|her|us|them|my|your|our|their|a|an|begg?in+ers?|kids|free|sale|students|now|ever|real|sure|this|that|it)\\b)", replacement: 'for' },
+        { word: "(?<=\\b(?:between|both)\\s+[A-Za-z]{2,}\\s)n(?=\\s+[A-Za-z]{2,})", replacement: 'and' },
         {
             word: 'u', replacement: 'you',
-            before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and)$/i,
-            after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?)\b/i
+            before: /\b(?:can|could|would|will|shall|do|did|does|should|thank|thanks|hope|if|unless|when|and|are|were|r|love|miss)$/i,
+            after: /^(?:are|can|could|should|would|will|know|think|have|has|had|explain|help|tell|give|show|write|make|do|need|want|please|guys?|doing|going|feeling|free|sure|ok|okay)\b/i
         },
         {
             // "u r wrong", "r u there" -- only ever next to a second-person pronoun.
@@ -251,6 +366,19 @@ const PromptMeterOptimizer = {
             after: /^(?:[a-z]{2,})\b/i
         },
         { word: 'urs', replacement: 'yours' },
+        // Real words typed for other words. Each is fixed only where the neighbours make
+        // the intended word certain, so the lookarounds live in the pattern itself.
+        {   // "I well send it" -- a pronoun opening a clause, then a bare verb.
+            word: "(?<=(?:^|[.!?,;]\\s*|\\b(?:and|but|so|then)\\s+)(?:[Ii]|[Ww]e|[Yy]ou|[Tt]hey|[Hh]e|[Ss]he)\\s+)well(?=\\s+(?:be|send|do|make|give|go|come|need|try|call|get|have|help|write|see|tell|pay|take|let|check|update|finish|share|meet|bring|keep|look|start|stop|miss|love|leave|return|reply|text|email|join|buy|visit|wait)\\b)",
+            replacement: 'will'
+        },
+        { word: "levee(?=\\s+(?:him|her|me|them|it|us|you|my|this|that|early|now|today|tonight|tomorrow)\\b)", replacement: 'leave' },
+        { word: "(?<![-+\\d])[Tt]el(?=\\s+(?:me|him|her|us|them|you|my)\\b)", replacement: 'tell' },
+        { word: "[Hh]es(?=\\s+(?:a|an|the|not|so|very|my|always|never|really|just|still|also|gonna|been|[a-z]+ing)\\b)", replacement: "he's" },
+        {   // "what should I by for dinner" -- but "thank you by the way" stays.
+            word: "(?<=\\b(?:[Ii]|we|they|to|should|will|can|could|must|gonna|wanna)\\s+)by(?=\\s+(?:a|an|the|some|this|that|these|those|new|me|my|it|for|groceries|food|tickets?)\\b)(?!\\s+the\\s+way)",
+            replacement: 'buy'
+        },
         {
             // "mi" stands for both "me" and "my", and the two are told apart by what
             // sits around it. This rule takes the object reading and must come first:
@@ -288,7 +416,16 @@ const PromptMeterOptimizer = {
         const keys = Object.keys(map)
             .sort((a, b) => b.length - a.length)
             .map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'));
-        return new RegExp('\\b(?:' + keys.join('|') + ')(?!\\w)', flags);
+        // The protected-span placeholder counts as word, not as a boundary.
+        //
+        // PM_PROTECT swaps code, names and quoted spans for U+E000...U+E001 before the
+        // rules run. Those are private-use characters and therefore not \w, so a plain
+        // (?!\w) reads a masked span as whitespace and lets a key match straight into
+        // it: "w/NAME_1" masks to "w/<span>", the guard sees no word character after
+        // "w/", and the text came back as "withNAME_1". Any short key can do this --
+        // it is the "ty" inside "types" bug arriving through masking instead.
+        const open = (PM_PROTECT && PM_PROTECT.MASK_OPEN) || '';
+        return new RegExp('\\b(?:' + keys.join('|') + ')(?![\\w' + open + '])', flags);
     },
 
     /**
@@ -322,6 +459,52 @@ const PromptMeterOptimizer = {
      * @param {string} text - Input text.
      * @returns {string} Text with contextual abbreviations expanded.
      */
+    /**
+     * Collapses a word or phrase typed twice in a row: "the the", "diagram diagram",
+     * "this diagram this diagram". Up to six words, any length -- the old rule capped
+     * the word at six letters and missed phrases entirely.
+     *
+     * Kept: a phrase starting with a digit ("1 1/2", "2 2 cups" are one value), and
+     * doubles that are grammatical or idiomatic ("had had", "that that", "bye bye").
+     * Stays on one line ([ \t]) so a list item is never merged with the next.
+     */
+    collapseAdjacentRepeats: function (text) {
+        const KEEP = /^(?:had|that|is|bye|no|so|very|really|ha|haha|knock|yeah|well|now|go|wait)$/i;
+        // "a list of users users can be filtered" is two sentences with the full stop
+        // missing, not a typo: a lone word repeated before a verb opens a new clause.
+        const CLAUSE = /^[ \t]+(?:can|could|should|will|would|must|may|might|are|is|was|were|have|has|need|want|get)\b/i;
+        // An optional comma between the copies: "this diagram, this diagram".
+        return text.replace(/\b(?!\d)((?:[\w'-]+[ \t]+){0,5}?[\w'-]+)(?:,?[ \t]+\1\b)+/gi,
+            (match, phrase, offset, str) => (KEEP.test(phrase)
+                || (!/\s/.test(phrase) && CLAUSE.test(str.slice(offset + match.length)))
+                ? match : phrase));
+    },
+
+    /**
+     * A prompt typed in capitals ("PLEASE HELP ME WRITE A COVER LETTER") is set in
+     * sentence case: dictionary words go lowercase, anything else (API, AWS, IELTS)
+     * keeps its capitals. Only when nearly all of it is capitals and it has four or
+     * more words, so a single acronym or a shouted word is left alone.
+     */
+    normalizeShouting: function (text) {
+        const letters = text.replace(/[^A-Za-z]/g, '');
+        const words = text.match(/[A-Za-z]+/g) || [];
+        if (words.length < 4 || letters.length < 12) return text;
+        if ((letters.match(/[A-Z]/g) || []).length / letters.length < 0.9) return text;
+        const known = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
+        let out = text.replace(/[A-Za-z]+/g, (w) => (known(w.toLowerCase()) ? w.toLowerCase() : w));
+        out = out.replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase())
+            .replace(/\bi\b/g, 'I');
+        return out;
+    },
+
+    /** The digit-for-word patterns of contextualSlangRules, for the validator. */
+    expandDigitWords: function (text) {
+        return this.contextualSlangRules
+            .filter((rule) => /^(to|for)$/.test(rule.replacement) && /[24]\(\?=/.test(rule.word))
+            .reduce((s, rule) => s.replace(new RegExp(rule.word, 'g'), rule.replacement), text);
+    },
+
     expandContextualSlang: function (text) {
         return this.contextualSlangRules.reduce((str, rule) => {
             const pattern = new RegExp(`\\b${rule.word}\\b`, 'g');
@@ -391,11 +574,11 @@ const PromptMeterOptimizer = {
         },
         {
             label: "Conversational filler & hedging detected", per: 6, cap: 18,
-            rx: /\b(?:um+|uh+|erm+|hmm+|you\s+know|i\s+mean|(?:i\s+was\s+)?just\s+wondering|out\s+of\s+curiosity|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff|sorry\s+(?:if|for)\s+(?:this|the)|correct\s+me\s+if|i\s+hope\s+(?:this|that)\s+makes\s+sense|is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|are\s+you\s+able\s+to|do\s+you\s+think\s+you\s+(?:can|could))\b/gi
+            rx: /\b(?:um+|uh+|erm+|hmm+|you\s+know|i\s+mean|(?:i\s+was\s+)?just\s+wondering|out\s+of\s+curiosity|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff|sorry\s+(?:if|for)\s+(?:this|the)|correct\s+me\s+if|i\s+hope\s+(?:this|that)\s+makes\s+sense|is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|are\s+you\s+able\s+to|do\s+you\s+think\s+you\s+(?:can|could|might|may|would)(?:\s+be\s+able\s+to)?)\b/gi
         },
         {
             label: "Sign-off & gratitude padding detected", per: 6, cap: 12,
-            rx: /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?|much\s+appreciated|appreciate\s+(?:it|any\s+help)|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to)\b/gi
+            rx: /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?|much\s+appreciated|(?:i\s+(?:really\s+|truly\s+|greatly\s+)?)?appreciate\s+(?:it|any\s+help)(?!\s+if\b)|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to)\b/gi
         },
         {
             label: "Urgency padding detected", per: 6, cap: 6,
@@ -424,17 +607,21 @@ const PromptMeterOptimizer = {
         // removes "I am trying to" and leaves "learn about X" standing as an imperative,
         // which tells the model to go and learn something. Rewriting it first turns it
         // into the request it actually is.
-        [/(?<=^|[.!?;,]|\n)\s*(?:i'?m|i\s+am|we'?re|we\s+are)\s+trying\s+to\s+(?:learn|understand|figure\s+out|work\s+out)\s+(?:about\s+|how\s+)?/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i'?m|i\s+am|we'?re|we\s+are)\s+trying\s+to\s+(?:learn|understand|figure\s+out|work\s+out)\s+(?:about\s+|how\s+)?/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
         // "help me understand X" has the same failure: the pleasantry stripper removes
         // "can you help me" and leaves "understand X", an instruction to the model to go
         // and understand something rather than to explain it.
-        [/(?<=^|[.!?;,]|\n)\s*(?:(?:can|could|will|would)\s+you\s+)?(?:please\s+)?help\s+me\s+(?:to\s+)?(?:understand|learn|figure\s+out)\s+(?:about\s+)?/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n|\b(?:so|and|but|then|now)\s)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:(?:can|could|will|would)\s+you\s+)?(?:please\s+)?help\s+me\s+(?:in\s+order\s+)?(?:to\s+)?(?:be\s+able\s+to\s+)?(?:understand|learn|figure\s+out)\s+(?:about\s+)?/gi,
+            // Capital only at a sentence start: after "... before submission so" it is
+            // mid-sentence, and "so Explain how" read as a typo.
+            (m, lead, offset, str) => (lead ? lead + 'explain '
+                : /(?:^|[.!?\n]\s*)$/.test(str.slice(0, offset)) ? 'Explain ' : ' explain ')],
         // Stated-intent wrappers that name the deliverable after them.
-        [/(?<=^|[.!?;,]|\n)\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, ''],
-        [/(?<=^|[.!?;,]|\n)\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, ''],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, 'Explain '],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, 'Show '],
-        [/(?<=^|[.!?;,]|\n)\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, 'Explain '],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, '$1'],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, '$1'],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(?:know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need)\s+to\s+see\s+/gi, (m, lead) => (lead ? lead + 'show ' : 'Show ')],
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:am|'m)\s+curious\s+(?:about|how|what|why)\s+/gi, (m, lead) => (lead ? lead + 'explain ' : 'Explain ')],
         [/\b(?:things?|stuff)\s+(?:that\s+)?(?:i|we)\s+(?:should|need\s+to|have\s+to)\s+know\s+about\b/gi, 'key points of']
     ],
 
@@ -549,18 +736,64 @@ const PromptMeterOptimizer = {
     // Greetings, pleasantries and request wrappers stripped outright. Ordered most-specific
     // first, so long phrases are consumed before the generic ones that overlap them.
     conversationalStrippers: [
-        /\b(?:hello|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s]*)/gi,
-        /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+today)?)(?:[,!.\s]*)/gi,
+        // Opinion framing. Whose opinion it is does not change what is being asked, and
+        // an LLM has nothing to do with the attribution. Measured on real prompts these
+        // were the largest uncovered filler family left.
+        // "i feel" is NOT here without a following "like/that": "I feel dizzy" is the
+        // symptom the prompt is about.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:in\s+my\s+(?:opinion|view|honest\s+opinion)|personally(?:\s+(?:i\s+(?:think|feel|believe)(?:\s+(?:like|that))?))?|if\s+you\s+ask\s+me|to\s+be\s+(?:honest|fair|clear)|honestly\s+speaking|frankly\s+speaking|at\s+the\s+end\s+of\s+the\s+day|the\s+way\s+i\s+see\s+it|as\s+far\s+as\s+i\s+(?:know|can\s+tell))\b[,:!.\s]*/gim,
+        // "I think that" and friends, where the belief is the frame rather than the
+        // subject. The optional "that" is what makes it safe: "I think differently" and
+        // "I believe you" are not matched, because neither is followed by a clause this
+        // rule can strip down to.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+(?:think|believe|reckon|suppose|guess|assume)\s+that|i\s+feel\s+(?:like|that))\s+(?=(?:it|this|that|they|we|you|there|the|a|an|my|your)\b)/gim,
+        // The reason-for-asking preamble. The reason is backstory; the ask follows it.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:the\s+reason\s+(?:why\s+)?(?:i\s+(?:am|'m)\s+asking|for\s+(?:my|this)\s+question)\s+is\s+(?:that\s+)?|i\s+(?:am|'m)\s+asking\s+because\s+)/gim,
+        // Announced curiosity. "I just want to know how to X" is "How to X".
+        /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
+        // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
+        // "my dear friend" its "dear".
+        /(?<=^|[.!?]|\n)\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s]*)/gi,
+        /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
         /\b(?:so\s+basically\s+what\s+happened\s+was|to\s+give\s+you\s+a\s+little\s+background(?:\s+context)?|as\s+you\s+might\s+already\s+know|i\s+was\s+sitting(?:\s+at\s+my\s+computer)?\s+thinking(?:\s+and)?)\b(?:[,!.\s]*)/gi,
-        /\b(?:i\s+was\s+wondering\s+if\s+you\s+could|i\s+just\s+wanted\s+to\s+ask\s+if\s+you\s+can|can\s+you\s+help\s+me\s+with|could\s+you\s+help\s+me\s+with|can\s+you\s+help\s+me\s+to|could\s+you\s+help\s+me\s+to|can\s+you\s+help\s+me)\b\s*/gi,
+        /\b(?:i\s+was\s+wondering\s+if\s+you\s+could|i\s+just\s+wanted\s+to\s+ask\s+if\s+you\s+can|can\s+you\s+help\s+me\s+with|could\s+you\s+help\s+me\s+with|can\s+you\s+help\s+me\s+to|could\s+you\s+help\s+me\s+to|can\s+you\s+help\s+me(?!\s*[?.!]*\s*$))\b\s*/gi,
         /\b(?:i\s+am\s+trying\s+to\s+figure\s+out\s+how\s+to|i\s+am\s+looking\s+for\s+a\s+way\s+to|is\s+there\s+any\s+way\s+that\s+you\s+could|do\s+you\s+know\s+if)\b\s*/gi,
-        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+would\s+like\s+you\s+to|i\s+would\s+like\s+to|i\s+want\s+you\s+to|i\s+want\s+to|i\s+need\s+you\s+to|i\s+need\s+to)\b\s*/gim,
-        /\b(?:pretty\s+please|do\s+me\s+a\s+huge\s+favor(?:\s+and)?|be\s+a\s+sweetheart(?:\s+and)?|my\s+life\s+depends\s+on\s+this|i\s+beg\s+you|i\s+will\s+tip(?:\s+\$\d+)?)\b\s*/gi,
-        /(?<=^|[.!?]|[,;]|\n)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b\s*/gim,
+        // Only the forms that address the model. "I want to lose weight" is the user's
+        // own goal, and stripping "I want to" turned it into the order "Lose weight".
+        // "I want to know how X" is handled by the curiosity rule above.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+would\s+like\s+you\s+to|i\s+(?:just\s+|really\s+)?want\s+you\s+to|i\s+need\s+you\s+to|i\s+(?:would\s+like|want|need)\s+to\s+(?=(?:understand|learn)\b(?!\s+(?:how|what|why|when|where|which|who|if|whether)\b)))\b\s*/gim,
+        /\b(?:pretty\s+please|do\s+me\s+a\s+huge\s+favor(?:\s+and)?|be\s+a\s+sweetheart(?:\s+and)?|my\s+life\s+depends\s+on\s+this|i\s+beg\s+you|i\s+will\s+tip(?:\s+\$?\d[\d,.]*)?)(?:\b|(?<=\d))[,.]?\s*/gi,
+        // Live-tested padding. Each is a frame around the request, never the request.
+        /(?<=^|[.!?]\s*|\n)\s*(?:you|u)\s+(?:are|r|'re)\s+(?:a|an|the|such\s+a)?\s*(?:genius|best(?:\s+ai)?|legend|lifesaver|life\s+saver|star|gem)\b[!.,\s]*/gi,
+        /\bi\s+know\s+(?:you(?:'re|\s+are)|ur)\s+(?:busy|probably\s+busy)\s*,?\s*(?:but\s+)?/gi,
+        /\b(?:if\s+it'?s\s+not\s+too\s+much\s+(?:trouble|to\s+ask)|if\s+you\s+don'?t\s+mind)\s*,?\s*/gi,
+        /\bsorry\s+(?:to\s+bother\s+you|for\s+(?:bothering|disturbing)\s+you)(?:\s+again)?\s*,?\s*(?:but\s+)?/gi,
+        /(?<=^|[.!?]\s*|\n)\s*as\s+an\s+ai(?:\s+(?:language\s+)?model)?\s*,\s*/gi,
+        /\bi\s+would\s+(?:be\s+(?:extremely\s+|very\s+|really\s+|so\s+|truly\s+)?(?:grateful|thankful)|(?:really\s+)?appreciate\s+it)\s+if\s+you\s+could\s+(?:please\s+)?(?:take\s+a\s+(?:moment|minute)\s+to\s+)?/gi,
+        /(?<=^|[.!?]\s*|\n)\s*(?:so\s+)?what\s+happened\s+was\s+/gi,
+        /(?<=^|[.!?]\s*|\n)\s*(?:can\s+you\s+)?help\s+me\s+with\s+something[.!:]\s*/gi,
+        /(?<=^|[.!?,]\s*|\n)\s*(?:lol|lmao|omg|brb|haha+|hehe+)(?!\w)[,!.\s]*/gi,
+        /\bmany\s+thanks\b[!.\s]*/gi,
+        /\b(?:thanks|thank\s+you|thx)\s+(?:for|4)\s+(?:the|your|all\s+the)\s+help(?:\s+(?:earlier|before|again|so\s+far))?\b[,.!]*\s*/gi,
+        /(?:,\s*)?\bi\s+(?:really\s+|truly\s+|greatly\s+)?appreciate\s+(?:it|this|your\s+help)\b(?!\s+if\b)[!.]*/gi,
+
+        // Not before a verb of belief: "Can you believe X?" is not a request wrapper,
+        // and stripping it left "Believe X?".
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b(?!\s+(?:believe|imagine|guess|tell\s+(?:if|whether)|see\s+why|not)\b)\s*/gim,
         /\b(?:please|plea+se+|ples+a+s+e*|pl+z+|pl+s+)\b\s*/gi,
-        /\b(?:thank\s+you\s+so\s+much(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thank\s+you(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thanks\s+a\s+lot|thanks|thx|tysm|ty|kindly)(?:[,!.\s]*)/gi,
-        /\b(?:chatgpt|chat\s*gpt|gpt)\b(?:[,!.\s]*)/gi
+        // (?!\w) after the alternation is load-bearing. \b anchors only the START, and
+        // the trailing [,!.\s]* is happy to match nothing, so "ty" matched the first two
+        // letters of "types" and the stripper turned "different types of ML" into
+        // "different pes of ML". Every short alternative here has the same exposure --
+        // "thx" inside a word, "ty" inside "typescript", "type", "typical", "tyre".
+        // The same guard is what buildAlternation() appends for the dictionary tables.
+        /\b(?:thank\s+you\s+so\s+much(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thank\s+you(?:\s+for\s+your\s+[\w\s]{0,30}?(?:time|help|assistance))?|thanks\s+a\s+lot|thanks(?!\s+to\b)|thx|tysm|ty|kindly)(?!\w)(?:[,!.\s]*)/gi,
+        // Only when it addresses the assistant: at a sentence start or as a trailing
+        // vocative. Unanchored it removed the subject of "ask the right question to
+        // ChatGPT" and the "GPT" of "GPT-4o".
+        /(?<=^|[.!?\n])\s*(?:chatgpt|chat\s*gpt|gpt)\b(?!-)(?:[,!.:\s]*)/gi,
+        /,\s*(?:chatgpt|chat\s*gpt)\s*(?=[.!?]?\s*$)/gi
     ],
 
     // Conversational noise that carries no instruction. These are deliberately narrow:
@@ -571,24 +804,43 @@ const PromptMeterOptimizer = {
         /\b[a-z]*(?:asdf|sdfg|dfgh|qwer|werty|zxcv|xcvb|hjkl|uiop)[a-z]*\b/gi,
         // Filler interjections and verbal tics
         /\b(?:um+|uh+|erm+|hmm+|welp|ok(?:ay)?\s+so|alright\s+so|so\s+yeah|yeah\s+so)\b[,!.\s]*/gi,
-        /\b(?:you\s+know|i\s+mean|like(?=\s*,)|like\s+i\s+said|as\s+i\s+said|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff)\b[,!.\s]*/gi,
+        // Filler "like" between a verb and its object: "I need like a list". Only
+        // before an article or a number, so "I like a challenge" is never touched.
+        /(?<=\b(?:need|want|have|got|get|is|was|are|takes?|took)\s+)like\s+(?=(?:a|an|the|some|\d+)\b)/gi,
+        // Not after do/did/does: "Do you know Flutter?" is a question, and removing
+        // "you know" left "Do Flutter?".
+        /(?<!\b(?:do|did|does|don't|didn't|doesn't)\s+)\b(?:you\s+know|i\s+mean|like(?=\s*,)|like\s+i\s+said|as\s+i\s+said|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff)\b[,!.\s]*/gi,
         // Hedging, apology and self-deprecation
         /\b(?:sorry\s+(?:if|for)\s+(?:this\s+is|the)\s+(?:a\s+)?(?:dumb|stupid|silly|basic|long|obvious)[\w\s]{0,12}|i\s+know\s+this\s+(?:might\s+be|is|sounds)\s+(?:a\s+)?(?:basic|dumb|stupid|silly|obvious)[\w\s]{0,12}|this\s+may(?:be)?\s+(?:be\s+)?(?:a\s+)?(?:dumb|stupid|basic)\s+question|not\s+sure\s+if\s+(?:this|that)(?:'s|\s+is)\s+(?:right|correct|clear)|correct\s+me\s+if\s+(?:i'?m|i\s+am)\s+wrong|i\s+hope\s+(?:this|that)\s+makes\s+sense|(?:i\s+was\s+)?just\s+wondering|(?:i\s+was\s+)?just\s+curious|out\s+of\s+curiosity)\b[,!.\s]*/gi,
         // Sign-offs and gratitude tails
         // The "for your time" tail is part of the sign-off, not a separate clause. Without
         // it the rule ate "thanks so much" and left "For your time!" standing alone as its
         // own sentence -- a fragment that reads as an instruction and is not one.
-        /\b(?:thanks?(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble))?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
+        // `thanks?` alone consumed the "thank" of "thank you" and left the pronoun
+        // standing: "tysm explain joins" came out as "You explain joins", and
+        // "thank you so much for your time" as "You so much for your time". This is
+        // the exact stranding the Stage 3 comment warns about, produced by the generic
+        // rule itself rather than by ordering. Absorbing an optional "you" makes the
+        // alternative match the whole phrase.
+        //
+        // It is (?:thanks|thank\s+you) and not thanks?(?:\s+you)? because a bare
+        // "thank" is a verb, not a pleasantry: "thank the user in the reply" is an
+        // instruction, and the looser form deleted its verb and left "The user in the
+        // reply". Gratitude is either plural or followed by the pronoun.
+        // "thanks to" is a preposition ("Thanks to the new API, latency dropped").
+        /\b(?:(?:thanks(?!\s+to\b)|thank\s+you)(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble)(?:\s+(?:earlier|before|again|so\s+far))?)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
         // Urgency padding: an LLM cannot act on it, so it is pure token cost
         /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
-        /\b(?:is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|do\s+you\s+think\s+you\s+(?:can|could)|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
+        /\b(?:is\s+it\s+(?:possible|ok|okay)\s+(?:to|if)|do\s+you\s+think\s+you\s+(?:can|could|might|may|would)(?:\s+be\s+able\s+to)?|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
         // Meta announcements about the question itself
         /\b(?:i\s+have\s+a\s+(?:quick\s+)?question(?:\s+about)?|quick\s+question(?:\s+about)?|one\s+(?:more|last)\s+thing|just\s+to\s+clarify|for\s+your\s+information|fyi|please\s+note\s+that)\b[,:!.\s]*/gi,
         // Tentative request wrappers. "I was thinking maybe you could possibly help me"
         // is six words of hedging in front of "help me". The modal and its hedges go
         // together, because removing only the opener leaves "maybe you could possibly".
-        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
+        // "if"/"whether" too: "I was wondering if perhaps you could possibly help me"
+        // slipped past both this and the fixed "wondering if you could" wrapper.
+        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|wondering|hoping|hoped|hope|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+|if\s+|whether\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)(?:\s+be\s+able\s+to)?\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
         // Discourse markers. In a prompt these mark hesitation rather than meaning, and
         // none of them changes what is being asked. "just", "really" and "so" are
         // deliberately absent: each carries meaning often enough to matter ("just the
@@ -597,7 +849,7 @@ const PromptMeterOptimizer = {
         // honestly ..."). It is consumed with it: leaving it behind only moves the
         // problem, and stripping the marker alone would stop the clause matching the
         // clause-start anchor on the next pass.
-        /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)\b[,\s]*/gi,
+        /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)(?:\s+speaking)?\b[,\s]*/gi,
         /\b(?:i\s+guess|i\s+suppose|or\s+so|more\s+or\s+less|if\s+possible|if\s+you\s+can)\b[,!.\s]*/gi,
         // Doubled intensifiers ("very very")
         /\b(very|really|so|super|extremely|totally)\s+\1\b/gi,
@@ -628,14 +880,27 @@ const PromptMeterOptimizer = {
     // strand the connective that introduced it ("... because about marketing"), so these
     // rules tidy up the joins rather than the content.
     connectiveRepairs: [
-        // A conjunction left immediately before a preposition lost its clause
-        [/\b(?:because|since|as|and|but|so|where|when|which|that|who|if)\s+(about|for|of|in|on|with|to|from|by)\b/gi, '$1'],
-        // A conjunction left dangling at a clause or sentence end
-        [/\s*\b(?:because|since|and|but|so|where|when|which|that|who|if|although|however)\s*([,.;!?])/gi, '$1'],
+        // A conjunction left immediately before a preposition lost its clause -- but
+        // only where a removal can have left it: at a clause start. Mid-sentence,
+        // "because of", "which of", "when in" are ordinary English, and this rule
+        // turned "declining because of a doctor's appointment" into "declining of a
+        // doctor's appointment" and "Which of the following" into "of the following".
+        [/(?<=^|[.!?;,:]\s*|\n)\s*(?:because|since|and|but|so|where|when|that|who|if)\s+(about|for|with|to|from|by)\b/gi, '$1'],
+        // A conjunction left dangling at a clause or sentence end.
+        //
+        // The lookahead is load-bearing: ! and ? open operators as well as ending
+        // sentences. Without it "explain C++ and C# using == and !=" matched "and"
+        // followed by the ! of !=, and the conjunction between two operators was
+        // deleted -- "using ==!=". Real sentence punctuation is followed by a space
+        // or the end of the text; an operator is followed by = or more symbol.
+        [/\s*\b(?:because|since|and|but|so|where|when|which|that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
         // Two coordinators in a row
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed
-        [/^\s*(?:and|but|so|because|since|where|when|which|that|although|however)\b\s*/i, ''],
+        // Coordinators only: "when", "which", "where", "that", "since" and "because"
+        // open real questions and sentences ("when will the next eclipse happen",
+        // "Which is faster?"), and stripping them turned questions into fragments.
+        [/^\s*(?:and|but|so|however)\b\s*/i, ''],
         // A hedge left in front of the instruction after its wrapper was stripped:
         // "I was wondering if you could maybe explain X" loses the wrapper and leaves
         // "maybe explain X", which reads as uncertainty the model will answer around.
@@ -660,7 +925,14 @@ const PromptMeterOptimizer = {
         // anchor match at all.
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:so|and|but|then|well|ok(?:ay)?)\s+)?if\s+you\s+(?:could|can|would)(?:\s+(?:maybe|possibly|perhaps|please|kindly|just))*\s+/gim,
         /(?<=^|[.!?]|[,;]|\n)\s*(?:(?:i'?m|i\s+am)\s+trying\s+to|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:could|would|can)(?:\s+maybe)?|i\s+wonder(?:ed)?\s+if\s+you\s+(?:could|can|would)|(?:i'?m|i\s+am)\s+looking\s+for\s+(?:a\s+way\s+to|help\s+(?:with|to)))\b\s*/gim,
-        /\b(?:i\s+need\s+help\s+(?:with|on|to)|i\s+could\s+use\s+(?:some\s+)?help\s+(?:with|on)|any\s+chance\s+you\s+(?:could|can))\b\s*/gi
+        // "you might be able to" is a modal wrapped in a second modal, which the group
+        // above stops at. Without this, "I was hoping you might be able to assist me"
+        // lost nothing at all.
+        /\b(?:you\s+)?(?:(?:might|may|could|would|can|will)\s+)?be\s+able\s+to\s+/gi,
+        // Only when an action follows ("help with writing X", "help to fix X"). Before
+        // a noun the wrapper IS the request: "I need help with my assignment" became
+        // "My assignment".
+        /\b(?:i\s+need\s+help\s+(?:with|on)(?=\s+\w+ing\b)|i\s+need\s+help\s+to(?=\s+[a-z])|i\s+could\s+use\s+(?:some\s+)?help\s+(?:with|on)(?=\s+\w+ing\b)|any\s+chance\s+you\s+(?:could|can))\b\s*/gi
     ],
 
     // Meta-prompting padding and over-specified constraints.
@@ -672,6 +944,16 @@ const PromptMeterOptimizer = {
 
     // Narrative padding, verbose constructions and wordy request wrappers, rewritten in place.
     structuralRewrites: [
+        // "it is important to X" is an assertion wrapped round the request X. Restricted
+        // to a clause start followed by a verb, so "explain why it is important to test"
+        // -- where the importance IS the subject -- is left alone.
+        [/^(?:it\s+(?:is|'s)\s+)(?:very\s+|really\s+|quite\s+|extremely\s+)?(?:important|essential|crucial|vital|necessary|useful|helpful|good|best)\s+to\s+/i, ''],
+        // "what are some of the best practices I should follow when Xing" -> "Best
+        // practices for Xing". Six words of scaffolding round a two-word request.
+        [/^what\s+(?:are|is)\s+(?:some\s+of\s+the\s+|some\s+|the\s+)?best\s+practices?\s+(?:that\s+)?(?:i\s+should\s+(?:follow|use|know)\s+)?(?:when|for|in|while|to)\s+/i, 'Best practices for '],
+        // A dangling plea left behind once the request in front of it has been folded
+        // into an imperative. "Figure out why X and I need help" ends mid-thought.
+        [/\s*(?:,?\s+?and\s+)?i\s+(?:really\s+)?need\s+(?:some\s+)?help\s*[.!?]?\s*$/i, ''],
         // Trailing emotional confusion fluff
         [/\b(?:because|since)\s+i\s+am\s+(?:really\s+)?(?:confused|stuck|lost|bored|struggling|dumb|clueless|new\s+to\s+this)\b.*/gi, ''],
         // Scenario & narrative compression
@@ -709,7 +991,20 @@ const PromptMeterOptimizer = {
     // Patterns identifying raw code or stack traces, which must never be rewritten.
     codeIndicators: [
         /^\s*(?:import|export)\s+[\w*{}\s,'"]+from/m,
-        /^\s*(?:const|let|var|function|class|def|async|return|if|for|while|switch)\s+[\w$]/m,
+        // A KEYWORD IS NOT ENOUGH. This used to be `keyword + whitespace + word`, which
+        // was wrong in both directions: it missed "if (x > 1) { return 2; }" -- the very
+        // shape it was written for, because a paren is not a word character -- and it
+        // matched twelve of fourteen ordinary prompts in a sample, including "for each
+        // student calculate the average", "let me know what you think" and "class sizes
+        // in schools are growing". Reading a prompt as code makes the optimizer return
+        // it untouched, so each of those was a silent no-op the user saw as "nothing to
+        // fix".
+        //
+        // What separates the two is PUNCTUATION, not vocabulary. Code assigns, calls,
+        // opens a block or ends a statement; prose does none of those. So the line has to
+        // carry a brace or a semicolon, an `=`, a call with no space before its paren, an
+        // arrow, or a trailing colon (Python's block opener).
+        /^\s*(?:const|let|var|function|class|def|async|await|return|yield|if|elif|else|for|while|switch|case|try|catch|except|finally|import|export|public|private|protected|static|void|struct|enum|interface|type|fn|impl|package)\b[^\n]*(?:[{};]|=|[\w$]\(|=>|->|:\s*$)/m,
         /^\s*(?:public|private|protected|static|void|int|string|boolean|double|float)\s+[\w$]/m,
         // SQL needs its actual shape, not just a leading keyword. The previous pattern
         // here was /^\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s+[A-Z*\s]/im,
@@ -758,7 +1053,7 @@ const PromptMeterOptimizer = {
      * @param {Array} issues - Optional collector; grammar findings are appended to it.
      * @returns {string} Corrected text.
      */
-    correctGrammarAndSpelling: function (text, issues) {
+    correctGrammarAndSpelling: function (text, issues, preserve) {
         if (!text) return "";
         let str = text;
 
@@ -778,13 +1073,33 @@ const PromptMeterOptimizer = {
             return replacement;
         });
 
-        // 2. Repeated character typos ("grmmmar" -> "grammar", "pleaaase" -> "please")
-        str = str.replace(/([a-z]){2,}/gi, (match, char) => (
-            /[eomsnlpftr]/i.test(char) ? char + char : char
-        ));
+        // 2. Stretched spellings ("pleaaase" -> "please", "sooooo" -> "so").
+        //
+        // The backreference here was a literal control byte for most of this file's life,
+        // eaten by a shell heredoc, so the rule silently matched nothing and every
+        // stretched word -- "doooomed", "pleaaase", "sooooo" -- passed through untouched.
+        str = str.replace(/[a-z]+/gi, (word) => {
+            if (!/([a-z])\1{2,}/i.test(word)) return word;
+
+            // Letters that legitimately double keep a pair, so "pleeeease" lands on
+            // "pleease" for the dictionary to finish rather than on "plese".
+            const doubled = word.replace(/([a-z])\1{2,}/gi, (run, char) => (
+                /[eomsnlpftr]/i.test(char) ? char + char : char));
+            const single = word.replace(/([a-z])\1{2,}/gi, '$1');
+
+            // Whichever is a real word wins. "sooooo" doubles to "soo", which is not one,
+            // and nothing downstream was going to fix it: the corrector only reconsiders
+            // words it does not know, and "soo" is two edits from anything.
+            if (PM_SPELL && !PM_SPELL.known(doubled.toLowerCase())
+                && PM_SPELL.known(single.toLowerCase())) {
+                return single;
+            }
+            return doubled;
+        });
 
         // 3. Chat slang and SMS abbreviation expansion. The contextual pass is separate
         //    because its one- and two-letter keys need the guards in that method.
+        str = this.normalizeShouting(str);
         str = this.replaceAll(str, this.compiled.slang, this.chatSlangMap, false);
         str = this.expandContextualSlang(str);
 
@@ -793,18 +1108,86 @@ const PromptMeterOptimizer = {
         //     acronym map so "ml" is still lowercase and below the corrector's minimum
         //     length. Everything the other tables know about is passed through as
         //     already-correct, so the corrector never second-guesses them.
-        if (PM_SPELL) {
-            const spelled = PM_SPELL.correct(str, { extraKnown: this.compiled.knownWords });
+        // An English dictionary on German text "corrects" bitte to bite. Below four
+        // words the vocabulary test has too little to go on -- one typo in "explain
+        // fnite automata" is a third of it -- so short prompts are still corrected.
+        if (PM_SPELL && (this.looksEnglish(str) || (str.match(/\S+/g) || []).length < 4)) {
+            // `preserve` holds words the USER has said to leave alone -- a name the
+            // corrector mistook for a typo, a term this dictionary has never heard
+            // of. Rejecting a correction has to actually stop it happening, not just
+            // hide the row, or the next keystroke brings it straight back.
+            const known = (preserve && preserve.size)
+                ? new Set([...this.compiled.knownWords, ...preserve])
+                : this.compiled.knownWords;
+            const spelled = PM_SPELL.correct(str, { extraKnown: known });
             str = spelled.text;
-            if (issues && spelled.corrections.length > 0) {
-                spelled.corrections.forEach(correction => issues.push({
+            const corrections = spelled.corrections || [];
+            if (issues && corrections.length > 0) {
+                corrections.forEach(correction => issues.push({
                     type: 'spelling',
                     label: `"${correction.from}" corrected to "${correction.to}"`
                 }));
             }
+
+        // 3c. Re-read any correction that landed between modifiers.
+        //
+        // Edit distance alone cannot choose between two readings of a typo, and when it
+        // guesses wrong it does so silently and confidently. "esasy" is one transposition
+        // from "essay" and one dropped consonant from "easy", so the ranking always
+        // answers "essay" -- and in "a simple esasy clean idea" that is a noun wedged
+        // between two adjectives, which is not a sentence anyone wrote.
+        //
+        // The neighbours are the evidence. Where a correction is NOT a modifier but sits
+        // in a run of them, and the ORIGINAL typo is one edit from a word that IS a
+        // modifier, the modifier reading is taken and the other is reported as an
+        // alternative rather than thrown away. The check only ever runs on a word the
+        // corrector already changed, so a word the user spelled correctly is never
+        // reconsidered.
+        if (PM_SPELL && PM_MODIFIERS && issues && PM_SPELL.nearMisses) {
+            corrections.forEach(correction => {
+                const chosen = String(correction.to).toLowerCase();
+                if (PM_MODIFIERS.isModifier(chosen)) return;
+
+                const pattern = new RegExp('(\\w+)\\s+(' + correction.to + ')\\s+(\\w+)', 'i');
+                const around = pattern.exec(str);
+                if (!around) return;
+
+                const neighbours = [around[1], around[3]]
+                    .filter(word => PM_MODIFIERS.isModifier(word));
+                if (neighbours.length === 0) return;
+
+                const alternatives = PM_SPELL.nearMisses(
+                    String(correction.from).toLowerCase(),
+                    candidate => PM_MODIFIERS.isModifier(candidate));
+                if (alternatives.length === 0) return;
+
+                const preferred = alternatives[0];
+                str = str.replace(pattern, (match, before, middle, after) =>
+                    // matchCase lives in grammar.js, not here: keep the capitalisation
+                    // the user typed rather than importing a helper for one call.
+                    before + ' ' + (middle[0] === middle[0].toUpperCase()
+                        ? preferred.charAt(0).toUpperCase() + preferred.slice(1)
+                        : preferred) + ' ' + after);
+
+                // The spelling line said "corrected to essay" and is now untrue.
+                const superseded = issues.findIndex(issue => issue.type === 'spelling'
+                    && issue.label.indexOf('"' + correction.from + '"') === 0);
+                if (superseded !== -1) issues.splice(superseded, 1);
+
+                issues.push({
+                    type: 'ambiguity',
+                    label: '"' + correction.from + '" read as "' + preferred
+                        + '" (it could also be "' + correction.to + '")',
+                    alternatives: [preferred, correction.to]
+                });
+            });
+        }
         }
 
-        // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JavaScript")
+        // 4. Tech acronyms & subjects ("ai" -> "AI", "js" -> "JS").
+        //    The context-gated ones run first: they only fire next to a companion term,
+        //    and they leave that companion in place for the table pass below.
+        str = this.applyRules(str, this.ambiguousAcronyms);
         str = this.replaceAll(str, this.compiled.acronyms, this.techAcronymMap, false);
 
         // 5. Grammar proper. Punctuation is left to the optimizer's own tidy pass, which
@@ -817,7 +1200,16 @@ const PromptMeterOptimizer = {
 
         // 6. Formatting left over from removals: spacing and doubled separators.
         return str
-            .replace(/(\w)([,!?:;])(\w)/g, '$1$2 $3')
+            // A space after punctuation that was typed without one -- but never between
+            // two digits. A comma between digits is a thousands separator and a colon
+            // between digits is a clock time or a ratio, so this rule was rewriting
+            // "1,000,000" as "1, 000, 000", "14:30" as "14: 30" and "[00:00:01]" as
+            // "[00: 00: 01]" in every prompt that contained one. ! ? and ; never sit
+            // inside a number, so they need no guard.
+            .replace(/(\w)([,:])(\w)/g, (match, before, mark, after) => (
+                /\d/.test(before) && /\d/.test(after) ? match : before + mark + ' ' + after
+            ))
+            .replace(/(\w)([!?;])(\w)/g, '$1$2 $3')
             .replace(/,{2,}/g, ',')
             .replace(/;{2,}/g, ';');
     },
@@ -828,6 +1220,106 @@ const PromptMeterOptimizer = {
      * @param {string} text - Cleaned prompt text.
      * @returns {string} Structurally transformed text.
      */
+    // An adjective that describes the ANSWER belongs on the verb, not on a noun the
+    // prompt only introduced so the adjective had somewhere to sit. "Give me a basic
+    // explanation of X" spends four words setting up "explanation"; "Explain X simply"
+    // says the same thing and leaves the adjective doing the same work as an adverb.
+    //
+    // Runs after the modifier pass, so a stack like "simple easy basic" has already
+    // collapsed to one word by the time this sees it.
+    ADVERB_FOR: {
+        basic: 'simply', simple: 'simply', easy: 'simply', straightforward: 'simply',
+        brief: 'briefly', short: 'briefly', concise: 'briefly', quick: 'briefly',
+        detailed: 'in detail', comprehensive: 'in detail', thorough: 'in detail',
+        clear: 'clearly'
+    },
+
+    /**
+     * Turns a request for a described artefact into the instruction it stands for.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    foldDescribedNoun: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+
+        const adjectives = Object.keys(this.ADVERB_FOR).join('|');
+        const nouns = 'explanation|overview|summary|description|rundown|walkthrough|breakdown';
+        const pattern = new RegExp(
+            '(?:^|(?<=[.!?]\\s))\\s*(?:please\\s+)?(?:give|provide|write|show|make)\\s+'
+            + '(?:me\\s+)?(?:an?\\s+)?(' + adjectives + ')\\s+(?:' + nouns + ')\\s+'
+            + '(?:of|on|about|for)\\s+([^.!?]+)', 'gi');
+
+        return text.replace(pattern, (match, adjective, object) => {
+            const adverb = this.ADVERB_FOR[adjective.toLowerCase()];
+            if (!adverb) return match;
+            return 'Explain ' + object.trim() + ' ' + adverb;
+        });
+    },
+
+    /**
+     * "Explain what X is" asks for X. The "what ... is" wrapper is the shape of a
+     * spoken question and carries nothing once the sentence is an instruction.
+     *
+     * Restricted to a short object, because a long one is usually a real clause where
+     * the "is" belongs: "explain what the output is when the input is empty" must not
+     * become "explain the output when the input is empty".
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    /**
+     * Turns a question FRAME into the question it was standing in for.
+     *
+     *     "I have a question about recursion"     ->  "Explain recursion"
+     *     "I have a question about X: why is Y?"  ->  frame deleted, question kept
+     *
+     * The frame used to be deleted outright as meta commentary, which is right when the
+     * real question follows it and wrong when it does not. "I have a question about
+     * machine learning" came back as "Machine learning" -- a noun phrase that asks for
+     * nothing, which is a worse prompt than the one the user typed even though it is
+     * shorter. The frame was carrying the verb.
+     *
+     * So the frame is only deleted when something else in the prompt still asks. When
+     * nothing does, it becomes the imperative it implied.
+     * @param {string} text
+     * @returns {string}
+     */
+    foldMetaQuestion: function (text) {
+        const FRAME = /(^|[.!?]\s+)[\s'"]*(?:i\s+(?:have|had|have\s+got)\s+(?:a|one|another)\s+(?:quick|small|short|simple)?\s*question|(?:just\s+a\s+)?quick\s+question)\s+(?:about|on|regarding|re|concerning)\s+/i;
+        const match = FRAME.exec(text);
+        if (!match) return text;
+        const head = text.slice(0, match.index + match[1].length);
+        const after = text.slice(match.index + match[0].length);
+        // Only this sentence is folded; anything after it is somebody else's clause.
+        const end = after.search(/[.!?](?:\s|$)/);
+        const rest = (end === -1 ? after : after.slice(0, end)).trim();
+        const tail = end === -1 ? '' : after.slice(end);
+        if (!rest) return text;
+        // A surviving ask means the frame really was just preamble, so it is left for
+        // the stripper pass to delete as before.
+        if (PM_CONDENSE && new RegExp('\\b(?:' + PM_CONDENSE.ASK_WORDS.join('|') + ')\\b', 'i').test(rest)) {
+            return text;
+        }
+        if (rest.indexOf('?') !== -1) return text;
+        return head + 'Explain ' + rest.replace(/^[.,:;\s]+/, '') + tail;
+    },
+
+    unwrapWhatIs: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+        return text.replace(
+            // The object is TEMPERED -- it may not itself contain is, are, when or
+            // if. Without that the lazy quantifier simply expanded past the blocked
+            // position: "explain what the output is when the input is empty" matched
+            // with the object running all the way to "the input", and came back as
+            // "Explain the output is when the input empty". A trailing lookahead
+            // cannot stop a match it can slide past; the object itself has to refuse.
+            /\b(explain|describe|tell me)\s+what\s+((?:(?!\b(?:is|are|when|if)\b)[^.!?,;]){1,40}?)\s+(?:is|are)\b/gi,
+            (match, verb, object) => (
+                verb.charAt(0).toUpperCase() + verb.slice(1).toLowerCase() + ' ' + object.trim()
+            ));
+    },
+
     transformStructuralIntent: function (text) {
         if (!text) return "";
         const str = text.trim();
@@ -845,12 +1337,24 @@ const PromptMeterOptimizer = {
         }
 
         // Work / project preambles ("I'm working on a X project and Y" -> "Y for a X project.")
-        const projectMatch = str.match(/^I\s+(?:am\s+)?working\s+on\s+a[n]?\s+(.*?)\s+(?:project|app|website)\s+(?:and|so)?\s*(?:I\s+need\s+(?:you\s+to|help\s+to)?|can\s+you|could\s+you)?\s*(.*)$/i);
-        if (projectMatch && projectMatch[1] && projectMatch[2]) {
-            return `${projectMatch[2].trim()} for a ${projectMatch[1].trim()} project.`;
+        const projectMatch = str.match(/^I\s+(?:am\s+|'m\s+)?(?:currently\s+)?working\s+on\s+a[n]?\s+(.*?)\s*(?:project|app|website)\s+(?:and|so)?\s*(?:I\s+need\s+(?:you\s+to|help\s+to)|can\s+you|could\s+you)?\s*(.*)$/i);
+        if (projectMatch && projectMatch[2].trim()) {
+            const kind = projectMatch[1].trim();
+            // The descriptor is now optional, so it can be empty: "for a  project" with
+            // a doubled space is not what the fold is for.
+            // With no project type named, "on a project" only matters when the request
+            // has no object of its own ("Assist me" -> "Assist me with a project.").
+            const rest = projectMatch[2].trim();
+            return kind ? `${rest} for a ${kind} project.`
+                : rest.split(/\s+/).length < 4 ? `${rest.replace(/[.!?]$/, '')} with a project.` : rest;
         }
 
-        return this.applyRules(str, this.structuralRewrites).trim();
+        let folded = this.applyRules(str, this.structuralRewrites);
+        // Sentence-level folds last: they read a whole clause, so they need the
+        // phrase rules to have finished with it.
+        folded = this.foldDescribedNoun(folded);
+        folded = this.foldMetaQuestion(folded);
+        return this.unwrapWhatIs(folded).trim();
     },
 
     /**
@@ -859,9 +1363,409 @@ const PromptMeterOptimizer = {
      * @param {Array} history - The list of historical turns.
      * @returns {Object} Analysis report { score, flags }
      */
+    // ---------------------------------------------------------------------------
+    // PROMPT QUALITY RULES
+    //
+    // scoreRules above are about WASTE: padding, slang, typos, repetition -- things
+    // that cost tokens. These are about whether the prompt can be ANSWERED. Measured
+    // over 4,000 real prompts from the reference corpus, the waste rules alone left
+    // 86.6% of them on a perfect 100, because most real prompts are not padded, they
+    // are under-specified. A scorer that cannot see that is not measuring quality.
+    //
+    // Every rule here is a HEURISTIC, not a verified quality judgement. Each carries
+    // its definition in `metric` so the dashboard, the docs and this table cannot drift
+    // apart, and every one is written to stay silent unless it is fairly confident --
+    // a false flag on a good prompt teaches the user to ignore the panel.
+    //
+    // Deliberately NOT a rule: prompt length. A short prompt is not a bad prompt
+    // ("Explain recursion" is complete), and a long one is not a good one. Length is
+    // reported as information, never as score.
+    // ---------------------------------------------------------------------------
+    // Function words that appear in almost any English sentence. Used only to decide
+    // whether the English-only rules below can read a prompt at all -- never to score.
+    // Imperative verbs that a prompt may repeat across a comma. Kept to a list rather
+    // than \w+ because the backreference alone would also collapse "the cat, the dog"
+    // into "the cat and dog", which is a different sentence.
+    REPEATABLE_VERBS: 'explain|describe|list|show|give|write|create|generate|summari[sz]e|'
+        + 'compare|define|outline|draft|suggest|recommend|analy[sz]e|review|translate|'
+        + 'calculate|solve|teach|tell|find|identify|name|discuss|elaborate|clarify|'
+        + 'illustrate|demonstrate|provide|include|add|build|design|make|do',
+
+    /**
+     * Collapses an imperative verb the prompt repeats across a comma or conjunction.
+     *
+     *     "Explain different types of finite automata, explain ML"
+     *       -> "Explain different types of finite automata and ML"
+     *
+     * condense.js already merges repeated sentence openings, but it cannot reach this:
+     * it only runs on prompts of 15 words or more, and its sentence splitter does not
+     * split on commas, so the two clauses above are one sentence to it. Short prompts
+     * are exactly where a repeated verb is most visible and most of the total length.
+     *
+     * The second clause must be short -- a handful of words with no internal punctuation
+     * -- because "Explain A, explain B in detail with examples and a table" is two real
+     * instructions, and merging them would silently attach the first one's object to the
+     * second one's qualifiers.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    mergeRepeatedVerbs: function (text) {
+        if (typeof text !== 'string' || !text) return text;
+
+        const verbs = this.REPEATABLE_VERBS;
+        // verb + object , [and|also|then] + SAME verb + short object
+        const pattern = new RegExp(
+            '\\b(' + verbs + ')\\b([^,;.!?]{2,80}?)\\s*[,;]\\s*(?:and\\s+|also\\s+|then\\s+)?\\1\\b\\s+([^,;.!?]{1,40})(?=[.!?]|$)',
+            'gi'
+        );
+
+        return text.replace(pattern, (match, verb, first, second) => {
+            // Bail if either side is empty once trimmed -- a malformed match should
+            // leave the prompt exactly as the user wrote it.
+            const left = first.trim();
+            const right = second.trim();
+            if (!left || !right) return match;
+            return verb + ' ' + left + ' and ' + right;
+        });
+    },
+
+    ENGLISH_MARKERS: new Set([
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'to', 'of', 'and', 'or',
+        'in', 'on', 'for', 'with', 'that', 'this', 'it', 'i', 'you', 'we', 'my', 'me',
+        'what', 'how', 'why', 'when', 'which', 'who', 'can', 'do', 'does', 'please',
+        'not', 'from', 'as', 'at', 'by', 'about', 'if', 'all', 'some', 'have', 'has',
+        'would', 'should', 'could', 'will', 'want', 'need', 'make', 'give', 'write'
+    ]),
+
+    /**
+     * Whether a prompt is English enough for the English-only quality rules to judge.
+     *
+     * This exists because two of those rules fire on the ABSENCE of an English cue.
+     * `no-clear-request` looks for an English imperative verb and flags a prompt that
+     * has none -- so a perfectly clear Japanese or Portuguese request was flagged for
+     * not being English. Measured over the LMSYS sample, non-English prompts scored a
+     * mean of 83-89 against 92.3 for English, and collected up to twice as many quality
+     * flags per prompt. That gap was the rules failing to read, reported as the user
+     * writing badly.
+     *
+     * Two checks, because script alone is not enough: Portuguese and German are Latin
+     * script and were penalised just as hard as Japanese.
+     *
+     * @param {string} text
+     * @returns {boolean} False when the English-only rules should stay silent.
+     */
+    looksEnglish: function (text) {
+        if (typeof text !== 'string' || !text.trim()) return false;
+
+        // 1. Script. A prompt substantially in a non-Latin script is not English, and
+        //    no amount of word matching will make it so.
+        const letters = text.replace(/[^\p{L}]/gu, '');
+        if (letters.length >= 8) {
+            const latin = (letters.match(/\p{Script=Latin}/gu) || []).length;
+            if (latin / letters.length < 0.65) return false;
+        }
+
+        const words = (text.toLowerCase().match(/[a-z']+/g) || []);
+        if (words.length === 0) return false;
+
+        // 2. Vocabulary. Latin script alone decides nothing -- Portuguese and German
+        //    are Latin too, and a short function-word list is worse than useless
+        //    because Romance languages share several of them ("a", "as", "de", "no").
+        //    The spelling dictionary is a real English vocabulary of a few thousand
+        //    words, so recognition against it separates "Explain recursion" from
+        //    "Explique a recursividade" where a marker list cannot.
+        // Chat shorthand this module expands ("u", "pls", "tmrw") and misspellings the
+        // corrector can confidently fix ("stupd", "greatt") are English too. Without
+        // them "can u pls explain how stupd gatha is wawa ass greatt bootiful" read as
+        // not-English and the card stayed silent on exactly the messy English it exists
+        // for. A foreign word is not a fixable English typo, so this does not let
+        // German or Spanish through.
+        // English almost never goes four words without one of these. Counting fixable
+        // typos as English let Italian and Indonesian through ("Grazie mille" had
+        // "mille" corrected to "mile"); requiring a real English function word stops
+        // that. Words shared with other European languages ("a", "in", "is", "me",
+        // "no", "de") are deliberately not on this list.
+        const STRONG = /^(?:the|you|your|can|could|would|should|what|how|why|which|this|that|with|and|for|of|i|my|it|are|was|were|do|does|did|not|from|about|please|pls|plz|explain|write|make|give|tell|to|there|their|they|going|will|have|has|had|we|when|where|who)$/;
+        if (words.length >= 4 && !words.some((w) => STRONG.test(w))) return false;
+
+        const shorthand = (word) => Object.prototype.hasOwnProperty.call(this.chatSlangMap || {}, word)
+            || Object.prototype.hasOwnProperty.call(this.spellingTypos || {}, word)
+            || Object.prototype.hasOwnProperty.call(this.politenessTypos || {}, word);
+        let known = 0;
+        for (const word of words) {
+            if (this.ENGLISH_MARKERS.has(word) ||
+                (PM_SPELL && PM_SPELL.known && PM_SPELL.known(word)) ||
+                shorthand(word) ||
+                (PM_SPELL && word.length >= 4 && PM_SPELL.correctWord && PM_SPELL.correctWord(word))) {
+                known++;
+            }
+        }
+
+        // A third of the words being recognisable English is a low bar on purpose. The
+        // cost of the two readings is asymmetric: calling English text non-English only
+        // silences a couple of rules, while calling Japanese text English flags it for
+        // having no English verb, which is the bias this whole function exists to stop.
+        return known / words.length >= 0.34;
+    },
+
+    // How confident a finding is, so the card can say which of its changes are facts and
+    // which are opinions. Three tiers, because two is not enough: a misspelling and a
+    // missing output format are both "issues" and a user should treat them completely
+    // differently.
+    //
+    //   error       The text is wrong by a rule that does not depend on context.
+    //               A dictionary misspelling, subject-verb disagreement, "a apple".
+    //   suggestion  Probably right, but the context could make it wrong. Confusables
+    //               and word choice read intent, and intent is not always readable.
+    //   improvement The text was not wrong. It is shorter, tidier or clearer now.
+    //               Capitalisation, punctuation, removed padding, merged clauses.
+    //
+    // Anything unlisted falls to "suggestion": an unclassified finding is one nobody has
+    // thought about yet, and defaulting it to "error" would overstate what is known.
+    SEVERITY_BY_TYPE: {
+        spelling: 'error',
+        agreement: 'error',
+        'verb-form': 'error',
+        'noun-form': 'error',
+        'pronoun-case': 'error',
+        article: 'error',
+        contraction: 'error',
+
+        'word-choice': 'suggestion',
+        confusable: 'suggestion',
+        phrasing: 'suggestion',
+
+        capitalization: 'improvement',
+        punctuation: 'improvement',
+        redundancy: 'improvement',
+        structure: 'improvement',
+        complexity: 'improvement'
+    },
+
+    SEVERITY_ORDER: { error: 0, suggestion: 1, improvement: 2 },
+
+    /**
+     * Tags findings with a severity and merges duplicates.
+     *
+     * Categories are detected independently -- the typo tables, the open-ended
+     * corrector, the grammar engine and the quality rules all run without knowing about
+     * each other -- so the same problem can be reported twice under different wording.
+     * Merging here rather than in each detector keeps them independent, which is the
+     * point: a detector that has to know what the others found cannot be reasoned about
+     * on its own.
+     *
+     * Order is by severity, then by first appearance, so the card leads with what is
+     * definitely wrong.
+     *
+     * @param {Array} findings - Raw findings, each { type, label }.
+     * @returns {Array} Tagged, de-duplicated findings sorted most-certain first.
+     */
+    classifyFindings: function (findings) {
+        const merged = new Map();
+
+        (findings || []).forEach((finding, index) => {
+            if (!finding || !finding.label) return;
+
+            const severity = this.SEVERITY_BY_TYPE[finding.type] || 'suggestion';
+            // Keyed on the label rather than the object: two detectors reporting
+            // '"teh" corrected to "the"' found one problem, however they phrased their
+            // own type.
+            const key = finding.label.toLowerCase();
+
+            const existing = merged.get(key);
+            if (existing) {
+                // Keep the more certain reading of the same finding.
+                if (this.SEVERITY_ORDER[severity] < this.SEVERITY_ORDER[existing.severity]) {
+                    existing.severity = severity;
+                    existing.type = finding.type;
+                }
+                existing.count += 1;
+                return;
+            }
+
+            merged.set(key, {
+                type: finding.type,
+                label: finding.label,
+                severity: severity,
+                count: 1,
+                order: index
+            });
+        });
+
+        return [...merged.values()].sort((a, b) => (
+            this.SEVERITY_ORDER[a.severity] - this.SEVERITY_ORDER[b.severity] ||
+            a.order - b.order
+        ));
+    },
+
+    qualityRules: [
+        {
+            id: 'missing-output-format',
+            requiresEnglish: true,
+            label: 'No output format given for a generative request',
+            metric: 'Fires when the prompt asks for something to be produced (write, '
+                + 'draft, create, generate, design, build, summarise) and nowhere states '
+                + 'a length, format, structure or medium. The model then guesses, and a '
+                + 'guess costs a whole extra turn to correct.',
+            per: 8, cap: 8,
+            test: function (text) {
+                // A generative verb whose object is a bare pronoun is not a request
+                // for a document: "make it better" asks for a change, not an artefact,
+                // and asking it to name a format is noise.
+                const generative = /\b(?:write|draft|create|generate|design|build|compose|make|produce|summari[sz]e|rewrite)\s+(?!it\b|this\b|that\b|them\b)/i;
+                if (!generative.test(text)) return 0;
+                // Any statement of shape counts, however informal.
+                const shape = /\b(?:\d+\s*(?:words?|characters?|lines?|pages?|paragraphs?|sentences?|bullets?|slides?|items?|steps?)|in\s+(?:json|xml|yaml|csv|markdown|html|a\s+table|bullet|point\s+form|list)|as\s+a\s+(?:table|list|json|essay|email|poem|script|summary)|format|structure|tone|style|short|brief|concise|detailed|step[\s-]by[\s-]step|outline)\b/i;
+                return shape.test(text) ? 0 : 1;
+            }
+        },
+        {
+            id: 'dangling-reference',
+            label: 'Refers to something that was not included',
+            metric: 'Fires when the prompt points at material ("the code below", "this '
+                + 'file", "the attached document", "the error above") and the prompt '
+                + 'contains no code block, no quoted span, no URL and no data payload. '
+                + 'The reference has nothing to resolve against.',
+            per: 12, cap: 12,
+            test: function (text) {
+                const points = /\b(?:the\s+(?:code|file|text|error|document|data|table|list|passage|article|image|screenshot)\s+(?:below|above|here|attached|provided|following)|(?:below|above|attached|following)\s*[:.]|this\s+(?:code|file|error|document|snippet|function|script)|my\s+(?:code|script|function|file|error))\b/i;
+                if (!points.test(text)) return 0;
+                const hasMaterial = /```|`[^`\n]+`|https?:\/\/|"[^"\n]{10,}"|\n\s*[\[{]|\n\s*\w[\w \t]{0,30}:\s*\S|\n\s*[-*•]\s+\S|\d{2,}/.test(text);
+                return hasMaterial ? 0 : 1;
+            }
+        },
+        {
+            id: 'contradiction',
+            label: 'Contains requirements that pull against each other',
+            metric: 'Fires on an explicit pair of opposing requirements in one prompt '
+                + '("detailed but brief", "simple yet comprehensive", "short and '
+                + 'thorough"). The model has to pick one silently, and which one it '
+                + 'picks is not the user’s choice.',
+            per: 10, cap: 10,
+            test: function (text) {
+                const SHORT = 'brief|short|concise|succinct|quick|simple|minimal|summary';
+                const LONG = 'detailed|comprehensive|thorough|exhaustive|in[\\s-]depth|complete|elaborate|extensive';
+                const joiner = '(?:\\s+(?:but|yet|while|although|though|and)\\s+(?:also\\s+|still\\s+)?)';
+                const a = new RegExp('\\b(?:' + SHORT + ')' + joiner + '(?:' + LONG + ')\\b', 'i');
+                const b = new RegExp('\\b(?:' + LONG + ')' + joiner + '(?:' + SHORT + ')\\b', 'i');
+                return (a.test(text) || b.test(text)) ? 1 : 0;
+            }
+        },
+        {
+            id: 'vague-specification',
+            label: 'Says what is wanted only in vague terms',
+            metric: 'Counts unquantified quality words ("good", "better", "nice", '
+                + '"proper", "a few", "some", "etc") that carry the entire '
+                + 'specification. Capped, and only counted when the prompt offers no '
+                + 'concrete constraint anywhere, so a prompt that says "a good summary '
+                + 'in 200 words" is not penalised.',
+            per: 4, cap: 12,
+            test: function (text) {
+                // Quoted and fenced spans are the user's material, not their
+                // specification: "Translate to French: \"good morning\"" is precise, and
+                // counting the "good" inside it as vagueness penalised a good prompt.
+                const prose = text
+                    .replace(/```[\s\S]*?```/g, ' ')
+                    .replace(/`[^`\n]+`/g, ' ')
+                    .replace(/"[^"\n]*"/g, ' ')
+                    .replace(/'[^'\n]{6,}'/g, ' ');
+                const concrete = /\b\d+\b|\bmust\b|\bonly\b|\bno\s+\w+|\bexactly\b|\bat\s+(?:least|most)\b/i;
+                if (concrete.test(prose)) return 0;
+                const vague = prose.match(/\b(?:good|better|best|nice|proper|properly|decent|a\s+few|some|several|etc\.?|and\s+so\s+on|stuff|things)\b/gi);
+                return vague ? vague.length : 0;
+            }
+        },
+        {
+            id: 'no-clear-request',
+            requiresEnglish: true,
+            label: 'Does not clearly state what it wants',
+            metric: 'Fires when the prompt contains no question mark, no imperative '
+                + 'opening verb and no "I want / I need / can you" construction. Such a '
+                + 'prompt is a statement of facts, and the model has to infer the task.',
+            per: 15, cap: 15,
+            test: function (text) {
+                if (text.indexOf('?') !== -1) return 0;
+                // The verb list is the whole rule, so it is long on purpose. Every verb
+                // missing from it is a correctly-phrased imperative prompt marked as
+                // having no clear request -- "Determine the volume of a cube", "Produce
+                // a slogan", "Predict the survival rate" were all flagged before these
+                // were added, which is the most damaging kind of false positive: it
+                // tells someone their good prompt is bad.
+                // Also after a comma, "and", "just" or "then": "The file is at X,
+                // refactor it" and "Don't explain, just give me the code" both ask.
+                const imperative = /(?:^|[.!?\n,;:]\s*|\b(?:and|just|then|now|so)\s+)\s*(?:(?:please|pls|plz|kindly)\s+)?(?:parse|schedule|email|send|set\s+up|render|plot|visuali[sz]e|search|look\s+up|book|remind|fill|say|greet|wish|share|propose|recommend|write|explain|give|list|show|tell|make|create|find|help|describe|compare|summari[sz]e|translate|fix|debug|generate|build|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|add|remove|check|teach|outline|draw|plan|rank|sort|name|define|identify|classify|extract|implement|refactor|optimi[sz]e|improve|continue|answer|do|let|act|pretend|imagine|consider|assume|output|return|print|provide|prepare|format|edit|correct|update|categori[sz]e|determine|produce|predict|read|compute|estimate|evaluate|choose|select|pick|arrange|organi[sz]e|state|match|label|group|split|merge|combine|replace|insert|delete|count|measure|construct|develop|propose|brainstorm|turn|transform|apply|use|run|execute|install|configure|deploy|test|verify|validate|ensure|avoid|include|exclude|start|begin|finish|complete|simplify|expand|shorten|paraphrase|proofread|guide|demonstrate|illustrate|prove|derive|simulate|model|forecast|detect|segment|annotate|tag|assess|critique|interpret|justify|argue|discuss|elaborate|clarify|reword|restate|compose|craft|invent|devise|sketch|map|trace|walk\s+me|come\s+up\s+with|put\s+together|take\s+(?:a\s+look|this))\b/i;
+                if (imperative.test(text)) return 0;
+                // Romanized Hindi/Malayalam request verbs count too: "recursion samjhao"
+                // (explain) and "explain cheyyamo" (can you do) ask as clearly as English.
+                const stated = /\b(?:samjhao|samjhaiye|batao|bataiye|sikhao|likho|likhiye|banao|dikhao|karo|kariye|cheyyamo|cheyyu|parayamo|paranju\s+tharamo|tharamo|sollu|solunga|pannunga|i\s+(?:want|need|would\s+like|am\s+looking\s+for)|(?:can|could|would)\s+(?:you|u)|(?:you|u)\s+(?:could|can)|how\s+(?:do|can|should)|what'?s|what|why|when|where|which|who|hows)\b/i;
+                return stated.test(text) ? 0 : 1;
+            }
+        },
+        {
+            id: 'truncated-instruction',
+            label: 'Instruction stops part-way',
+            metric: 'Fires when the prompt ends on a conjunction, preposition, colon or '
+                + 'comma with nothing after it ("summarise this and", "the steps are:"). '
+                + 'Usually a prompt sent before it was finished.',
+            per: 10, cap: 10,
+            test: function (text) {
+                return /(?:\b(?:and|or|but|with|for|to|of|in|on|about|such\s+as|like|including|e\.g\.|i\.e\.)\s*[:,]?\s*|[:,])$/i
+                    .test(text.trim()) ? 1 : 0;
+            }
+        }
+    ],
+
+    /**
+     * Runs the quality heuristics over a prompt.
+     *
+     * Kept separate from scoreRules because the two answer different questions and the
+     * UI shows them differently: waste is something the optimizer can fix on the user's
+     * behalf, whereas a missing output format is something only the user can supply.
+     *
+     * @param {string} text - Prose-only text (masked and stripped by the caller).
+     * @returns {Array} [{ id, label, metric, penalty, count }]
+     */
+    qualityIssues: function (text) {
+        if (typeof text !== 'string' || text.trim() === '') return [];
+
+        const findings = [];
+        // Decided once per prompt rather than per rule: the check walks the text.
+        const english = this.looksEnglish(text);
+
+        for (const rule of this.qualityRules) {
+            // A rule that fires on the ABSENCE of an English cue cannot be run on a
+            // prompt it cannot read -- it would report "no clear request" for every
+            // Japanese prompt ever written. Rules that fire on the PRESENCE of an
+            // English phrase need no gate: they simply stay quiet.
+            if (rule.requiresEnglish && !english) continue;
+            let count = 0;
+            try {
+                count = rule.test.call(this, text) || 0;
+            } catch (err) {
+                // A broken heuristic must not take the whole score down with it.
+                continue;
+            }
+            if (count > 0) {
+                findings.push({
+                    id: rule.id,
+                    label: rule.label,
+                    metric: rule.metric,
+                    count: count,
+                    penalty: Math.min(rule.cap, count * rule.per)
+                });
+            }
+        }
+        return findings;
+    },
+
     analyzePrompt: function (prompt, history = []) {
+        // An absent prompt has no score. It used to return 100, which read on the
+        // dashboard as a perfect prompt and pulled the running average up every time
+        // the box was empty -- the one input that cannot be good was scoring best.
+        // null is not 0 either: zero is a judgement, and there is nothing to judge.
         if (typeof prompt !== 'string' || prompt.trim() === "") {
-            return { score: 100, flags: [] };
+            return { score: null, flags: [], quality: [], scored: false };
         }
 
         const cleanPrompt = prompt.trim();
@@ -872,7 +1776,9 @@ const PromptMeterOptimizer = {
         // passage are not the user's padding and must not cost them points.
         const scorable = PM_PROTECT ? PM_PROTECT.strip(PM_PROTECT.mask(cleanPrompt).masked) : cleanPrompt;
         if (scorable.length === 0) {
-            return { score: 100, flags: [] };
+            // Nothing but code or quoted material. There is no prose to charge for, so
+            // the waste rules have nothing to say and the score stays clean.
+            return { score: 100, flags: [], quality: [], scored: true };
         }
 
         for (const rule of this.scoreRules) {
@@ -896,6 +1802,24 @@ const PromptMeterOptimizer = {
             flags.push(`Grammatical errors detected: ${grammarIssues.length} (-${deduction} pts)`);
         }
 
+        // Prompt quality. The rules above charge for waste -- padding, slang, typos --
+        // which is what the optimizer can strip on the user's behalf. These ask a
+        // different question: can the prompt be answered at all? A missing output
+        // format or a reference to code that was never pasted is not something any
+        // rewrite can fix, so the findings are returned separately for the UI to show
+        // as advice rather than folded into the flag list as though they were edits.
+        // Given the WHOLE prompt, not the stripped prose. The waste rules read `scorable`
+        // so that politeness inside a pasted code sample is not charged to the user, but
+        // these rules ask whether the material a prompt refers to is actually present --
+        // and on the stripped text it never is. "Fix the code below:" followed by a real
+        // code block was being flagged both for a dangling reference and for stopping
+        // mid-instruction, because the block had been removed before the rules ran.
+        const qualityFindings = this.qualityIssues(cleanPrompt);
+        for (const finding of qualityFindings) {
+            score -= finding.penalty;
+            flags.push(`${finding.label} (-${finding.penalty} pts)`);
+        }
+
         // Scope. Unlike every rule above this does not mean the prompt is badly written;
         // it means the prompt is too large to be answered once. A 100/100 score on a
         // request for forty subsystems would be telling the user something false.
@@ -914,7 +1838,14 @@ const PromptMeterOptimizer = {
                 : "Duplicate prompt detected (-10 pts)");
         }
 
-        return { score: Math.max(0, Math.min(100, score)), flags: flags };
+        return {
+            score: Math.max(0, Math.min(100, score)),
+            flags: flags,
+            // Structured, with each rule's definition attached, so the dashboard can
+            // explain a deduction instead of only naming it.
+            quality: qualityFindings,
+            scored: true
+        };
     },
 
     // --- Scope analysis --------------------------------------------------------------
@@ -952,6 +1883,27 @@ const PromptMeterOptimizer = {
     // Demands for exhaustiveness. Harmless alone; multiplied against a long enumeration
     // is what turns a prompt into one no answer can satisfy.
     EXHAUSTIVE: /\b(?:every|all|each|complete|full|entire|comprehensive|exhaustive|production-ready|end-to-end|in\s+detail|detailed)\b/gi,
+
+    // Coding requests that ask for more work than the task needs. Unlike the rules
+    // above, which count how MUCH is being asked for, these look at what is being asked
+    // for: a request to rebuild something that already exists costs the user tokens on
+    // the way in and a worse answer on the way out.
+    //
+    // Each entry is [pattern, advice]. The advice is phrased as a question, never an
+    // instruction -- "from scratch" is the whole point of a learning exercise, and a
+    // library ban is sometimes a real constraint (no network, licence, exam). The
+    // optimizer cannot tell those apart, so it raises the question and leaves the
+    // decision where it belongs.
+    CODING_COMPLEXITY: [
+        [/\b(?:write|build|implement|create|code|roll)\s+(?:my|your|our)?\s*own\s+(?:custom\s+)?(?:date\s+(?:parser|library)|json\s+(?:parser|serializer)|http\s+(?:client|server)|auth(?:entication)?\s+system|password\s+hash\w*|encryption|regex\s+engine|template\s+engine|orm|router|logger|uuid\s+generator|hash\s+(?:map|table)|linked\s+list|sorting\s+algorithm)\b/i,
+            'this asks for something the standard library or an existing dependency already provides -- worth saying why that one will not do'],
+        [/\bfrom\s+scratch\b/i,
+            'building from scratch is a lot of answer; if the goal is learning say so, otherwise name what it may reuse'],
+        [/\b(?:without\s+(?:using\s+)?any\s+(?:external\s+)?(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?|packages?)|do\s+not\s+use\s+any\s+(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?|packages?)|no\s+(?:external\s+)?(?:librar(?:y|ies)|dependenc(?:y|ies)|frameworks?))\b/i,
+            'a no-dependency constraint usually costs more code than it saves -- keep it only if it is a real requirement'],
+        [/\b(?:production[-\s]?ready|production[-\s]grade|enterprise(?:[-\s]grade)?|fully[-\s]functional)\s+(?:code|implementation|system|application|app|solution|version)\b/i,
+            'production-ready in one turn is a large ask; scoping it to one component first usually lands better']
+    ],
 
     /**
      * Longest run of comma-separated items in the text.
@@ -1021,6 +1973,16 @@ const PromptMeterOptimizer = {
             });
         }
 
+        // Coding-specific complexity. Carries no penalty: the rules above measure a
+        // prompt that is too big to answer, which is a scoring matter, while these raise
+        // a question about the approach that only the user can settle. Scoring a prompt
+        // down for saying "from scratch" would punish a legitimate exercise.
+        for (const [pattern, advice] of this.CODING_COMPLEXITY) {
+            if (pattern.test(scorable)) {
+                findings.push({ type: 'complexity', penalty: 0, label: advice });
+            }
+        }
+
         return findings;
     },
 
@@ -1029,7 +1991,11 @@ const PromptMeterOptimizer = {
     // listing them would bury the ones that change meaning.
     REPORTABLE_GRAMMAR: new Set([
         'agreement', 'verb-form', 'tense', 'noun-form', 'pronoun-case',
-        'word-choice', 'article', 'contraction', 'phrasing', 'spelling'
+        'word-choice', 'article', 'contraction', 'phrasing', 'spelling',
+        // A typo with two readings, and a modifier dropped as redundant, are both
+        // things the user may want to overrule. Leaving them out of this set meant
+        // the work happened and the card never said so.
+        'ambiguity', 'redundancy'
     ]),
 
     /**
@@ -1054,13 +2020,13 @@ const PromptMeterOptimizer = {
      * @param {string} prompt - The original prompt text.
      * @returns {Object} { text, grammar, savedWords } where grammar is [{ type, label }].
      */
-    optimizeWithReport: function (prompt) {
+    optimizeWithReport: function (prompt, preserve) {
         // Collected from the real run rather than re-derived: the spelling corrector
         // works inside the pipeline, on masked text, and its findings exist nowhere
         // else. Deduplicated because the same word can be corrected in more than one
         // place, and the card is a summary rather than a log of every edit.
         const collected = [];
-        const text = this.optimizePrompt(prompt, collected);
+        const text = this.optimizePrompt(prompt, collected, preserve);
 
         // Only what the run actually did. Re-deriving findings from the RAW prompt also
         // reported grammar from inside protected spans -- a fenced block containing
@@ -1078,7 +2044,9 @@ const PromptMeterOptimizer = {
         const countWords = str => (str || '').trim().split(/\s+/).filter(Boolean).length;
         return {
             text: text,
-            grammar: grammar,
+            // Tagged with a severity and de-duplicated, so the card can separate what
+            // is definitely wrong from what is merely tidier.
+            grammar: this.classifyFindings(grammar),
             // Advice rather than edits: these describe a prompt that is too big to answer
             // in one turn, which no rewrite of the wording can fix.
             scope: this.scopeIssues(prompt || ''),
@@ -1107,7 +2075,7 @@ const PromptMeterOptimizer = {
      * @param {string} prompt - The original prompt text.
      * @returns {string} The optimized prompt text.
      */
-    optimizePrompt: function (prompt, issues) {
+    optimizePrompt: function (prompt, issues, preserve) {
         // Guard the type, not just emptiness. Every caller in the extension reads from
         // the DOM and so hands over a string, but this module is also driven directly
         // from the tests and the dashboard, where a stray number or object would throw
@@ -1130,7 +2098,21 @@ const PromptMeterOptimizer = {
         if (this.isCodeSnippet(prose)) return prompt;
 
         // Stage 1: grammar, spelling & acronym pre-processing
-        optimized = this.correctGrammarAndSpelling(optimized, issues);
+        optimized = this.correctGrammarAndSpelling(optimized, issues, preserve);
+
+        // Stage 1b: collapse runs of modifiers that say the same thing. After the
+        // spelling pass, so "esasy" has already become a word the lexicon knows,
+        // and before the phrase rules, so they see the shortened noun phrase.
+        if (PM_MODIFIERS) {
+            const trimmed = PM_MODIFIERS.compress(optimized);
+            optimized = trimmed.text;
+            if (issues) {
+                trimmed.dropped.forEach(item => issues.push({
+                    type: 'redundancy',
+                    label: '"' + item.word + '" removed: ' + item.reason
+                }));
+            }
+        }
 
         // Stage 2: copy-paste garbage & symbol spam
         optimized = optimized
@@ -1142,6 +2124,11 @@ const PromptMeterOptimizer = {
         // Stage 2b: turn a stated intent into the command it stands for, before the
         // strippers below can remove its wrapper and strand the verb.
         optimized = this.applyRules(optimized, this.intentRewrites);
+
+        // Same reason, one level up: "I have a question about X" is a request whose
+        // only verb lives in the frame, and stripping the frame as meta commentary
+        // left a bare noun phrase that asks for nothing.
+        optimized = this.foldMetaQuestion(optimized);
 
         // Stage 3: pleasantry and junk stripping. Two passes catch wrappers that only
         // become visible once an outer one has been removed.
@@ -1173,8 +2160,15 @@ const PromptMeterOptimizer = {
 
         // Stages 4-6: structural intent, meta-prompting fluff, concise wording
         optimized = this.transformStructuralIntent(optimized);
+        // Collapse a verb the prompt repeats across a comma before the phrase rules
+        // run, so the merged clause is what they see.
+        optimized = this.mergeRepeatedVerbs(optimized);
         optimized = this.applyRules(optimized, this.fluffReplacements);
         optimized = this.applyRules(optimized, this.concisePhrases);
+        // Again, now the wrappers are gone: "I was wondering if you could possibly help
+        // me learn SQL" only reaches "help me learn SQL" here, and without this second
+        // pass the rewrite was not idempotent -- running it on its own output changed it.
+        optimized = this.applyRules(optimized, this.intentRewrites);
 
         // "Could you help me X?" becomes "Help me X?" once the wrapper is stripped, but
         // an imperative is not a question. Swap the mark for a full stop.
@@ -1188,10 +2182,12 @@ const PromptMeterOptimizer = {
         // the patterns that "I wanted to ..." does.
         optimized = this.applyRules(optimized, this.connectiveRepairs);
         optimized = this.applyRules(optimized, this.adjectiveStacks);
-        optimized = optimized
-            .replace(/[ \t]+/g, ' ')
-            .replace(/\b(\w{1,6})\s+\1\b/gi, '$1')
-            .replace(/\s+([,.?!;:])/g, '$1')
+        optimized = this.collapseAdjacentRepeats(optimized
+            .replace(/[ \t]+/g, ' '))
+            // Closing the space before punctuation, except where that punctuation is
+            // part of an operator. ! and ? open != and ?=, and : opens a ternary or a
+            // time, so "a != b" was being closed up into "a!= b".
+            .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             .replace(/([!?])\1+/g, '$1')
             .trim();
 
@@ -1205,21 +2201,50 @@ const PromptMeterOptimizer = {
         }
 
         // Stage 7: re-run grammar over the rewritten text
-        optimized = this.correctGrammarAndSpelling(optimized);
+        optimized = this.correctGrammarAndSpelling(optimized, null, preserve);
 
         // Stage 8: clean joining words, duplicate filler and whitespace artifacts.
         // Duplicate collapsing is safe unconditionally now: anything code-shaped is
         // already masked, so "return return" inside a snippet can no longer be hit.
-        optimized = optimized
+        optimized = this.collapseAdjacentRepeats(optimized)
             .replace(/^\s*(?:and|so|or|but|then)\s+/gi, '')
-            .replace(/\b(\w{1,6})\s+\1\b/gi, '$1')
-            .replace(/^[.,:;\-\u2013\u2014\s]+/, '')
+            // Debris a removed opener left behind -- but not a list marker: "- install
+            // node" lost its dash once the "Steps:" line above it was dropped.
+            .replace(/^(?:[.,:;\u2013\u2014\s]|-(?![ \t]+\S))+/, '')
             .replace(/[ \t]+/g, ' ')
             .replace(/,(?:\s*,)+/g, ',')
+            // "... DBMS. And I really need to ...": the clause in front of the "and" was
+            // removed as backstory, leaving a sentence that opens on a conjunction.
+            .replace(/([.!?]\s+)(?:and|so|then)\s+(\w)/g, (m, lead, next) => lead + next.toUpperCase())
+            // Spoken fillers at a sentence start ("ok so like basically um I need") and
+            // filler "like" inside one ("a recipe for like pasta", "works like at all").
+            .replace(/(^|[.!?]\s+)(?:(?:ok|okay|so|like|basically|um+|uh+|well|actually)[,\s]+)+(?=\w)/gi, '$1')
+            .replace(/\b(for|is|was|need|needs|want|just|about|takes?|got|had|be)\s+like\s+(?=[a-z])/gi, '$1 ')
+            .replace(/\s+like\s+(?=at\s+all\b)/gi, ' ')
+            .replace(/,\s*like\s+(?=(?:what|how|why|when|where|which|who)\b)/gi, ', ')
+            .replace(/\s+you\s+know(?=\s*[.?!]?\s*$)/gi, '')
+            .replace(/\bto\s+by\b(?=\s*[.?!]?\s*$)/gi, 'to buy')
+            // A filler span removed from a sign-off leaves its first word behind:
+            // "I really appreciate it!" -> "I", "Many thanks!" -> "Many". A one-word
+            // fragment after a finished sentence is debris, not content.
+            .replace(/([.!?])\s+(?:i|many|so|and|but|also|it|this|that|very|really|much|in\s+advance)[\s.!?]*$/i, '$1')
+            .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase())
+            // "Because I am new to this, Explain X": a task verb after a comma is
+            // mid-sentence, whatever opener was cut away in front of it.
+            .replace(/,\s+(Explain|Write|Give|List|Tell|Show|Describe|Create|Make|Help)\b/g,
+                (m, verb) => ', ' + verb.toLowerCase())
             // A removed sentence can leave its full stop beside the previous one.
             // Exactly two collapse; three are left alone, because that is an ellipsis.
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
-            .replace(/\s+([,.?!;:])/g, '$1')
+            .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
+            // A word stripped from the end of a sentence leaves its comma behind:
+            // "summarize the article, basically." came out as "the article,."
+            .replace(/[,;:]+([.!?])/g, '$1')
+            // A clause rewrite that fires at a sentence boundary consumes the space
+            // after the full stop, because the anchor ends in \s*. Without this,
+            // "i want to learn ml. i want to learn dl" closes up as
+            // "Explain ML.Explain DL". Only before a letter, so decimals survive.
+            .replace(/([.!?])(?=[A-Za-z])/g, '$1 ')
             // Closing up spaces can re-form a run ("! !" -> "!!"), so collapse again
             .replace(/([!?])\1+/g, '$1')
             .replace(/\n\s*\n/g, '\n')
@@ -1230,7 +2255,7 @@ const PromptMeterOptimizer = {
         // protected spans remain -- "um uh TypeError: x" should optimise down to the
         // error text, not have its filler restored.
         if (optimized.trim().length === 0) {
-            optimized = this.correctGrammarAndSpelling(protectedText.masked);
+            optimized = this.correctGrammarAndSpelling(protectedText.masked, null, preserve);
         }
         // Stripping a leading "Can you " or "Please " leaves the next word lowercase, so
         // re-capitalise after every sentence break. A placeholder is not [a-z], so a
@@ -1287,6 +2312,11 @@ PromptMeterOptimizer.compiled = (function () {
             Object.keys(o.techAcronymMap).forEach(term => known.add(term));
             Object.values(o.techAcronymMap).forEach(term => known.add(String(term).toLowerCase()));
             Object.values(typoMap).forEach(term => known.add(String(term).toLowerCase()));
+            // The context-gated acronyms are real words, and the spelling corrector
+            // treated them as typos -- "build a rag pipeline" became "a rage
+            // pipeline" before the gate downstream could fire. Derived from the
+            // replacements so the two lists cannot drift apart.
+            o.ambiguousAcronyms.forEach(rule => known.add(String(rule[1]).toLowerCase()));
             Object.keys(o.chatSlangMap).forEach(term => known.add(term));
             if (typeof PM_GRAMMAR !== 'undefined' && PM_GRAMMAR && PM_GRAMMAR.PROPER_NOUNS) {
                 Object.keys(PM_GRAMMAR.PROPER_NOUNS).forEach(term => known.add(term));

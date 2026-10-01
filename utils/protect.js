@@ -39,7 +39,14 @@ const PromptMeterProtect = {
 
         // --- Diagnostics -----------------------------------------------------------
         { name: 'traceback', rx: /Traceback \(most recent call last\):[\s\S]*?(?=\n[ \t]*\n|$)/g },
-        { name: 'stack-frame', rx: /^[ \t]*at\s+\S[^\n]*$/gm },
+        // A stack frame must carry a LOCATION -- "(file.js:3:9)", "(native)" or a
+        // trailing ":line:col". Matching every line that merely starts with "at " masked
+        // ordinary prose as program text: "at the end of the day what matters is
+        // performance" was protected whole, so the optimizer could not touch a single
+        // word of it and reported nothing to fix. Masking is the safe direction for
+        // genuinely ambiguous text, but it is not free -- a fully masked prompt is a
+        // prompt the extension silently does nothing for.
+        { name: 'stack-frame', rx: /^[ \t]*at\s+\S[^\n]*?(?:\([^)\n]*\)|:\d+(?::\d+)?)[ \t]*$/gm },
         { name: 'exception', rx: /\b[A-Z]\w*(?:Error|Exception|Warning)\b[^\n]*/g },
 
         // --- Locators --------------------------------------------------------------
@@ -59,6 +66,11 @@ const PromptMeterProtect = {
         // --- Material the user marked as verbatim ----------------------------------
         { name: 'double-quoted', rx: /"[^"\n]{1,300}"/g },
         { name: 'smart-quoted', rx: /“[^”\n]{1,300}”/g },
+        // Single quotes too: "correct my sentence: 'Ich habe gestern...'" had "habe"
+        // corrected to "have", and a passage sent for proofreading was proofread
+        // before the model saw it. Not touching a letter on the outside, so the
+        // apostrophes in "it's" and "students' books" are never taken for quotes.
+        { name: 'single-quoted', rx: /(?<![\w'’])'[^'\n]{3,300}'(?![\w'’])/g },
 
         // --- Templates, variables, flags -------------------------------------------
         { name: 'handlebars', rx: /\{\{[^}\n]+\}\}/g },

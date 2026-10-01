@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html class="pm-tokens">
 
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="icons/icon32.png">
     <title>PromptMeter</title>
-    <!-- Same faces as the dashboard, so the two surfaces do not disagree. The local
-         stack after them carries the popup if the request is slow or offline. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Tokens first: style.css reads them and defines none of its own. No webfont is
+         fetched -- the extension has to work with no connection after install. -->
+    <link rel="stylesheet" href="utils/tokens.css">
     <link rel="stylesheet" href="style.css">
     <!-- Stamps the saved theme before first paint. External because MV3 extension pages
          run under script-src 'self', which blocks inline scripts. -->
@@ -18,38 +17,63 @@
 <body>
 
     <div class="popup-container">
-        <div class="popup-header">
-            <div class="header-brand">
-                <h2>PromptMeter</h2>
-                <span id="popup-status-badge" class="badge">Active</span>
+        <header class="popup-header">
+            <img class="brand-mark" src="icons/icon32.png" alt="" width="24" height="24">
+            <div class="brand-text">
+                <h1>PromptMeter</h1>
+                <div id="status-banner" class="status-banner">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Active on ChatGPT</span>
+                </div>
             </div>
-            <label class="switch" title="Toggle PromptMeter On/Off">
-                <input type="checkbox" id="toggle-promptmeter" checked>
-                <span class="slider round"></span>
+            <label class="switch" title="Turn PromptMeter on or off">
+                <input type="checkbox" id="toggle-promptmeter" checked aria-label="PromptMeter on">
+                <span class="slider"></span>
             </label>
-        </div>
+        </header>
 
-        <div id="status-banner" class="status-banner">
-            <span class="status-dot"></span>
-            <span id="status-text">Coach is actively monitoring</span>
-        </div>
-
-        <div class="stats-preview">
-            <div class="stat-box stat-box-carbon">
-                <span class="stat-label">Carbon Footprint</span>
-                <span id="popup-carbon" class="stat-value">0.0g</span>
+        <section class="levels">
+            <span class="stat-label" id="level-label">Edit level</span>
+            <div class="level-options" role="radiogroup" aria-labelledby="level-label">
+                <button type="button" role="radio" data-level="fixes" aria-checked="false">Fix</button>
+                <button type="button" role="radio" data-level="trim" aria-checked="true">Trim</button>
+                <button type="button" role="radio" data-level="condense" aria-checked="false">Condense</button>
             </div>
-            <div class="stat-box">
-                <span class="stat-label">Avg Efficiency</span>
+            <span id="level-hint" class="stat-sub">Also remove greetings and filler</span>
+        </section>
+
+        <section class="hero-stat">
+            <span class="stat-label">Tokens saved</span>
+            <span id="popup-saved" class="hero-value">0</span>
+            <span id="popup-carbon" class="stat-sub">no CO₂ saved yet</span>
+        </section>
+
+        <section class="stats-row">
+            <div class="stat">
+                <span class="stat-label">Improved</span>
+                <span id="popup-improved" class="stat-value">0</span>
+                <span id="popup-logged" class="stat-sub">of 0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Efficiency</span>
                 <span id="popup-efficiency" class="stat-value">100%</span>
             </div>
-        </div>
+            <div class="stat">
+                <span class="stat-label">Streak</span>
+                <span id="popup-streak" class="stat-value">0</span>
+            </div>
+        </section>
 
-        <button id="open-dashboard-btn" class="dashboard-btn">Open Dashboard</button>
+        <p id="popup-empty" class="popup-empty" hidden>
+            Nothing logged yet. Type a prompt on chatgpt.com and a shorter version appears above the message box.
+        </p>
+
+        <button id="open-dashboard-btn" class="dashboard-btn">Open dashboard <span aria-hidden="true">&rarr;</span></button>
     </div>
 
     <!-- Load storage layer to fetch statistics locally -->
     <script src="utils/storage.js"></script>
+    <script src="utils/gamification.js"></script>
     <script src="utils/theme.js"></script>
     
     <script src="popup.js"></script>

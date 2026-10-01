@@ -333,7 +333,10 @@ const PromptMeterCondense = {
         // them strands the word as its own sentence, so they are excluded here.
         const hardStop = connective.split('|').filter(w => w !== 'now' && w !== 'also').join('|');
         const stop = `(?:${ask}|${hardStop})`;
-        const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’./+#-]+){0,10}`;
+        // A dot only inside a token ("Node.js", "3.5"): as a token's last character it
+        // is the sentence's full stop, and taking it glued the next sentence on --
+        // "...before and I am panicking lol. Can you give me" became "before give me".
+        const tail = `(?:\\s+(?!${stop}\\b)[A-Za-z0-9$%'’/+#-]+(?:\\.[A-Za-z0-9]+)*){0,10}`;
 
         // A context clause is recognised in exactly two positions: at the start of a
         // clause, optionally behind one or two lead-ins ("so basically my professor
@@ -429,10 +432,18 @@ const PromptMeterCondense = {
         for (let pass = 0; pass < 2; pass++) {
             for (const rx of this.situational) {
                 rx.lastIndex = 0;
-                out = out.replace(rx, match => {
+                out = out.replace(rx, (...args) => {
+                    // Offset and string are the last two arguments whatever groups
+                    // the pattern captures.
+                    const [match] = args;
+                    const offset = args[args.length - 2];
+                    const whole = args[args.length - 1];
                     // A clause holding protected content is never removed, however
                     // situational it looks -- the span may be what the question is about.
                     if (match.indexOf(this.MASK_OPEN) !== -1) return match;
+                    // Stopped short of a parenthetical: removing it would strand
+                    // "(worth 30% of my grade!) and I need..." at the front.
+                    if (/^\s*\(/.test(whole.slice(offset + match.length))) return match;
                     // Second opinion: the pattern matched, but if the model reads this
                     // clause as the instruction itself, leave it alone.
                     if (this.mlVetoesRemoval(match)) return match;
@@ -496,10 +507,43 @@ const PromptMeterCondense = {
      * @param {string} sentence
      * @returns {Object} { core, lowValue, protectedSpan }
      */
+    // A segment that carries DATA rather than prose.
+    //
+    // contentWords() only matches [a-z]+, so a line of numbers, a bracketed list or a
+    // "Label: value" row has zero content words. The pruner read that as "introduces no
+    // new subject matter" and dropped it, and the fragment test below finished the job
+    // on anything three words or shorter. Measured over 4,000 real prompts that lost the
+    // numbers in 2.0% of them and the operators in 1.4%:
+    //
+    //   "Output the 3rd and 7th element of the following list:\n[1, 5, 8, 11, 15, ...]"
+    //     -> "Output the 3rd and 7th element of the following list"
+    //
+    // The request survived and the data it operates on did not, which leaves a prompt
+    // that cannot be answered at all. Anything matching these is treated as core.
+    DATA_SEGMENT: [
+        /\d/,                          // any digit: quantities, dates, ids, versions
+        /^\s*[-*•·]\s+\S/,   // a bullet
+        /^\s*\w[\w \t/&'-]{0,40}:\s*\S/, // Label: value
+        /[[\]{}|]/,                    // brackets, braces, table pipes
+        /[<>=+*/^%]/,                  // operators
+        /^[A-Za-z][\w+#.-]*$/,          // a bare item on its own line: Java, C++, Node.js
+        /\S,\s*\S+,\s*\S/              // a comma-separated series
+    ],
+
+    /**
+     * True when a segment is data the prompt operates on rather than prose about it.
+     * @param {string} trimmed
+     * @returns {boolean}
+     */
+    carriesData: function (trimmed) {
+        return this.DATA_SEGMENT.some(rx => rx.test(trimmed));
+    },
+
     classify: function (sentence) {
         const trimmed = sentence.trim();
         const bare = trimmed.replace(this.LEAD_IN, '');
         const protectedSpan = trimmed.indexOf(this.MASK_OPEN) !== -1;
+        const data = this.carriesData(trimmed);
         // MID_ASK catches a request that does not open the sentence ("...tomorrow, teach
         // me ML"), which the anchored patterns cannot see. Every clause here widens what
         // counts as core, which only ever keeps MORE -- the safe direction.
@@ -507,17 +551,23 @@ const PromptMeterCondense = {
             this.QUESTION_OPENER.test(trimmed) ||
             this.MID_ASK.test(trimmed) ||
             trimmed.indexOf('?') !== -1;
-        const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed);
+        // "Also between your and you're." continues the request before it; its words
+        // are function words, so it looked empty and was dropped.
+        const continues = /^(?:also|and also|plus|as well as|then)\b/i.test(trimmed);
+        const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed) || continues;
 
-        // A short leftover that asks for nothing is a fragment, not a sentence.
+        // A short leftover that asks for nothing is a fragment, not a sentence -- unless
+        // it is data, where being short is normal. "Quantity: 3" and "C++" are three
+        // words or fewer and are the whole point of the prompt they sit in.
         const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-        const fragment = !protectedSpan && !asks && !constrains &&
+        const fragment = !protectedSpan && !asks && !constrains && !data &&
             (this.FRAGMENT.test(trimmed) || wordCount <= 3);
 
         return {
             protectedSpan: protectedSpan,
-            core: protectedSpan || asks || constrains,
-            lowValue: fragment || this.LOW_VALUE.some(rx => rx.test(trimmed))
+            data: data,
+            core: protectedSpan || asks || constrains || data,
+            lowValue: fragment || (!data && this.LOW_VALUE.some(rx => rx.test(trimmed)))
         };
     },
 
@@ -605,7 +655,9 @@ const PromptMeterCondense = {
      * @param {Array} sentences
      * @returns {Array} Surviving sentences, in original order.
      */
-    pruneNarrative: function (sentences) {
+    pruneNarrative: function (sentences, minNewTerms) {
+        // Caller-supplied floor, so an aggressive pass can keep less.
+        const threshold = minNewTerms || this.MIN_NEW_TERMS;
         const classified = sentences.map(sentence => ({
             text: sentence,
             info: this.classify(sentence),
@@ -618,10 +670,20 @@ const PromptMeterCondense = {
             if (entry.info.core) entry.words.forEach(word => known.add(word));
         });
 
-        const kept = classified.filter(entry => {
+        // A sentence the next one leans on. "There's a girl in my class... It's normal,
+        // right?" and "Beavers live near rivers. What do they build?" lost their first
+        // sentence and left a pronoun pointing at nothing.
+        // Also "this view", "that claim" anywhere in the next sentence: "Renewable energy
+        // is the future. Give arguments for and against this view." lost its first half.
+        const REFERS_BACK = /^\W*(?:it|it's|its|this|that|these|those|they|they're|them|their|he|she|his|her|him)\b|\b(?:he|she|they|him|them|his|her|their)\b|\b(?:this|that|these|those)\s+(?:views?|opinions?|ideas?|claims?|statements?|points?|arguments?|approach|situation|problems?|issues?|case|topic|question|text|plan|belief|theory|assumption|stance|position)\b/i;
+        const leanedOn = (index) => index + 1 < classified.length
+            && REFERS_BACK.test(classified[index + 1].text);
+
+        const kept = classified.filter((entry, index) => {
             // A sentence that asks, constrains, or holds protected content is the
             // user's request. The rules keep it and the model is never asked.
             if (entry.info.core) return true;
+            if (leanedOn(index)) return true;
 
             if (entry.info.lowValue) {
                 // Rules say drop. The model may veto.
@@ -630,7 +692,7 @@ const PromptMeterCondense = {
 
             // Keep a non-core sentence only if it carries genuinely new subject matter.
             const fresh = entry.words.filter(word => !known.has(word));
-            if (fresh.length >= this.MIN_NEW_TERMS) {
+            if (fresh.length >= threshold) {
                 // Rules say keep. The model may propose dropping it -- new vocabulary
                 // is not the same as new information, and this is where a blacklist is
                 // blind: "I have been revising all night for tomorrow" introduces four
@@ -654,18 +716,52 @@ const PromptMeterCondense = {
      * @param {string} text - Masked prompt text.
      * @returns {string} Condensed text.
      */
-    condense: function (text) {
+    condense: function (text, options) {
         if (!text) return text;
 
+        // Thresholds are overridable so a caller can ask for a harder pass without this
+        // module having to know what a compression tier is. Omitting them gives exactly
+        // what every existing caller got, so the seam changes nothing by existing.
+        const minWords = (options && options.minWords) || this.MIN_WORDS;
+        const minNewTerms = (options && options.minNewTerms) || this.MIN_NEW_TERMS;
+
         text = text.replace(/[ \t]+/g, ' ').trim();
+
+        // Every rule below reads English through [a-z]. A Malayalam or Japanese sentence
+        // has no content words to it, so it looked like pure narrative and was dropped:
+        // a three-sentence Malayalam request came back as its first sentence. Text this
+        // module cannot read is text it must not prune.
+        const letters = text.match(/\p{L}/gu) || [];
+        const latin = text.match(/\p{Script=Latin}/gu) || [];
+        if (letters.length && latin.length / letters.length < 0.65) return text;
+
         const wordCount = text.split(/\s+/).filter(Boolean).length;
-        if (wordCount < this.MIN_WORDS) return text;
+        if (wordCount < minWords) return text;
 
         const sentences = this.splitSentences(text);
         if (sentences.length < 2) return text;
 
-        const condensed = this.pruneNarrative(this.mergeRepeats(sentences));
-        return condensed.join(' ').replace(/\s+/g, ' ').trim();
+        // Which segments began a new line in the original. Joining everything with a
+        // space flattened "Item: Apple iPad Pro\nQuantity: 3" into one run, which reads
+        // as a single garbled value rather than two fields -- the request survives and
+        // its shape does not. Keyed by text rather than index on purpose: mergeRepeats
+        // rewrites some segments, and a rewritten one simply misses the lookup and
+        // falls back to a space, which is the safe direction.
+        const startedLine = new Set();
+        text.split(/\n+/).forEach((line, index) => {
+            const first = this.splitSentences(line)[0];
+            if (index > 0 && first) startedLine.add(first.trim());
+        });
+
+        const condensed = this.pruneNarrative(this.mergeRepeats(sentences), minNewTerms);
+        return condensed
+            .map((part, index) => (
+                index > 0 && startedLine.has(part.trim()) ? '\n' + part : part
+            ))
+            .join(' ')
+            .replace(/[ \t]+/g, ' ')
+            .replace(/[ \t]*\n[ \t]*/g, '\n')
+            .trim();
     }
 };
 

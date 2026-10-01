@@ -16,8 +16,8 @@ const PromptMeterRecommendations = {
             // General baseline recommendation
             list.push({
                 id: "general_tips",
-                title: "🌱 Sustainable Prompting Guidelines",
-                description: "Write direct, single-instruction prompts. Avoid polite greetings (like 'please' or 'thank you') to keep prompt sizes small and save GPU computation cycles.",
+                title: "Write direct prompts",
+                description: "One clear instruction per prompt. Greetings and sign-offs add tokens without changing the answer.",
                 severity: "success",
                 savings: "Up to 25% tokens"
             });
@@ -25,10 +25,11 @@ const PromptMeterRecommendations = {
         }
 
         // 1. Audit: Low Average Prompt Efficiency (Filler words & Politeness)
-        const inefficientPrompts = history.filter(turn => turn.efficiencyScore !== undefined && turn.efficiencyScore < 85);
+        const inefficientPrompts = history.filter(turn =>
+            typeof turn.efficiencyScore === 'number' && turn.efficiencyScore < 85);
         if (inefficientPrompts.length > 0) {
             const avgScore = Math.round(
-                history.reduce((sum, item) => sum + (item.efficiencyScore || 100), 0) / history.length
+                history.reduce((sum, item) => sum + (typeof item.efficiencyScore === 'number' && isFinite(item.efficiencyScore) ? item.efficiencyScore : 100), 0) / history.length
             );
             
             if (avgScore < 85) {
@@ -36,8 +37,8 @@ const PromptMeterRecommendations = {
                 const estimatedSavings = inefficientPrompts.length * 15;
                 list.push({
                     id: "filler_reduction",
-                    title: "🧹 Strip Politeness & Conversational Fillers",
-                    description: `Your average prompt efficiency is ${avgScore}%. Stripping phrases like 'could you please help me' or 'thank you' from your queries will reduce redundant tokens.`,
+                    title: "Cut filler phrases",
+                    description: `Your average prompt efficiency is ${avgScore}%. Dropping phrases like 'could you please help me' or 'thank you' removes tokens that do not change the answer.`,
                     severity: "warning",
                     savings: `Save ~${estimatedSavings} tokens`
                 });
@@ -67,7 +68,7 @@ const PromptMeterRecommendations = {
 
             list.push({
                 id: "duplicate_prompts",
-                title: "📂 Reuse Previous Conversational Outputs",
+                title: "Reuse earlier answers",
                 description: `You asked identical queries (e.g. ${displayPrompt}) multiple times. Consider bookmarking answers or scrolling up instead of regenerating the same output.`,
                 severity: "info",
                 savings: `Save ~20-50% energy`
@@ -91,7 +92,7 @@ const PromptMeterRecommendations = {
         if (regenCount > 0) {
             list.push({
                 id: "rapid_regens",
-                title: "🎯 Avoid Rapid Response Regenerations",
+                title: "Fewer regenerations",
                 description: `We detected ${regenCount} quick response regenerations. Try refining your prompts in your first turn by adding explicit constraints (e.g. output formatting, word limits) to get correct answers instantly.`,
                 severity: "warning",
                 savings: `Save ~1.5Wh electricity`
@@ -107,7 +108,7 @@ const PromptMeterRecommendations = {
         if (carbonToday > 5.0) {
             list.push({
                 id: "carbon_ceiling",
-                title: "⚠️ High Daily Carbon Usage Warning",
+                title: "High usage today",
                 description: `Your generative AI queries have generated ${carbonToday.toFixed(1)}g of CO₂ today. Consider batching smaller queries into unified, multi-step prompts.`,
                 severity: "warning",
                 savings: `Reduces load spikes`
@@ -118,10 +119,10 @@ const PromptMeterRecommendations = {
         if (list.length === 0) {
             list.push({
                 id: "success_habits",
-                title: "🏆 Stellar Prompting Habits!",
-                description: "Amazing work! Your prompts show exceptional efficiency. You are minimizing server overhead and actively supporting responsible digital consumption (SDG 12).",
+                title: "Prompts are efficient",
+                description: "Your recent prompts carry little filler. Nothing to change right now.",
                 severity: "success",
-                savings: "Optimal footprint"
+                savings: "On track"
             });
         }
 
