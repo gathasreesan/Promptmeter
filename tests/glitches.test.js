@@ -218,6 +218,12 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
     'bhai ki shaadi ke liye speech likho', 'bro code kya hota hai', 'Escribe una carta de agradecimiento que termine con gracias',
     'कृपया का अर्थ क्या है?', 'Dime el significado de la palabra por favor'
 ].forEach((p) => check('courtesy word that IS the content stays: ' + p.slice(0, 24), run(p).text === p, run(p).text));
+keeps('a foreign greeting on an English request goes', 'namaste, please explain recursion with an example in python', /^Explain recursion/);
+keeps('a foreign thanks on an English request goes', 'Hola! Can you explain recursion? Gracias', /^Explain recursion\.?$/);
+keeps('a thanks after a code span goes', 'Por favor, arregla este código: `for i in range(10) print(i)` ¡Gracias!',
+    /^Arregla este código: `for i in range\(10\) print\(i\)`$/);
+keeps('"gracias" as the content stays', 'Write a thank-you note in Spanish that says gracias', 'says gracias');
+keeps('"hola" as the content stays', 'Explain what hola means', 'what hola means');
 keeps('an English request with a German payload is handled, payload untouched',
     'correct my german: ich habe gestern ein buch gelesen und es war sehr gut', /^Correct my German: ich habe gestern ein buch gelesen und es war sehr gut$/);
 keeps('a romanized Malayalam payload is untouched', 'translate to english: ente peru gatha aanu, njan kochiyil thamasikkunnu',

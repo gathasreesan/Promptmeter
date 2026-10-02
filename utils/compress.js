@@ -302,7 +302,8 @@ const PromptMeterCompress = {
                 please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?\\s*`, 'giu'),
                 // Only a thanks that is its own sentence or follows a comma: "a letter that
                 // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
-                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
+                // After a code span too: "arregla este código: `...` ¡Gracias!".
+                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
             };
         }
         const rx = this.foreignRx;

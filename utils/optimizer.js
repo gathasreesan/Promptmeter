@@ -945,6 +945,11 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]\s*|\n)\s*(?:(?:can|could)\s+you\s+(?:please\s+)?)?help\s+me\s+(?:with|out\s+with)\s+something(?:\s+quick)?[.!:,]\s*/gi,
         /(?<=^|[.!?,]\s*|\n)\s*(?:lol|lmao|omg|brb|haha+|hehe+)(?!\w)[,!.\s]*/gi,
         /\bmany\s+thanks\b[!.\s]*/gi,
+        // Courtesy in another language on an English request: "namaste, please explain",
+        // "Hola! Can you explain recursion? Gracias". Openers at a sentence start, thanks
+        // only closing the prompt.
+        /(?<=^|[.!?]|\n)\s*(?:namaste|namaskar|vanakkam|hola|bonjour|hallo|ciao|salaam|salam|marhaba|konnichiwa|ni\s+hao)\b[,!.\s]*(?=\S)/gi,
+        /(?<=[.!?,]|^)\s*(?:muchas\s+gracias|gracias|merci(?:\s+beaucoup)?|danke(?:\s+sch[oö]n)?|grazie(?:\s+mille)?|obrigad[oa]|shukriya|dhanyavaa?d|nanri|nandri|nanni|arigato(?:\s+gozaimasu)?|xie\s*xie|spasibo|terima\s+kasih)\b[!.\s🙏]*$/gi,
         /\b(?:thanks|thank\s+you|thx)\s+(?:for|4)\s+(?:the|your|all\s+the)\s+help(?:\s+(?:earlier|before|again|so\s+far))?\b[,.!]*\s*/gi,
         /(?:,\s*)?\bi\s+(?:really\s+|truly\s+|greatly\s+)?appreciate\s+(?:it|this|your\s+help)\b(?!\s+if\b)[!.]*/gi,
 
