@@ -228,6 +228,123 @@ const PromptMeterCompress = {
         }).join(' ');
     },
 
+    // ---------------------------------------------------------------------------
+    // Prompts the English rules cannot read
+    // ---------------------------------------------------------------------------
+
+    // Greetings, "please" and thanks, by language. Removing any of them changes the tone
+    // of a prompt and never what it asks: the same rule the English strippers follow.
+    // Address terms ("bhai", "chetta", "machi") are greetings in code-mixed prompts.
+    FOREIGN_GREETINGS: [
+        'hola', 'buenos días', 'buenas tardes', 'buenas noches', 'bonjour', 'bonsoir', 'salut',
+        'hallo', 'guten tag', 'guten morgen', 'servus', 'olá', 'oi', 'bom dia', 'boa tarde',
+        'boa noite', 'ciao', 'buongiorno', 'buonasera', 'salve', 'halo', 'selamat pagi',
+        'selamat siang', 'selamat malam', 'merhaba', 'selam', 'goedemorgen', 'goedendag',
+        'привет', 'здравствуйте', 'добрый день', 'доброе утро', '你好', '您好', '大家好',
+        'こんにちは', 'こんばんは', 'おはようございます', '안녕하세요', 'مرحبا', 'مرحباً',
+        'السلام عليكم', 'أهلا', 'नमस्ते', 'नमस्कार', 'हेलो', 'हाय', 'வணக்கம்', 'ഹായ്', 'ഹലോ',
+        'നമസ്കാരം', 'namaste', 'namaskar', 'vanakkam', 'hi', 'hello', 'hey'
+    ],
+    FOREIGN_ADDRESS: ['bhai', 'bhaiya', 'yaar', 'bro', 'chetta', 'chechi', 'machi', 'machan', 'dude'],
+    FOREIGN_PLEASE: [
+        'por favor', "s'il vous plaît", "s'il te plaît", 'svp', 'bitte', 'per favore', 'per piacere',
+        'lütfen', 'alsjeblieft', 'alstublieft', 'пожалуйста', 'من فضلك', 'لو سمحت', 'कृपया',
+        'कृपा करके', 'ദയവായി', 'ദയവു ചെയ്ത്', 'தயவுசெய்து', 'தயவு செய்து', 'please', 'pls', 'plz', 'kindly'
+    ],
+    // Only where they open the request: "请解释" and "Tolong jelaskan" are "please explain",
+    // but 请 and tolong also appear inside ordinary words and phrases.
+    FOREIGN_PLEASE_OPENERS: ['请问', '请', 'tolong', 'mohon'],
+    FOREIGN_THANKS: [
+        'muchas gracias', 'gracias de antemano', 'gracias', 'merci beaucoup', "merci d'avance",
+        'merci par avance', 'merci', 'vielen dank im voraus', 'vielen dank', 'danke im voraus',
+        'danke schön', 'danke sehr', 'danke', 'desde já obrigado', 'desde já obrigada', 'obrigado',
+        'obrigada', 'grazie mille', 'grazie in anticipo', 'grazie', 'terima kasih banyak',
+        'terima kasih', 'teşekkür ederim', 'teşekkürler', 'dank je wel', 'dank je', 'bedankt',
+        'заранее спасибо', 'спасибо заранее', 'большое спасибо', 'спасибо', '谢谢你', '谢谢您', '谢谢',
+        '多谢', 'ありがとうございます', 'ありがとう', 'よろしくお願いします', '감사합니다',
+        'شكرا جزيلا', 'شكراً', 'شكرا', 'बहुत धन्यवाद', 'धन्यवाद', 'शुक्रिया', 'നന്ദി', 'நன்றி',
+        'dhanyavaad', 'dhanyavad', 'shukriya', 'nanri', 'nandri', 'nanni', 'nandi',
+        'thank you', 'thanks', 'thx'
+    ],
+
+    /** Letters of any script, with the combining marks Indic scripts are built from. */
+    FOREIGN_EDGE: '[\\p{L}\\p{M}\\p{N}]',
+
+    /**
+     * Removes greetings, "please" and thank-you sentences from a prompt in any language.
+     * Protected spans (code, quotes, URLs) are masked first.
+     * @param {string} text
+     * @returns {string}
+     */
+    foreignTrim: function (text) {
+        const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+        const alt = (list) => list.slice().sort((a, b) => b.length - a.length).map(esc).join('|');
+        const E = this.FOREIGN_EDGE;
+        const cut = '[\\s,，、،؛!！¡.。।॥:;：；\\-–—🙏😊🙂]*';
+        const stop = '[.!?。！？؟।\\n]';
+        if (!this.foreignRx) {
+            this.foreignRx = {
+                greet: new RegExp(`^\\s*(?:${alt(this.FOREIGN_GREETINGS)})(?!${E})(?:${cut}(?:${alt(this.FOREIGN_ADDRESS)})(?!${E}))?${cut}`, 'iu'),
+                address: new RegExp(`^\\s*(?:${alt(this.FOREIGN_ADDRESS)})(?!${E})${cut}`, 'iu'),
+                opener: new RegExp(`(^|${stop}\\s*)(?:${alt(this.FOREIGN_PLEASE_OPENERS)})(?=\\S)\\s*`, 'iu'),
+                please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?\\s*`, 'giu'),
+                // "¡Muchas gracias!": the opening ¡ belongs to the thanks.
+                thanks: new RegExp(`(^|${stop}\\s*|\\s)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
+            };
+        }
+        const rx = this.foreignRx;
+        const masked = PM_C_PROTECT ? PM_C_PROTECT.mask(text) : { masked: text, spans: [] };
+        let out = masked.masked;
+        out = out.replace(rx.greet, '').replace(rx.address, '');
+        out = out.replace(rx.thanks, '$1');
+        out = out.replace(rx.opener, '$1');
+        out = out.replace(rx.please, '');
+        out = out.replace(/[ \t]{2,}/g, ' ').replace(/\s+([,，、،.。!！?？؟])/g, '$1')
+            // A "please" removed before the question mark leaves its comma: "máquina,?".
+            .replace(/[,，、،]+\s*([?？؟!！.。])/g, '$1')
+            .replace(/^[\s,，、،؛.。:;\-]+/, '').replace(/[,，、،]\s*$/, '').trim();
+        // Keep a capital the prompt opened with: "Por favor, explica" -> "Explica", and
+        // "Hola, ¿puedes" -> "¿Puedes".
+        if (/^\p{Lu}/u.test(text.trim())) {
+            out = out.replace(/^([¿¡"'“(]*)(\p{Ll})/u, (m, lead, c) => lead + c.toUpperCase());
+        }
+        if (!out || out === masked.masked) return text;
+        return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
+    },
+
+    /**
+     * True when every word removed from `original` is a listed greeting, "please" or
+     * thanks, and every number and protected span survived. Han, kana and Hangul have no
+     * spaces, so they are compared character by character.
+     */
+    foreignValid: function (original, candidate) {
+        if (!candidate || !candidate.trim()) return false;
+        const units = (s) => {
+            const out = [];
+            (s.toLowerCase().match(/[\p{L}\p{M}\p{N}']+/gu) || []).forEach((run) => {
+                if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(run)) {
+                    out.push(...Array.from(run));
+                } else out.push(run);
+            });
+            return out;
+        };
+        if (!this.foreignAllowed) {
+            this.foreignAllowed = new Set(units([].concat(this.FOREIGN_GREETINGS, this.FOREIGN_ADDRESS,
+                this.FOREIGN_PLEASE, this.FOREIGN_PLEASE_OPENERS, this.FOREIGN_THANKS).join(' ')));
+        }
+        const left = new Map();
+        units(candidate).forEach((u) => left.set(u, (left.get(u) || 0) + 1));
+        for (const u of units(original)) {
+            if (left.get(u)) { left.set(u, left.get(u) - 1); continue; }
+            if (!this.foreignAllowed.has(u)) return false;
+        }
+        // Nothing may appear that was not there.
+        if ([...left.values()].some((n) => n > 0)) return false;
+        const nums = (s) => (s.match(/\d+(?:[.,]\d+)*/g) || []).join(' ');
+        if (nums(original) !== nums(candidate)) return false;
+        return this.verbatimIn(original).every((span) => candidate.indexOf(span) !== -1);
+    },
+
     STATUS: {
         SUCCESSFUL: 'OPTIMIZATION_SUCCESSFUL',
         ALREADY_OPTIMAL: 'NO_OP_ALREADY_OPTIMAL',
@@ -960,6 +1077,26 @@ const PromptMeterCompress = {
             ? prompt.slice(0, payloadAt.index + payloadAt[0].length).replace(/:\s*$/, '')
             : prompt;
         if (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(instruction)) {
+            // The English rules cannot read it, but greetings, "please" and thanks are
+            // the same few words in every language and cost the most tokens in the
+            // scripts BPE splits finely. Only those go, and foreignValid() proves that
+            // nothing else did.
+            const trimmed = this.foreignTrim(prompt);
+            const trimmedTokens = PM_C_TOKENIZER ? PM_C_TOKENIZER.countTokens(trimmed) : 0;
+            if (trimmed !== prompt && trimmedTokens < originalTokens && this.foreignValid(prompt, trimmed)) {
+                const done = unchanged(this.STATUS.SUCCESSFUL,
+                    'not English: only greetings, "please" and thanks were removed');
+                done.text = trimmed;
+                done.mode = 'conservative';
+                done.tokens = Object.assign({}, done.tokens, {
+                    optimized: trimmedTokens, saved: originalTokens - trimmedTokens,
+                    percent: Math.round(((originalTokens - trimmedTokens) / originalTokens) * 100),
+                    netSaved: (originalTokens - trimmedTokens) * Math.max(1, settings.repeats || 1)
+                });
+                done.candidates = [{ mode: 'conservative', text: trimmed, tokens: trimmedTokens,
+                    valid: true, violations: [], ms: 0 }];
+                return done;
+            }
             return unchanged(this.STATUS.UNSUPPORTED_LANGUAGE,
                 'not English: the rewrite rules and the validator cannot read it');
         }

@@ -198,7 +198,8 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
     'Paki-explain kung ano ang recursion at bigyan mo ako ng halimbawa',
     'yaar kal mera exam hai dbms ka, normalization samjha do aur examples bhi do',
     'chetta enikku python padikkanam, oru roadmap tharamo please'
-].forEach((p) => check('declined, not mangled: ' + p.slice(0, 30), run(p).text === p, run(p).text));
+].forEach((p) => check('only filler removed, never content: ' + p.slice(0, 30),
+    C.foreignValid(p, run(p).text), run(p).text));
 keeps('an English request with a German payload is handled, payload untouched',
     'correct my german: ich habe gestern ein buch gelesen und es war sehr gut', /^Correct my German: ich habe gestern ein buch gelesen und es war sehr gut$/);
 keeps('a romanized Malayalam payload is untouched', 'translate to english: ente peru gatha aanu, njan kochiyil thamasikkunnu',

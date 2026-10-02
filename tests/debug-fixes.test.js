@@ -147,7 +147,9 @@ has('apostrophes are not quotes', A.analyze("it's the students' books and teh te
  ['Japanese', 'こんにちは。Pythonで再帰を説明してください。ありがとうございます。'],
  ['Russian', 'Привет! Объясни, пожалуйста, рекурсию в Python на примере. Спасибо.'],
  ['Arabic', 'مرحبا، هل يمكنك شرح الفرق بين TCP و UDP؟ شكرا جزيلا.']]
-    .forEach(([lang, p]) => check(lang + ' left untouched', text(p) === p, text(p)));
+    // Greetings, "please" and thanks may go; nothing else. foreignValid() is the proof.
+    .forEach(([lang, p]) => check(lang + ' loses only greetings, please and thanks',
+        C.foreignValid(p, text(p)), text(p)));
 const hinglish = text('bhai mujhe python mein recursion samjhao please, kal exam hai');
 ['mujhe', 'samjhao', 'kal', 'hai'].forEach((w) => has('Hinglish keeps "' + w + '"', hinglish, w));
 has('Manglish keeps cheyyamo', text('chetta enikku python recursion onnu explain cheyyamo pls'), 'cheyyamo');

@@ -239,8 +239,11 @@ statusOf('Hi! I hope you are well. ' + MATH + ' Thanks so much in advance!',
 // and the request for an explanation both gone -- and validate, because every check
 // reads [a-z] and found nothing to object to.
 const ML = 'ദയവായി എനിക്ക് പൈത്തണിൽ ഒരു ഫംഗ്ഷൻ എഴുതാൻ സഹായിക്കാമോ? ഒരു ലിസ്റ്റിലെ എല്ലാ ഇരട്ട സംഖ്യകളുടെയും തുക കണ്ടെത്തുന്ന ഒരു ഫംഗ്ഷൻ എഴുതുക. ദയവായി കോഡിന് വിശദീകരണം നൽകുക.';
-check('Malayalam prompt comes back whole',
-    statusOf(ML, 'Malayalam prompt', S.UNSUPPORTED_LANGUAGE).text === ML);
+// It is now optimised, but only by dropping "ദയവായി" (please): all three sentences,
+// the sum-of-evens function and the request for an explanation stay.
+const mlOut = statusOf(ML, 'Malayalam prompt', S.SUCCESSFUL).text;
+check('Malayalam keeps every sentence', mlOut.split(/[?.]/).filter((s) => s.trim()).length === 3, mlOut);
+check('Malayalam loses only "please"', K.foreignValid(ML, mlOut) && !/ദയവായി/.test(mlOut), mlOut);
 check('condense no longer prunes a script it cannot read',
     PromptMeterCondense.condense(ML) === ML);
 
