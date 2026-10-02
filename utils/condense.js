@@ -136,7 +136,7 @@ const PromptMeterCondense = {
     ]),
 
     // The sentence actually asks for something.
-    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort)\b/i,
+    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort|initiate|start|begin|continue|narrate|simulate|play|roleplay|brainstorm|stay|remember|pretend)\b/i,
 
     QUESTION_OPENER: /^(?:what|why|how|when|where|which|who|whose|can|could|should|would|will|is|are|do|does|did|has|have|any)\b/i,
 
@@ -166,7 +166,7 @@ const PromptMeterCondense = {
     // reads the "I have a doubt ... I don't know why" frame around it, calls it
     // removable at 0.95, and the user's actual problem is deleted while "help me"
     // survives. A sentence describing a malfunction is never offered to the model.
-    PROBLEM: /\b(?:does\s*n[o']?t\s+work|do\s*n[o']?t\s+work|not\s+working|is\s*n[o']?t\s+working|fails?|failing|failed|crash(?:es|ed|ing)?|throws?|threw|errors?|exception|traceback|bug|broken|breaks?|wrong|incorrect|inconsistent|unexpected|times?\s+out|timed\s+out|hangs?|freezes?|stuck|returns?\s+(?:a\s+|an\s+)?(?:\d{3}|null|undefined|nothing|empty|duplicate))\b/i,
+    PROBLEM: /\b(?:does\s*n[o']?t\s+work|do\s*n[o']?t\s+work|not\s+working|(?:not|n't)\s+able\s+to|unable\s+to|won'?t\s+(?:turn|start|boot|load|open|charge|connect)|gone\s+(?:blank|black|dead)|(?:screen|display)\s+(?:is\s+)?(?:blank|black)|is\s*n[o']?t\s+working|fails?|failing|failed|crash(?:es|ed|ing)?|throws?|threw|errors?|exception|traceback|bug|broken|breaks?|wrong|incorrect|inconsistent|unexpected|times?\s+out|timed\s+out|hangs?|freezes?|stuck|returns?\s+(?:a\s+|an\s+)?(?:\d{3}|null|undefined|nothing|empty|duplicate))\b/i,
 
     // Sentences that are pure hedging, uncertainty or research narrative. These are
     // dropped even when they introduce new vocabulary, because the vocabulary is about
@@ -289,7 +289,7 @@ const PromptMeterCondense = {
         "MEBE\\s+(?:running\\s+out\\s+of\\s+time|short\\s+on\\s+time|out\\s+of\\s+time|pressed\\s+for\\s+time|in\\s+a\\s+hurry|in\\s+a\\s+rush)",
         "(?:there\\s+(?:is|are|'s)\\s+(?:no|not\\s+much|very\\s+little|hardly\\s+any)\\s+time|time\\s+is\\s+(?:short|running\\s+out|against\\s+me))",
         // Emotional and physical state.
-        "(?:MEBE|ME\\s+(?:feel|feels|felt))\\s+(?:feeling\\s+)?(?:so\\s+|very\\s+|really\\s+|quite\\s+|kind\\s+of\\s+|kinda\\s+|a\\s+bit\\s+|a\\s+little\\s+|totally\\s+|completely\\s+|extremely\\s+|super\\s+)?(?:stressed|stressing|panicking|panicked|nervous|anxious|worried|scared|afraid|terrified|tired|exhausted|sleepy|burnt\\s+out|burned\\s+out|lost|confused|stuck|frustrated|overwhelmed|bored|lazy|desperate|helpless|hopeless|blank|clueless|freaking\\s+out|dying|screwed|doomed|cooked|struggling|suffering)(?!\\s+(?:that|about|if|whether|of|with|by|because)\\b)",
+        "(?:MEBE|ME\\s+(?:feel|feels|felt))\\s+(?:feeling\\s+)?(?:so\\s+|very\\s+|really\\s+|quite\\s+|kind\\s+of\\s+|kinda\\s+|a\\s+bit\\s+|a\\s+little\\s+|totally\\s+|completely\\s+|extremely\\s+|super\\s+)?(?:stressed|stressing|panicking|panicked|nervous|anxious|worried|scared|afraid|terrified|tired|exhausted|sleepy|burnt\\s+out|burned\\s+out|lost|confused|stuck|frustrated|overwhelmed|bored|lazy|desperate|helpless|hopeless|blank|clueless|freaking\\s+out|dying|screwed|doomed|cooked|struggling|suffering)(?!\\s+(?:that|about|if|whether|of|with|by|because|to|on|in)\\b)",
         // Who set the task, and where the user first saw it.
         "(?:my|our)\\s+(?:professor|prof|teacher|lecturer|instructor|tutor|mentor|manager|boss|senior|guide|hod|friend|classmate|roommate|batchmate|colleague|dad|mom|mum|brother|sister|parents?)\\s+(?:gave|give|gives|told|tells|said|says|asked|asks|assigned|assigns|wants?|wanted|suggested|suggests|recommended|recommends|showed|shows|shared|shares|set|sent)",
         "ME\\s+(?:saw|found|read|noticed|came\\s+across|stumbled\\s+(?:up)?on|was\\s+watching|watched)\\s+(?:a|an|this|that|some|it)\\s+(?:video|post|article|tweet|reel|short|thread|blog|comment|paper|book|course|lecture|meme|thing|question)",
@@ -474,8 +474,12 @@ const PromptMeterCondense = {
                     // password to my phone, is there a way to get it unlocked?" lost the
                     // phone and kept "it".
                     const remainder = whole.slice(0, offset) + ' ' + whole.slice(offset + match.length);
-                    if (/\b(?:it|its|them|they|this|that|these|those)\b/i.test(remainder)
-                        && /\b(?:forgot|lost|broke|bought|have|got|own|using|use|installed|deleted|wrote|made|built)\s+(?:the|my|a|an|our)\b/i.test(match)
+                    // Any clause, not only one that owns something: "i dont understand
+                    // pointers in c can u explain it simply" became "Explain it simply".
+                    // Only a pronoun AFTER the clause points back into it.
+                    // and only as the thing acted on ("explain it", "get it unlocked"), not
+                    // "make it short", where "it" is the answer.
+                    if (/\b(?:explain|fix|solve|unlock|reset|use|do|understand|get|open|repair|recover|find|describe|teach|clarify|simplify|check|debug|run|install)\s+(?:it|them|this|that|these|those)\b/i.test(whole.slice(offset + match.length))
                         && this.topicWords(match).some((w) => !/^(?:exams?|tests?|tomorrow|today|tonight|week|month|year|time|days?|hours?)$/.test(w)
                             && remainder.toLowerCase().indexOf(w) === -1)) return match;
                     // Nor may it be the main clause of a sentence that opened with a
@@ -492,13 +496,16 @@ const PromptMeterCondense = {
                     // left. The subject becomes a heading instead: "Operating systems:".
                     const when = String.raw`(?:tomorrow|today|tonight|(?:next|this)\s+\w+|on\s+\w+day)`;
                     const notTopic = String.raw`(?!(?:tomorrow|today|tonight|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next|this|my|our|the|a|an|week|month|morning|evening)\b)`;
-                    this.eventSubject = this.eventSubject || new RegExp(String.raw`\b(?:${this.EVENT_NOUNS.join('|')})\s+(?:${when}\s+)?(?:on|in|about|of)\s+((?:${notTopic}[A-Za-z0-9+#.'-]+\s*){1,4})(?:${when}\b)?[\s.,;!?]*$`, 'i');
+                    this.eventSubject = this.eventSubject || new RegExp(String.raw`\b(?:${this.EVENT_NOUNS.join('|')})\s+(?:${when}\s+)?(?:on|in|about|of)\s+((?:${notTopic}[A-Za-z0-9+#.'-]+\s*){1,6})(?:${when}\b)?[\s.,;!?]*$`, 'i');
                     const subject = this.eventSubject.exec(match);
                     if (subject) {
                         const rest = (whole.slice(0, offset) + ' ' + whole.slice(offset + match.length)).toLowerCase();
                         const missing = this.topicWords(subject[1])
                             .filter((w) => rest.indexOf(w) === -1);
-                        if (missing.length) return ' ' + subject[1].trim() + ': ';
+                        // A short vowel-poor subject is an acronym: "dbms" -> "DBMS:", not "Dbms:".
+                        const topic = subject[1].trim().replace(/^[A-Za-z]{2,5}$/,
+                            (w) => (w.length <= 2 || !/[aeiou].*[aeiou]/i.test(w) ? w.toUpperCase() : w));
+                        if (missing.length) return ' ' + topic + ': ';
                     }
                     return ' ';
                 });
@@ -606,6 +613,9 @@ const PromptMeterCondense = {
      * @returns {boolean}
      */
     carriesData: function (trimmed) {
+        // Answer options: "(B) foliate. (C) precipitate." were three-word fragments and
+        // the multiple-choice question lost every option but the first.
+        if (/^(?:\(?[A-Ha-h1-9]\)|[A-Ha-h1-9][.:]\s|[ivx]+\)\s)/.test(trimmed)) return true;
         return this.DATA_SEGMENT.some(rx => rx.test(trimmed));
     },
 
@@ -769,11 +779,27 @@ const PromptMeterCondense = {
         // looking to get a raise. My work ethic is very high and I always deliver. What
         // should I say to my boss?" lost both facts the answer was meant to use.
         const ADVICE = /\b(?:what\s+should\s+i\s+(?:say|tell|write|ask|do|choose|pick|buy|use|study|learn)|should\s+i\b|what\s+(?:would|do)\s+you\s+(?:suggest|recommend|advise)|how\s+(?:do|can|should)\s+i\s+(?:convince|persuade|negotiate|ask|approach|tell|handle|deal|respond|reply))/i;
-        const dependent = classified.some((entry) => entry.info.core
+        // A request that names no subject of its own -- "Write a conclusion for me",
+        // "Give me a name for it" -- takes its subject from the rest of the prompt.
+        // "I am doing a project on twitter sentiment analysis. Can you write a
+        // conclusion for me" came back as "Write a conclusion".
+        const DELIVERABLE = new Set(['conclusion', 'introduction', 'intro', 'summary', 'essay', 'report',
+            'answer', 'code', 'email', 'letter', 'story', 'poem', 'abstract', 'title', 'titles', 'name',
+            'names', 'ideas', 'idea', 'plan', 'outline', 'list', 'description', 'caption', 'bio', 'paragraph',
+            'review', 'response', 'reply', 'script', 'program', 'function', 'solution', 'explanation',
+            'tips', 'advice', 'suggestions', 'help', 'something', 'one', 'it', 'this', 'that']);
+        const subjectless = !classified.some((entry) => entry.info.core
+            && this.topicWords(entry.text).some((w) => !DELIVERABLE.has(w) && w.length > 2));
+        const dependent = subjectless || classified.some((entry) => entry.info.core
             && (DEPENDENT_ASK.test(entry.text) || ABOUT_THAT.test(entry.text) || ADVICE.test(entry.text)
                 // A bare short question ("Where is water?", "Who won?") is about the
                 // story told before it, and every step of the story can be the answer.
-                || (/\?\s*$/.test(entry.text) && entry.text.split(/\s+/).length <= 7)));
+                || (/\?\s*$/.test(entry.text) && entry.text.split(/\s+/).length <= 7)
+                // A question about the user ("What rating would I give ...?") is
+                // answered from what they said about themselves.
+                || /\b(?:would|should|could|will|do|did|am)\s+i\b|\bfor\s+someone\s+like\s+me\b/i.test(entry.text)
+                // "Please help me." alone asks for help with what came before it.
+                || /^(?:please\s+)?help\s+(?:me|us)\s*[.!?]?$/i.test(entry.text.trim())));
 
         // A sentence stating a problem is the situation being asked about, not backstory.
         const PROBLEM = /\b(?:can'?t|cannot|won'?t|doesn'?t|isn'?t|not\s+working|unable|error|fails?|failed|failing|broken|crash(?:es|ed|ing)?|stuck|freez(?:es|ing)|slow|issue|problem|bug)\b/i;
@@ -811,8 +837,20 @@ const PromptMeterCondense = {
                 // Never a stated goal: "I want to remotely control my RaspberryPi from
                 // kilometers away, independent from mobile service" is the spec the
                 // answer has to meet, and the model called it removable at >0.9.
-                const goal = /\b(?:want|need|trying|try|goal\s+is|would\s+like|'d\s+like|planning|plan|hoping|aim)\s+to\b/i;
-                if (!goal.test(entry.text) && this.mlProposesRemoval(entry.text)) return false;
+                // Nor what the user already has: "I have a users table and a transactions
+                // table" is the starting point of the schema they asked for.
+                const goal = /\b(?:want|need|trying|try|goal\s+is|would\s+like|'d\s+like|planning|plan|hoping|aim)\s+to\b|\b(?:i|we)\s+(?:have|already\s+have|got|made|wrote|created|built|use|am\s+using|are\s+using)\s+(?:a|an|the|some|two|three|this|these|my|our)\b/i;
+                // Nor a sentence that shares its subject with the rest of the prompt: the
+                // model is for chit-chat ("my cousin adopted two cats"), and it removed
+                // "Sometimes I have apple cores sitting out" from "Why do the apple cores
+                // change color?" and "My friend thinks pineapple on pizza is bad" from an
+                // argument about pineapple on pizza.
+                const elsewhere = new Set();
+                classified.forEach((other) => {
+                    if (other !== entry) other.words.forEach((w) => elsewhere.add(w));
+                });
+                const shared = entry.words.some((w) => w.length > 3 && elsewhere.has(w));
+                if (!goal.test(entry.text) && !shared && this.mlProposesRemoval(entry.text)) return false;
 
                 fresh.forEach(word => known.add(word));
                 return true;

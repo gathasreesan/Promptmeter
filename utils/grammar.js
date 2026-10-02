@@ -231,7 +231,8 @@ const PromptMeterGrammar = {
         [/\b(had|have|has|having)\s+(knew|went|did|saw|took|ate|wrote|gave|broke|spoke|drove|began|drank|swam|ran|came|forgot|chose|stole|froze|rode|threw|grew|flew|hid|bit)\b/gi,
             (m, aux, v, offset, str) => /^(?:have|has)$/i.test(aux) && /\b(?:yesterday|last\s+(?:year|week|month|night|time|summer|winter)|ago|in\s+(?:19|20)\d\d)\b/i.test(str) ? v : aux + ' ' + ({ knew: 'known', went: 'gone', did: 'done', saw: 'seen', took: 'taken', ate: 'eaten', wrote: 'written', gave: 'given', broke: 'broken', spoke: 'spoken', drove: 'driven', began: 'begun', drank: 'drunk', swam: 'swum', ran: 'run', came: 'come', forgot: 'forgotten', chose: 'chosen', stole: 'stolen', froze: 'frozen', rode: 'ridden', threw: 'thrown', grew: 'grown', flew: 'flown', hid: 'hidden', bit: 'bitten' })[v.toLowerCase()],
             "past participle after 'have'"],
-        [/\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
+        // Not after an inverted auxiliary: "why haven't we seen" became "haven't we saw".
+        [/(?<!\b(?:have|has|had|haven't|hasn't|hadn't|havent|hasnt|hadnt|having)\s+)\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
             (m, s, v) => s + ' ' + (v.toLowerCase() === 'seen' ? 'saw' : 'did'), "'seen/done' needs 'have'; the past tense is 'saw/did'"],
         [/(?<!\bhow\s)\b(the|these|those|my|your|our|their|his|her|both)\s+([a-z]+[^su\W]s)\s+is\b(?!\s+(?:this|that|it|[a-z]+ing)\b)/gi,
             (m, det, noun) => /(?:ics|news|series|species|ss)$|^(?:datas|informations|advices|feedbacks|researches|knowledges|equipments|furnitures|luggages|softwares|homeworks|evidences)$/i.test(noun) ? m : `${det} ${noun} are`, "a plural subject takes 'are'"],

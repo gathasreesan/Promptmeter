@@ -340,7 +340,8 @@ const PromptMeterOptimizer = {
         "tho": "though", "thru": "through", "nvm": "never mind",
         "b4": "before", "gr8": "great", "msg": "message", "msgs": "messages",
         "thnx": "thanks", "tnx": "thanks", "thanx": "thanks", "btwn": "between", "bw": "between",
-        "idk": "I do not know", "imo": "in my opinion", "btw": "by the way",
+        // "btw" is in contextualSlangRules: "difference btw X and Y" means "between".
+        "idk": "I do not know", "imo": "in my opinion",
         "gud": "good",
         // Modal verbs in texting spelling. Expanded with the slang, before the request
         // wrappers run, so "culd u suggest" loses its wrapper like "could you suggest".
@@ -369,6 +370,12 @@ const PromptMeterOptimizer = {
     // same shape, and the first is far more likely in the prompts this extension sees.
     // It stays penalised by the chatSlang score rule, just never rewritten.
     contextualSlangRules: [
+        // "btw" is "between" after a comparison -- "difference btw ram and rom" became
+        // "difference by the way RAM and ROM" -- and "by the way" everywhere else.
+        { word: "(?<=\\b(?:difference|differences|differentiate|compare|comparison|relation|relationship|distance|gap|connection|choose|link)\\s+)btw(?=\\s)", replacement: 'between' },
+        // Opening a prompt it is pure filler; "By the way can you explain" cost 2 tokens.
+        { word: "(?<=^\\s*)[Bb]tw", replacement: '' },
+        { word: "[Bb]tw", replacement: '' },
         // "ar" for "are" and "sae" for "save", only where the neighbours decide it.
         { word: "(?<=\\b(?:they|we|you|these|those|there|which|who|[a-z]{3,}s)\\s)ar(?=\\s+[a-z])", replacement: 'are' },
         { word: "(?<=\\b[A-Za-z]{3,}\\s)ar(?=\\s+(?:important|good|bad|not|very|so|the|a|an|used|going|more|less|essential|useful|different|similar|available|easy|hard)\\b)", replacement: 'are' },
@@ -908,7 +915,8 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
         // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
         // "my dear friend" its "dear".
-        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya|bro+|bruh|dude|buddy|sir|ma'?am|mam)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        // (Forms of address too: "bro i have viva tmrw" kept its "Bro".)
         /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
         /\b(?:so\s+basically\s+what\s+happened\s+was|to\s+give\s+you\s+a\s+little\s+background(?:\s+context)?|as\s+you\s+might\s+already\s+know|i\s+was\s+sitting(?:\s+at\s+my\s+computer)?\s+thinking(?:\s+and)?)\b(?:[,!.\s]*)/gi,
@@ -1168,8 +1176,8 @@ const PromptMeterOptimizer = {
         [/\b(?:because|since)\s+i\s+am\s+(?:really\s+)?(?:confused|stuck|lost|bored|struggling|dumb|clueless|new\s+to\s+this)\b.*/gi, ''],
         // Scenario & narrative compression
         [/^Imagine\s+(?:a|an)\s+(.*?)\s+is\s+running\s+a\s+/i, 'Describe a $1 running a '],
-        [/^Imagine\s+(?:that\s+)?/i, ''],
-        [/^Suppose\s+(?:that\s+)?/i, ''],
+        // Not "Imagine" or "Suppose" on their own: stripped, "Suppose the universe is
+        // infinitely big" asserted it, and "Imagine you are self-aware" told the model it was.
         // Indirect action simplification
         [/\bdecided\s+to\s+replace\s+all\s+the\s+/gi, 'replaced all '],
         [/\bdecided\s+to\s+(replace|use|create|make|build|change|implement|add|remove|switch)\b/gi, '$1d'],

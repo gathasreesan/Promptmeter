@@ -139,6 +139,10 @@ const PromptMeterCompress = {
             (m, how) => ({ simple: 'simply', easy: 'simply', clear: 'clearly', brief: 'briefly',
                 short: 'briefly', detailed: 'in detail', concise: 'concisely' })[how.toLowerCase()]],
         [/\bexplain\s+to\s+me\b/gi, 'explain'],
+        // "I don't understand pointers in C, can you explain it simply" -> "Explain
+        // pointers in C simply": the confusion names the subject, the request points at it.
+        [/(^|[.!?]\s+)i\s+(?:don'?t|do\s+not)\s+(?:really\s+)?(?:understand|get)\s+([^.?!,]+?),?\s+(?:so\s+)?(?:(?:can|could|would)\s+(?:you|u)\s+(?:please\s+)?)?explain\s+(?:it|this|that|them)\b/gi,
+            (m, lead, what) => lead + 'Explain ' + what],
         // "takes X and then calculates Y and then prints Z": "then" carries the order.
         [/\band\s+then\s+(?=[a-z])/gi, 'then '],
         // "Basically what I want is a summary of X" -> "I want a summary of X".
@@ -240,7 +244,9 @@ const PromptMeterCompress = {
         /\bmust\s+(?:not\s+)?\w+/gi,
         /\bonly\s+(?:use\s+)?\w+/gi,
         /\bno\s+(?:external|third[\s-]party|new|extra)?\s*\w+/gi,
-        /\b(?:do not|don't|never|avoid)\s+\w+/gi,
+        // Not a statement of the user's own state: "I don't understand recursion" is
+        // the question, and "Explain recursion" says it without being a lost rule.
+        /\b(?:do not|don't|never|avoid)\s+(?!(?:really\s+)?(?:understand|know|get|think|mind|care|remember|have\s+(?:any|much))\b)\w+/gi,
         // Requirements asked politely. "I would like it to not mention water" read as
         // no constraint at all, so a haiku prompt lost it and still validated; so did
         // "I'd appreciate it if the story had a twist ending". The whole clause is the

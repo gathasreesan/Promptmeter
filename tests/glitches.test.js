@@ -106,6 +106,36 @@ keeps('"Let\'s play chess." is the request', "Let's play chess. I'll type my mov
 keeps('"You will ..." is an instruction', 'I want you to act as a drunk person. You will only answer like a drunk person texting. You will also randomly ignore what I said and say something random. Do not write explanations.',
     'randomly ignore');
 
+keeps('every answer option survives',
+    'When an igneous intrusion comes into contact with surrounding rock, the surrounding rock will (A) erode. (B) foliate. (C) precipitate. (D) recrystallize.',
+    '(B) foliate', '(C) precipitate', '(D) recrystallize');
+keeps('the problem survives "Please help me"',
+    "Pretend to be customer support for Apple. I am an old lady, and my phone screen has just gone blank. I'm not able to turn it on. Please help me.",
+    'gone blank', 'turn it on');
+keeps('a subjectless request keeps its subject',
+    'i am doing a project on twitter sentiment analysis from comment. Can you write a conclusion for me', /twitter sentiment analysis/i);
+keeps('a question about the user keeps what they said about themselves',
+    'I like watching comedy and intellectual movies. What rating between 0 and 5 would I give to the movie The Exorcist?', 'comedy');
+keeps('a premise sharing the subject survives the classifier',
+    'I love to eat fruit, especially apples. Sometimes I have apple cores sitting out after I eat some. Why do the apple cores change color so quickly?',
+    'sitting out');
+keeps('"Initiate a story." is the request', 'Initiate a story. Use lots of details and add some dialog.', 'Initiate a story');
+keeps('what the user already has survives',
+    'It is a web app that tracks expenses. I have a users table and a transactions table but I am not sure if that is enough. Help me design a proper database schema.',
+    'users table');
+
+keeps('the confusion names the subject',
+    'i dont understand pointers in c can u explain it simply and also tell where its used', /pointers in c/i, /tell where/i);
+keeps('"I don\'t understand X, explain it" becomes "Explain X"',
+    "I don't understand recursion, can you explain it with an example?", /^Explain recursion/);
+keeps('"struggling to" keeps what the user is struggling with',
+    'I have an architecture project about a bioenergy plant. I am struggling to come up with a creative name for this project, do you have any ideas?',
+    'creative name');
+keeps('"difference btw" is "between"', 'can you tell me difference btw ram and rom and also cache memory', 'between RAM and ROM');
+lacks('"btw" as filler goes', 'btw can you explain recursion', /by the way/i);
+keeps('"bro" goes, the viva subject stays', 'bro i have viva tmrw on dbms so tell me imp questions and also answers for them', /^DBMS:/);
+keeps('"Broadcast" is not "bro"', 'Broadcast this message to all users in Python', 'Broadcast');
+
 // ---------------------------------------------------------------------------
 // Wording that changed the meaning
 // ---------------------------------------------------------------------------
@@ -115,6 +145,9 @@ keeps('"feel free to" stays a permission', 'Use 63% as the rate. Feel free to al
 keeps('"Expand on that." keeps its object', 'Tell me about Martin Luther. What is important about him? Expand on that.', 'Expand on that');
 keeps('"if possible." keeps the full stop', 'Is it a myth? Please explain with scientific evidence if possible.', /evidence\.$/);
 lacks('"and I\'ve" is not "and me\'ve"', "My company is moving to California and I've been looking at apartments there.", /me've/);
+keeps('"haven\'t we seen" stays "seen"', 'why havent we seen aliens yet?', "haven't we seen");
+keeps('"Suppose" keeps a hypothesis hypothetical', 'Suppose the universe is infinitely big. Does that mean you will travel forever?', /^Suppose/);
+keeps('"Imagine" keeps a role imagined', 'Imagine you are self-aware. What would you tell the world?', /^Imagine/);
 lacks('spacing alone is not shipped as a correction', 'Write an intro for a company at Thane-Belapur Road, P.O. - Vashi', /P\. O\./);
 
 // ---------------------------------------------------------------------------
