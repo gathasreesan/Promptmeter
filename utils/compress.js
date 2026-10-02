@@ -251,7 +251,8 @@ const PromptMeterCompress = {
         /\b\d+\s*(?:words?|characters?|lines?|pages?|paragraphs?|sentences?|bullets?|slides?|items?|steps?|examples?)\b/gi,
         /\bmust\s+(?:not\s+)?\w+/gi,
         /\bonly\s+(?:use\s+)?\w+/gi,
-        /\bno\s+(?:external|third[\s-]party|new|extra)?\s*\w+/gi,
+        // Not "no idea", "no clue", "no worries": the user's state, not a rule.
+        /\bno\s+(?:external|third[\s-]party|new|extra)?\s*(?!(?:idea|clue|worries|problem|matter|time|way|doubt|one|longer)\b)\w+/gi,
         // Not a statement of the user's own state: "I don't understand recursion" is
         // the question, and "Explain recursion" says it without being a lost rule.
         /\b(?:do not|don't|never|avoid)\s+(?!(?:really\s+)?(?:understand|know|get|think|mind|care|remember|have\s+(?:any|much))\b)\w+/gi,

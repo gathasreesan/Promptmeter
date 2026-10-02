@@ -917,7 +917,8 @@ const PromptMeterOptimizer = {
         // "my dear friend" its "dear".
         /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya|bro+|bruh|dude|buddy|sir|ma'?am|mam)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
         // (Forms of address too: "bro i have viva tmrw" kept its "Bro".)
-        /\b(?:(?:i\s+)?hope\s+you\s+are\s+doing\s+well(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
+        // "doing great", "doing good", "having a good day" too, and "you're".
+        /\b(?:(?:i\s+)?hope\s+(?:you\s+are|you're|ur)\s+(?:doing\s+(?:well|great|good|fine|okay|ok)|having\s+an?\s+(?:good|great|nice)\s+day)(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,
         /\b(?:so\s+basically\s+what\s+happened\s+was|to\s+give\s+you\s+a\s+little\s+background(?:\s+context)?|as\s+you\s+might\s+already\s+know|i\s+was\s+sitting(?:\s+at\s+my\s+computer)?\s+thinking(?:\s+and)?)\b(?:[,!.\s]*)/gi,
         /\b(?:i\s+was\s+wondering\s+if\s+you\s+could|i\s+just\s+wanted\s+to\s+ask\s+if\s+you\s+can|can\s+you\s+help\s+me\s+to|could\s+you\s+help\s+me\s+to|can\s+you\s+help\s+me(?!\s*[?.!]*\s*$)(?!\s+(?:with|in|on|out|understand|learn|figure)\b))\b\s*/gi,

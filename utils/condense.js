@@ -286,6 +286,10 @@ const PromptMeterCondense = {
         // Not "finish": "I need to finish it all in a month" is the time frame the advice
         // has to fit, and stripping it answered a different question.
         "ME\\s+(?:have|has|'ve|had|need|needs|want|wants)\\s+to\\s+(?:appear|sit|attend|submit|present|face|clear|pass|crack|score|top|ace|survive)\\b",
+        // "i have no idea where to start", "its due on friday": the model can do nothing
+        // with either.
+        "ME\\s+(?:have|'ve)\\s+no\\s+(?:idea|clue)\\s+(?:where|how)\\s+to\\s+(?:start|begin)",
+        "(?:it'?s|it\\s+is|its)\\s+due\\s+(?:on\\s+\\w+|by\\s+\\w+|tomorrow|today|tonight|next\\s+\\w+|this\\s+\\w+|soon)",
         // Time pressure. An LLM cannot act on a countdown.
         "ME\\s+(?:only\\s+)?(?:have|has|'ve|got|have\\s+got)\\s+(?:only\\s+|just\\s+|barely\\s+)?(?:\\d+|a\\s+few|very\\s+few|less\\s+than\\s+\\w+|one|two|three|four|five|six|seven|ten)\\s+(?:days?|hours?|weeks?|months?|minutes?|nights?)\\b",
         "MEBE\\s+(?:running\\s+out\\s+of\\s+time|short\\s+on\\s+time|out\\s+of\\s+time|pressed\\s+for\\s+time|in\\s+a\\s+hurry|in\\s+a\\s+rush)",
@@ -472,6 +476,10 @@ const PromptMeterCondense = {
                         + this.ASK_WORDS.filter((w) => !/^(?:what|why|how|when|where|which|who|whose|is|are|do|does|did|should|need|want|can|could|would|will|please)$/.test(w)).join('|')
                         + ')\\b)', 'i');
                     if (!this.situationalEnd.test(whole.slice(offset + match.length))) return match;
+                    // Nor stop on an infinitive's "to": "I have been trying to learn guitar
+                    // ... but my fingers hurt" lost "I have been trying to" and the rest
+                    // read as the order "Learn guitar for 2 months".
+                    if (/\bto\s*$/i.test(match)) return match;
                     // The rest still points at what the clause named: "I forgot the
                     // password to my phone, is there a way to get it unlocked?" lost the
                     // phone and kept "it".
