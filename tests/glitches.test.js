@@ -136,6 +136,21 @@ lacks('"btw" as filler goes', 'btw can you explain recursion', /by the way/i);
 keeps('"bro" goes, the viva subject stays', 'bro i have viva tmrw on dbms so tell me imp questions and also answers for them', /^DBMS:/);
 keeps('"Broadcast" is not "bro"', 'Broadcast this message to all users in Python', 'Broadcast');
 
+keeps('a preference behind "recommend I" survives',
+    "I love classical piano music, but I feel like I've already heard all the greats. Are there any modern pianists you would recommend I listen to?",
+    'classical piano');
+keeps('the sentence to categorise survives', 'Categorize this sentence as one of these sentiments; anger, joy, sadness, disgust. I am so proud of the work I did today.',
+    'proud of the work');
+keeps('the claim behind "Is this true?" survives', "My brother says you shouldn't put butter on a burn. Is this true?", 'butter on a burn');
+keeps('what "it" is survives', 'My hair is damaged due to hair dye. What is the best product to restore it?', 'hair dye');
+keeps('"Introduce yourself." is the request', "Let's switch roles. I'll be the language model and you be the human. Introduce yourself.", 'Introduce yourself');
+keeps('an "Ideally" preference survives', "What's an inexpensive food I can bring to work? Ideally I would want something healthy and not too messy to prepare.",
+    'not too messy');
+keeps('a fact the plan must fit survives', 'give me 2 challenges for a solo japan trip to work on social anxiety. I don\'t know any japanese.',
+    /don't know any Japanese/i);
+keeps('"I will say ..." is an instruction', "Write a story. Start writing. I will say to you then when is the end and not you. Write with dialogues.",
+    'I will say');
+
 // ---------------------------------------------------------------------------
 // Wording that changed the meaning
 // ---------------------------------------------------------------------------

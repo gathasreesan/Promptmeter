@@ -136,7 +136,7 @@ const PromptMeterCondense = {
     ]),
 
     // The sentence actually asks for something.
-    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort|initiate|start|begin|continue|narrate|simulate|play|roleplay|brainstorm|stay|remember|pretend)\b/i,
+    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort|initiate|start|begin|continue|narrate|simulate|play|roleplay|brainstorm|stay|remember|pretend|introduce|greet|wait|ask|say|return|output|print|read|draw|sketch|paint|compose|invent|predict|guess|choose|pick|select|name|count|convert|format)\b/i,
 
     QUESTION_OPENER: /^(?:what|why|how|when|where|which|who|whose|can|could|should|would|will|is|are|do|does|did|has|have|any)\b/i,
 
@@ -154,7 +154,7 @@ const PromptMeterCondense = {
     LEAD_IN: /^(?:so\s+|okay\s+|well\s+|and\s+|but\s+)?(?:please\s+)?(?:(?:i|we)\s+(?:need|want|would\s+like|'d\s+like)\s+(?:you\s+)?to\s+|(?:can|could|would|will)\s+you\s+(?:please\s+)?|(?:i|we)\s+(?:need|want)\s+|let'?s\s+|help\s+me\s+(?:to\s+)?)/i,
 
     // The sentence states a requirement about the output.
-    CONSTRAINT: /\b(?:must|should|needs?\s+to|has\s+to|make\s+sure|ensure|include|exclude|avoid|format|at\s+least|no\s+more\s+than|\d+\s+words?|step[-\s]by[-\s]step|in\s+\w+\s+style|bullet\s+points?|tone)\b|^(?:you|your)\s+(?:will|must|should|shall|are\s+(?:to|going\s+to)|need\s+to|have\s+to|may|can|only)\b|^let'?s\b|^let\s+us\b/i,
+    CONSTRAINT: /\b(?:must|should|needs?\s+to|has\s+to|make\s+sure|ensure|include|exclude|avoid|format|at\s+least|no\s+more\s+than|\d+\s+words?|step[-\s]by[-\s]step|in\s+\w+\s+style|bullet\s+points?|tone)\b|^(?:you|your)\s+(?:will|must|should|shall|are\s+(?:to|going\s+to)|need\s+to|have\s+to|may|can|only)\b|^let'?s\b|^let\s+us\b|\bideally\b|\bpreferably\b|\b(?:would|'d)\s+(?:want|prefer|like)\b|\bi\s+prefer\b|^i\s+will\s+(?:say|tell|give|type|send|provide|ask|paste|share|be)\b/i,
 
     // The sentence reports a symptom: something is broken, failing or wrong.
     //
@@ -178,7 +178,9 @@ const PromptMeterCondense = {
         /^(?:but\s+)?(?:i|we)\s+(?:have\s+)?(?:tried|read|looked|searched|googled|watched|checked)\b/i,
         /^(?:i|we)\s+(?:really\s+)?(?:hope|wish|feel|felt|guess)\b/i,
         /^(?:i|we)\s+would\s+(?:really\s+)?appreciate\b/i,
-        /^(?:i|we)\s+(?:do\s+not|don't|did\s+not|didn't)\s+(?:know|understand|get)\b/i,
+        // Doubt about the question, not a fact about the user: "I don't know any
+        // Japanese" is the constraint a Japan travel plan has to work around.
+        /^(?:i|we)\s+(?:do\s+not|don't|did\s+not|didn't)\s+(?:really\s+)?(?:know|understand|get)\b(?!\s+(?:any|a\s+word\s+of|much)\s+[A-Z]?[a-z]+(?:ese|ish|ian|an|ch|ic)?\b(?<!\s(?:any|much)\s(?:of|about)))/i,
         /^(?:but\s+)?there\s+(?:is|are|'s)\s+so\s+(?:much|many)\b/i,
         /^(?:i|we)\s+(?:have\s+been|had\s+been|has\s+been)\s+struggling\b/i,
         /^(?:i|we)\s+wanted\s+to\s+reach\s+out\b/i,
@@ -479,7 +481,9 @@ const PromptMeterCondense = {
                     // Only a pronoun AFTER the clause points back into it.
                     // and only as the thing acted on ("explain it", "get it unlocked"), not
                     // "make it short", where "it" is the answer.
-                    if (/\b(?:explain|fix|solve|unlock|reset|use|do|understand|get|open|repair|recover|find|describe|teach|clarify|simplify|check|debug|run|install)\s+(?:it|them|this|that|these|those)\b/i.test(whole.slice(offset + match.length))
+                    // "My brother says you shouldn't put butter on a burn. Is this true?"
+                    // came back as "Is this true?".
+                    if (/\b(?:explain|fix|solve|unlock|reset|use|do|understand|get|open|repair|recover|find|describe|teach|clarify|simplify|check|debug|run|install)\s+(?:it|them|this|that|these|those)\b|\b(?:is|was|are)\s+(?:this|that|it)\s+(?:true|right|correct|normal|safe|real|possible|good|bad|a\s+myth)\b/i.test(whole.slice(offset + match.length))
                         && this.topicWords(match).some((w) => !/^(?:exams?|tests?|tomorrow|today|tonight|week|month|year|time|days?|hours?)$/.test(w)
                             && remainder.toLowerCase().indexOf(w) === -1)) return match;
                     // Nor may it be the main clause of a sentence that opened with a
@@ -762,8 +766,12 @@ const PromptMeterCondense = {
         // Also "this view", "that claim" anywhere in the next sentence: "Renewable energy
         // is the future. Give arguments for and against this view." lost its first half.
         const REFERS_BACK = /^\W*(?:it|it's|its|this|that|these|those|they|they're|them|their|he|she|his|her|him)\b|\b(?:he|she|they|him|them|his|her|their)\b|\b(?:this|that|these|those)\s+(?:views?|opinions?|ideas?|claims?|statements?|points?|arguments?|approach|situation|problems?|issues?|case|topic|question|text|plan|belief|theory|assumption|stance|position)\b/i;
+        // "it" or "this" acted on later points back too: "My hair is damaged due to hair
+        // dye. What is the best product to restore it?" lost the hair.
+        const ACTS_ON_IT = /\b(?:restore|fix|repair|treat|cure|clean|improve|use|solve|handle|stop|prevent|get\s+rid\s+of|deal\s+with|remove|replace|reset|unlock|recover|explain|categori[sz]e|classify|label|rate|translate|summari[sz]e|rewrite|correct|proofread|analy[sz]e|check|review)\s+(?:it|them|this|that)\b|\b(?:is|was|are)\s+(?:this|that|it)\s+(?:true|right|correct|normal|safe|real|possible|good|bad|a\s+myth)\b/i;
         const leanedOn = (index) => index + 1 < classified.length
-            && REFERS_BACK.test(classified[index + 1].text);
+            && (REFERS_BACK.test(classified[index + 1].text)
+                || classified.slice(index + 1).some((later) => ACTS_ON_IT.test(later.text)));
 
         // A question that only makes sense with what came before it ("What could be the
         // reason?", "How do I fix it?") makes every earlier sentence its subject.
@@ -778,7 +786,10 @@ const PromptMeterCondense = {
         // Advice for the user's own situation: the situation is the input. "I've been
         // looking to get a raise. My work ethic is very high and I always deliver. What
         // should I say to my boss?" lost both facts the answer was meant to use.
-        const ADVICE = /\b(?:what\s+should\s+i\s+(?:say|tell|write|ask|do|choose|pick|buy|use|study|learn)|should\s+i\b|what\s+(?:would|do)\s+you\s+(?:suggest|recommend|advise)|how\s+(?:do|can|should)\s+i\s+(?:convince|persuade|negotiate|ask|approach|tell|handle|deal|respond|reply))/i;
+        const ADVICE = /\b(?:what\s+should\s+i\s+(?:say|tell|write|ask|do|choose|pick|buy|use|study|learn)|should\s+i\b|what\s+(?:would|do)\s+you\s+(?:suggest|recommend|advise)|how\s+(?:do|can|should)\s+i\s+(?:convince|persuade|negotiate|ask|approach|tell|handle|deal|respond|reply))|\b(?:recommend|suggest|advise)\b[^.?!]*\b(?:i|me|my)\b/i;
+        // The request works on text the prompt supplies: "Categorize this sentence ...
+        // I am so proud of the work I did today." lost the sentence to be categorised.
+        const PAYLOAD = /\b(?:this|these|the\s+following|following|below|above|given)\s+(?:sentences?|texts?|paragraphs?|passages?|reviews?|tweets?|statements?|emails?|messages?|posts?|comments?|story|stories|poems?|essays?|articles?|code|data|lists?|words?|phrases?|quotes?|lines?|questions?)\b/i;
         // A request that names no subject of its own -- "Write a conclusion for me",
         // "Give me a name for it" -- takes its subject from the rest of the prompt.
         // "I am doing a project on twitter sentiment analysis. Can you write a
@@ -792,6 +803,7 @@ const PromptMeterCondense = {
             && this.topicWords(entry.text).some((w) => !DELIVERABLE.has(w) && w.length > 2));
         const dependent = subjectless || classified.some((entry) => entry.info.core
             && (DEPENDENT_ASK.test(entry.text) || ABOUT_THAT.test(entry.text) || ADVICE.test(entry.text)
+                || PAYLOAD.test(entry.text)
                 // A bare short question ("Where is water?", "Who won?") is about the
                 // story told before it, and every step of the story can be the answer.
                 || (/\?\s*$/.test(entry.text) && entry.text.split(/\s+/).length <= 7)
