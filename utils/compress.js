@@ -299,7 +299,7 @@ const PromptMeterCompress = {
                 // 请 opens "please explain", but 请客 is "to treat", 请假 "to ask for
                 // leave", 请教 "to consult", 请求 "a request": never cut out of a word.
                 opener: new RegExp(`(^|${stop}\\s*)(?:请问|请(?![客假求教帖柬示愿安辞])|(?:tolong|mohon)(?!\\s*menolong))(?=\\S)\\s*`, 'iu'),
-                please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?\\s*`, 'giu'),
+                please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?`, 'giu'),
                 // Only a thanks that is its own sentence or follows a comma: "a letter that
                 // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
                 // After a code span too: "arregla este código: `...` ¡Gracias!".
@@ -308,21 +308,32 @@ const PromptMeterCompress = {
         }
         const rx = this.foreignRx;
         const masked = PM_C_PROTECT ? PM_C_PROTECT.mask(text) : { masked: text, spans: [] };
+        // Every removal leaves a mark (\u0007), and only the text around a mark is tidied.
+        // Tidying the whole prompt reflowed tab-separated tables, indented results, JSON
+        // and CSV payloads, took the "----" off a separator line and the dash off a line
+        // of dialogue, and closed up French "français ?" with nothing removed at all.
+        const M = '\u0007';
         let out = masked.masked;
-        out = out.replace(rx.greet, '').replace(rx.address, '');
-        out = out.replace(rx.thanks, '$1');
-        out = out.replace(rx.opener, '$1');
-        out = out.replace(rx.please, '');
-        out = out.replace(/[ \t]{2,}/g, ' ').replace(/\s+([,，、،.。!！?？؟])/g, '$1')
+        out = out.replace(rx.greet, M).replace(rx.address, M);
+        out = out.replace(rx.thanks, '$1' + M);
+        out = out.replace(rx.opener, '$1' + M);
+        out = out.replace(rx.please, M);
+        if (out.indexOf(M) === -1) return text;
+        out = out
+            .replace(new RegExp(`^\\s*(?:${M}[\\s,，、،؛:;]*)+`), '')
             // A "please" removed before the question mark leaves its comma: "máquina,?".
-            .replace(/[,，、،]+\s*([?？؟!！.。])/g, '$1')
-            .replace(/^[\s,，、،؛.。:;\-]+/, '').replace(/[,，、،]\s*$/, '').trim();
+            .replace(new RegExp(`[ \\t]*[,，、،]?[ \\t]*${M}[ \\t]*(?=[?？؟!！.。]|$)`, 'g'), '')
+            .replace(new RegExp(`[,，、،]\\s*${M}\\s*[,，、،]`, 'g'), ',')
+            .replace(new RegExp(`[ \\t]*${M}[ \\t]*`, 'g'), (m) => (/^[ \t]/.test(m) && /[ \t]$/.test(m) ? ' ' : ''))
+            .replace(/[ \t]+$/, '');
         // Keep a capital the prompt opened with: "Por favor, explica" -> "Explica", and
         // "Hola, ¿puedes" -> "¿Puedes".
-        if (/^\p{Lu}/u.test(text.trim())) {
+        if (/^\s*\p{Lu}/u.test(text)) {
             out = out.replace(/^([¿¡"'“(]*)(\p{Ll})/u, (m, lead, c) => lead + c.toUpperCase());
         }
-        if (!out || out === masked.masked) return text;
+        // A greeting with one word left is not a shorter prompt: "Hallo Vicuna" -> "Vicuna".
+        const words = (s) => (s.match(/[\p{L}\p{M}]+/gu) || []).length;
+        if (!out.trim() || (words(out) < 2 && words(masked.masked) >= 2)) return text;
         return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
     },
 

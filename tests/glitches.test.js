@@ -218,6 +218,18 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
     'bhai ki shaadi ke liye speech likho', 'bro code kya hota hai', 'Escribe una carta de agradecimiento que termine con gracias',
     'कृपया का अर्थ क्या है?', 'Dime el significado de la palabra por favor'
 ].forEach((p) => check('courtesy word that IS the content stays: ' + p.slice(0, 24), run(p).text === p, run(p).text));
+// The trim touches only the words it removes: data, spacing and punctuation elsewhere stay.
+[
+    'Tu comprends le français ?',
+    'Hallo Vicuna',
+    '- ¡qué cagada! -dijo la baronesa indignada-',
+    'Причины раскола\tОсновные проявления\tВозможные последствия'
+].forEach((p) => check('untouched when nothing is courtesy: ' + p.slice(0, 24), run(p).text === p, run(p).text));
+keeps('a table keeps its tabs and indentation', '----\nWahl zum Schatzmeister\n    abgegebene Stimmen: 505\nBitte zusammenfassen.',
+    '----\nWahl zum Schatzmeister\n    abgegebene Stimmen: 505\n');
+keeps('a removed "bitte" leaves one space', 'Hallo, kannst du mir bitte erklären, wie ein Motor funktioniert? Vielen Dank!',
+    'Kannst du mir erklären, wie ein Motor funktioniert?');
+keeps('a removed ", пожалуйста," leaves one comma', 'Привет, объясни, пожалуйста, что такое рекурсия. Спасибо!', 'Объясни, что такое рекурсия.');
 keeps('a foreign greeting on an English request goes', 'namaste, please explain recursion with an example in python', /^Explain recursion/);
 keeps('a foreign thanks on an English request goes', 'Hola! Can you explain recursion? Gracias', /^Explain recursion\.?$/);
 keeps('a thanks after a code span goes', 'Por favor, arregla este código: `for i in range(10) print(i)` ¡Gracias!',
