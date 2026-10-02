@@ -163,6 +163,15 @@ keeps('what "that" stands for survives', 'I am thinking about changing my colleg
 check('Norwegian is declined, not mangled', run('Har man rett på fri med lønn for å amme barnet sitt i norge?').status === C.STATUS.UNSUPPORTED_LANGUAGE);
 check('English with "café" is still English', run('Can you recommend a good café near the office and explain why it is good?').status === C.STATUS.SUCCESSFUL);
 
+// Found live on chatgpt.com
+keeps('"and also how" stays joined to its request',
+    'I have a job interview tomorrow so give me common HR questions and also how to answer them', 'questions and how to answer them');
+lacks('...with no stray stop', 'I have a job interview tomorrow so give me common HR questions and also how to answer them', /\. How|also\./);
+keeps('"not only ... but also" becomes "and"', 'Not only explain the theory of relativity but also give real world examples',
+    'Explain the theory of relativity and give real world examples');
+keeps('"as well as" becomes "and"', 'List the causes of World War 2 as well as the major turning points', 'causes of World War 2 and the major');
+keeps('"as well as you can" is not a connector', 'Do it as well as you can', 'as well as you can');
+
 // ---------------------------------------------------------------------------
 // Wording that changed the meaning
 // ---------------------------------------------------------------------------

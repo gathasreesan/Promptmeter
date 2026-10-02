@@ -139,6 +139,10 @@ const PromptMeterCompress = {
             (m, how) => ({ simple: 'simply', easy: 'simply', clear: 'clearly', brief: 'briefly',
                 short: 'briefly', detailed: 'in detail', concise: 'concisely' })[how.toLowerCase()]],
         [/\bexplain\s+to\s+me\b/gi, 'explain'],
+        // Connectors longer than "and": "Not only explain X but also give Y" and "the
+        // causes as well as the turning points". Not "as well as possible/you can".
+        [/\bnot\s+only\s+([^.?!]+?),?\s+but\s+also\s+/gi, '$1 and '],
+        [/\bas\s+well\s+as\b(?!\s+(?:possible|you|i|we|they|he|she|it|can|could))/gi, 'and'],
         // "I don't understand pointers in C, can you explain it simply" -> "Explain
         // pointers in C simply": the confusion names the subject, the request points at it.
         [/(^|[.!?]\s+)i\s+(?:don'?t|do\s+not)\s+(?:really\s+)?(?:understand|get)\s+([^.?!,]+?),?\s+(?:so\s+)?(?:(?:can|could|would)\s+(?:you|u)\s+(?:please\s+)?)?explain\s+(?:it|this|that|them)\b/gi,

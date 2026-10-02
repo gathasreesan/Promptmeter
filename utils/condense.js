@@ -256,7 +256,7 @@ const PromptMeterCondense = {
 
     // Modifiers that commonly sit in front of an occasion ("end sem exam", "mock test").
     EVENT_ADJ: [
-        'big', 'final', 'important', 'upcoming', 'next', 'last', 'first', 'second',
+        'big', 'final', 'important', 'upcoming', 'next', 'last', 'first', 'second', 'job',
         'third', 'sem', 'semester', 'series', 'model', 'unit', 'mid', 'midterm', 'end',
         'internal', 'external', 'university', 'college', 'school', 'board', 'entrance',
         'mock', 'practice', 'placement', 'campus', 'technical', 'hr', 'coding', 'online',

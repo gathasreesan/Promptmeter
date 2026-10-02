@@ -1707,6 +1707,12 @@ const PromptMeterOptimizer = {
             (match, lead, statement, question) => {
                 const last = (statement.match(/(\S+)\s*$/) || ['', ''])[1];
                 if (TAKES_CLAUSE.test(last)) return match;
+                // A connector joins the question to the request before it: "give me
+                // common HR questions and also how to answer them" became "... questions.
+                // How to answer them", and the conservative tier "and also. How".
+                if (/^(?:and|also|or|but|so|then|plus|as|well|both|either|nor)$/i.test(last)) return match;
+                // The statement already asks for something; the question is its object.
+                if (/\b(?:give|tell|show|explain|list|teach|write|suggest|send|make)\s+(?:me|us)\b/i.test(statement)) return match;
                 return lead + statement + '. ' + question.charAt(0).toUpperCase() + question.slice(1);
             });
     },
