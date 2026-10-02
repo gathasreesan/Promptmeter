@@ -151,6 +151,18 @@ keeps('a fact the plan must fit survives', 'give me 2 challenges for a solo japa
 keeps('"I will say ..." is an instruction', "Write a story. Start writing. I will say to you then when is the end and not you. Write with dialogues.",
     'I will say');
 
+keeps('a first-person puzzle keeps every move',
+    'I have two quarters and a ball. I place the ball in a cup, and place the cup in my room. I take the quarters and place them in my kitchen. Now I take the cup and place it next to the quarters. I put the quarters in the cup. Where is the cup, and how many items are in it?',
+    'Now I take the cup', 'I put the quarters in the cup');
+keeps('persona traits survive', 'You are NAME_1. You are 30 years old. You live in France. You are outgoing. You are talkative. Introduce yourself.',
+    'You are outgoing', 'You are talkative');
+keeps('a three-word sentence is not a fragment', "help me invent a cocktail for mother's day - my mom enjoys mixing drinks. she prefers gin", /prefers gin/i);
+keeps('"Be super succinct." is an instruction', 'Give some insight in how to understand love. Be super succinct.', 'Be super succinct');
+keeps('what "that" stands for survives', 'I am thinking about changing my college major to computer science. What kinds of jobs would that lead to?',
+    'computer science');
+check('Norwegian is declined, not mangled', run('Har man rett på fri med lønn for å amme barnet sitt i norge?').status === C.STATUS.UNSUPPORTED_LANGUAGE);
+check('English with "café" is still English', run('Can you recommend a good café near the office and explain why it is good?').status === C.STATUS.SUCCESSFUL);
+
 // ---------------------------------------------------------------------------
 // Wording that changed the meaning
 // ---------------------------------------------------------------------------

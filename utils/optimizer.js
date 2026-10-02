@@ -2040,6 +2040,12 @@ const PromptMeterOptimizer = {
         // cost of the two readings is asymmetric: calling English text non-English only
         // silences a couple of rules, while calling Japanese text English flags it for
         // having no English verb, which is the bias this whole function exists to stop.
+        // Letters English does not use are strong evidence the other way. Norwegian
+        // ("Har man rett på fri med lønn") and Portuguese ("os crimes fictícios") cleared
+        // the bar on short shared words plus words the corrector could "fix", and came
+        // back as "ret", "løNN", "am me" and "fistícios". English with a borrowed "café"
+        // or "résumé" is still mostly dictionary words and clears the higher bar.
+        if (/[à-öø-ÿ]/i.test(text) && known / words.length < 0.75) return false;
         return known / words.length >= 0.34;
     },
 

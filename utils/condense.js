@@ -154,7 +154,7 @@ const PromptMeterCondense = {
     LEAD_IN: /^(?:so\s+|okay\s+|well\s+|and\s+|but\s+)?(?:please\s+)?(?:(?:i|we)\s+(?:need|want|would\s+like|'d\s+like)\s+(?:you\s+)?to\s+|(?:can|could|would|will)\s+you\s+(?:please\s+)?|(?:i|we)\s+(?:need|want)\s+|let'?s\s+|help\s+me\s+(?:to\s+)?)/i,
 
     // The sentence states a requirement about the output.
-    CONSTRAINT: /\b(?:must|should|needs?\s+to|has\s+to|make\s+sure|ensure|include|exclude|avoid|format|at\s+least|no\s+more\s+than|\d+\s+words?|step[-\s]by[-\s]step|in\s+\w+\s+style|bullet\s+points?|tone)\b|^(?:you|your)\s+(?:will|must|should|shall|are\s+(?:to|going\s+to)|need\s+to|have\s+to|may|can|only)\b|^let'?s\b|^let\s+us\b|\bideally\b|\bpreferably\b|\b(?:would|'d)\s+(?:want|prefer|like)\b|\bi\s+prefer\b|^i\s+will\s+(?:say|tell|give|type|send|provide|ask|paste|share|be)\b/i,
+    CONSTRAINT: /\b(?:must|should|needs?\s+to|has\s+to|make\s+sure|ensure|include|exclude|avoid|format|at\s+least|no\s+more\s+than|\d+\s+words?|step[-\s]by[-\s]step|in\s+\w+\s+style|bullet\s+points?|tone)\b|^(?:you|your)\s+(?:will|must|should|shall|are|is|have|live|work|like|love|hate|speak|know|only|need\s+to|have\s+to|may|can)\b|^let'?s\b|^let\s+us\b|\bideally\b|\bpreferably\b|\b(?:would|'d)\s+(?:want|prefer|like)\b|\bi\s+prefer\b|^i\s+will\s+(?:say|tell|give|type|send|provide|ask|paste|share|be)\b/i,
 
     // The sentence reports a symptom: something is broken, failing or wrong.
     //
@@ -651,7 +651,11 @@ const PromptMeterCondense = {
             // "For the given input text, label the sentiment ..." was the instruction.
             ((this.FRAGMENT.test(trimmed) && wordCount <= 6
                 && !/\b(?:it|you|he|she|they|we|i|there|this|that|which)\s+[a-z']+/i.test(trimmed))
-                || wordCount <= 3);
+                // Three words can be a whole sentence: "She prefers gin.", "You are
+                // talkative.", "Be super succinct." A short leftover has no verb.
+                || (wordCount <= 3
+                    && !/\b(?:is|are|was|were|be|am|has|have|had|prefers?|likes?|loves?|hates?|wants?|needs?|uses?|works?|lives?|added|removed|taken|eaten)\b/i.test(trimmed)
+                    && !/^(?:be|do|use|keep|make|add|give|show|list|write|stay|avoid|answer|reply|respond|include|go|stop|start)\b/i.test(trimmed)));
 
         return {
             protectedSpan: protectedSpan,
@@ -804,6 +808,11 @@ const PromptMeterCondense = {
         const dependent = subjectless || classified.some((entry) => entry.info.core
             && (DEPENDENT_ASK.test(entry.text) || ABOUT_THAT.test(entry.text) || ADVICE.test(entry.text)
                 || PAYLOAD.test(entry.text)
+                // "Where is the cup, and how many items are in it?" is answered by
+                // every step of the story; "What jobs would that lead to?" by the
+                // sentence "that" stands for.
+                || /\b(?:where\s+(?:is|are|was|were)|how\s+many|how\s+much|who\s+(?:has|is|won|wins)|what\s+(?:colou?r|happened|happens))\b/i.test(entry.text)
+                || /\b(?:would|will|does|did|can|could|is|was)\s+(?:that|this)\b/i.test(entry.text)
                 // A bare short question ("Where is water?", "Who won?") is about the
                 // story told before it, and every step of the story can be the answer.
                 || (/\?\s*$/.test(entry.text) && entry.text.split(/\s+/).length <= 7)
