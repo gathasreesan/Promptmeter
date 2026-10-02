@@ -230,6 +230,14 @@ keeps('a table keeps its tabs and indentation', '----\nWahl zum Schatzmeister\n 
 keeps('a removed "bitte" leaves one space', 'Hallo, kannst du mir bitte erklären, wie ein Motor funktioniert? Vielen Dank!',
     'Kannst du mir erklären, wie ein Motor funktioniert?');
 keeps('a removed ", пожалуйста," leaves one comma', 'Привет, объясни, пожалуйста, что такое рекурсия. Спасибо!', 'Объясни, что такое рекурсия.');
+// Courtesy inside the material the user pasted is the material.
+keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
+    'Por favor me avise. Obrigada');
+keeps('a text to classify keeps its "Bitte"', 'In welche Kategorien passt dieser folgender Text am besten [Hallo, Bitte passen sie mein Abo an]',
+    'Bitte passen sie mein Abo an');
+keeps('a conversation to summarise keeps its "gracias"', 'resumime esta conversacion:\nBuen día, mi nombre es Lara. Muchas gracias', 'Muchas gracias');
+keeps('the request before the payload is still trimmed', 'Hallo! Kannst du bitte folgenden Text zusammenfassen?\nDie Zahl der Fälle steigt.',
+    /^Kannst du folgenden Text zusammenfassen\?\nDie Zahl der Fälle steigt\.$/);
 keeps('a foreign greeting on an English request goes', 'namaste, please explain recursion with an example in python', /^Explain recursion/);
 keeps('a foreign thanks on an English request goes', 'Hola! Can you explain recursion? Gracias', /^Explain recursion\.?$/);
 keeps('a thanks after a code span goes', 'Por favor, arregla este código: `for i in range(10) print(i)` ¡Gracias!',

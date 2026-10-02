@@ -313,11 +313,22 @@ const PromptMeterCompress = {
         // and CSV payloads, took the "----" off a separator line and the dash off a line
         // of dialogue, and closed up French "français ?" with nothing removed at all.
         const M = '\u0007';
-        let out = masked.masked;
-        out = out.replace(rx.greet, M).replace(rx.address, M);
-        out = out.replace(rx.thanks, '$1' + M);
+        // Only the request is the user's own courtesy. A message to answer, a text to
+        // classify or a conversation to summarise lost its "por favor", "bitte" and
+        // "gracias" -- they were the payload. So the edit stops at the first line break or
+        // colon, and a closing thanks goes only from a one-line prompt.
+        const full = masked.masked;
+        // "dieser folgender Text [Hallo, Bitte ...]" marks its payload in words.
+        const cutAt = full.search(/\n|:(?=\s*\S)|\[|(?<![\p{L}\p{M}])(?:folgenden?|folgender|folgendes|following|siguientes?|suivante?s?|seguintes?|seguente|следующ[\p{L}]*|下面|以下)(?![\p{L}\p{M}])/iu);
+        const head = cutAt === -1 ? full : full.slice(0, cutAt);
+        let rest = cutAt === -1 ? '' : full.slice(cutAt);
+        let out = head.replace(rx.greet, M).replace(rx.address, M);
+        if (!rest) out = out.replace(rx.thanks, '$1' + M);
+        // After a colon only code or quoted spans (masked): "arregla este código: `...`
+        // ¡Gracias!" -- the thanks is still the user's.
+        else if (/^:\s*(?:\d+\s*)+[^\n]*$/.test(rest)) rest = rest.replace(rx.thanks, '$1' + M);
         out = out.replace(rx.opener, '$1' + M);
-        out = out.replace(rx.please, M);
+        out = out.replace(rx.please, M) + rest;
         if (out.indexOf(M) === -1) return text;
         out = out
             .replace(new RegExp(`^\\s*(?:${M}[\\s,，、،؛:;]*)+`), '')
