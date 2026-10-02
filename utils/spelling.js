@@ -1940,7 +1940,31 @@ PromptMeterSpelling.firstNames = new Set(((typeof PM_FIRST_NAMES !== 'undefined'
 ('deno bun vite pnpm npx webpack rollup esbuild nextjs nuxt svelte sveltekit astro remix '
     + 'tailwind kotlin rustc cargo gradle maven numpy scipy pandas sklearn keras pytorch '
     + 'fastapi flask django laravel rails nginx redis kafka spark hadoop terraform ansible '
-    + 'kubectl helm grafana jupyter colab figma canva notion jira trello calculus')
+    + 'kubectl helm grafana jupyter colab figma canva notion jira trello calculus '
+    // Short forms students and engineers type in lowercase: course codes, subjects,
+    // degrees, tech. "dma" (data mining and analytics) is not "dam".
+    + 'dma dbms rdbms dsa coa daa toc nlp iot ece eee cse mca bca btech mtech ooad erp crm hci '
+    + 'vlsi dsp cad gis dbs bfs dfs lru lfu fifo lifo tds ctc emi cgpa sgpa sdlc stlc uat etl eda '
+    + 'pca knn svm jwt orm cli sdk ide gui mvc oop sql nosql dsl ocr nlu llm rag mlops devops cicd '
+    // Protocols, formats and platforms. "wss" became "was", "fiverr" "fiver".
+    + 'wss ws http https ftp sftp ssh tcp udp smtp imap pop3 dns dhcp ssl tls mqtt grpc rest soap '
+    + 'graphql webrtc websocket websockets oauth saml ldap vpn lan nat ipv4 ipv6 json yaml toml xml '
+    + 'csv tsv pdf docx xlsx pptx png jpg jpeg svg gif webp mp3 mp4 wav ascii utf utf8 regex '
+    + 'fiverr upwork etsy shopify wix squarespace wordpress woocommerce paypal stripe razorpay paytm '
+    + 'gpay upi zomato swiggy flipkart myntra amazon ebay tiktok instagram insta youtube whatsapp '
+    + 'telegram snapchat linkedin reddit quora discord slack zoom gmail outlook github gitlab bitbucket '
+    + 'vercel netlify heroku firebase supabase mongodb postgres postgresql mysql sqlite mariadb oracle '
+    + 'dynamodb cassandra neo4j elasticsearch kibana prometheus docker k8s openshift aws gcp '
+    + 'azure lambda ec2 s3 rds iam cloudfront bigquery snowflake databricks airflow dbt tableau powerbi '
+    + 'matplotlib seaborn plotly opencv tensorflow huggingface langchain llamaindex ollama openai chatgpt '
+    + 'gemini claude copilot midjourney dalle stable diffusion arduino raspberry esp32 esp8266 nodemcu '
+    + 'stm32 verilog vhdl matlab simulink labview autocad solidworks ansys blender unity unreal godot '
+    + 'golang rustlang typescript javascript nodejs reactjs vuejs angularjs jquery bootstrap sass scss '
+    + 'npm yarn pip conda venv virtualenv poetry pytest jest mocha cypress selenium playwright postman '
+    + 'swagger jenkins circleci sonarqube apache tomcat iis linux ubuntu debian fedora centos '
+    + 'arch kali macos ios ipados android windows wsl powershell bash zsh vim neovim emacs vscode '
+    + 'intellij pycharm eclipse xcode leetcode hackerrank codeforces codechef kaggle gfg geeksforgeeks '
+    + 'neet jee gate upsc gre gmat ielts toefl sat cbse icse ktu vtu anna')
     .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
 // Technical vocabulary the lists lack, one letter from a word they have: "memoization"
 // became "memorization" once long words could be repaired by a missing letter.
@@ -1970,7 +1994,12 @@ Object.assign(PromptMeterSpelling.misspellings = Object.assign({}, PromptMeterSp
     ned: 'need', neds: 'needs', neded: 'needed', neding: 'needing',
     // A real tie (formula minus a letter, formal with two swapped) that the shape
     // ranking resolves the wrong way for this word.
-    formla: 'formula', formlas: 'formulas', formlae: 'formulae'
+    formla: 'formula', formlas: 'formulas', formlae: 'formulae',
+    // "thos" is one edit from "this" and from "those"; the commoner word won, and
+    // "avoid thos dangers" became "avoid this dangers".
+    thos: 'those', tho: 'though', thier: 'their', theirr: 'their', wich: 'which',
+    becuase: 'because', becasue: 'because', untill: 'until', occured: 'occurred',
+    becoz: 'because', bcoz: 'because'
 });
 
 PromptMeterSpelling.rank = new Map();

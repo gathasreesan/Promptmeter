@@ -56,6 +56,9 @@ const PromptMeterOptimizer = {
         "knowed": "knew", "throwed": "threw", "growed": "grew", "choosed": "chose",
         "fighted": "fought", "maked": "made", "taked": "took", "gived": "gave",
         "loosing": "losing",
+        // Short slips the short-word guard in spelling.js no longer guesses at.
+        "hte": "the", "yuo": "you", "yuor": "your", "nad": "and", "fo": "of", "si": "is",
+        "mch": "much", "muhc": "much", "wht": "what", "whta": "what", "becoz": "because", "bcoz": "because",
         // Two candidates one edit away, decided by what people mean: "reverse a strng"
         // is a string, "learning calculas" is calculus.
         "strng": "string", "stirng": "string", "strin": "string", "calculas": "calculus",
@@ -696,7 +699,10 @@ const PromptMeterOptimizer = {
         // Stated-intent wrappers that name the deliverable after them.
         [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*what\s+(?:i|we)\s+(?:want|need|would\s+like)\s+(?:you\s+)?to\s+do\s+is\s+(?:to\s+)?/gi, '$1'],
         [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:it\s+would\s+be\s+(?:great|helpful|nice|good)\s+if\s+you\s+could|i\s+was\s+hoping\s+(?:that\s+)?you\s+(?:might\s+be\s+able\s+to|could|would|can))\s+/gi, '$1'],
-        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?/gi,
+        [/(?<=^|[.!?;,]|\n)\s*((?:and|also|plus|then|or|but|so)\s+(?:also\s+)?)?\s*(?:i|we)\s+(?:would\s+like|want|need|wanted)\s+to\s+(know|understand|learn|find\s+out)\s+(?:about\s+|more\s+about\s+)?(?![^.!?\n]*\b(?:but|so|can\s+you|could\s+you|would\s+you|give\s+me|suggest|recommend)\b)/gi,
+            // Not when the sentence goes on to ask something else: "I want to learn React
+            // but I don't know where to start, so can you give me a roadmap?" became
+            // "Explain React but ..." -- the request is the roadmap.
             // "learn X" is a request to be taught, not for an explanation of X:
             // "I want to learn Python fast" read "Explain Python fast".
             (m, lead, verb) => {
@@ -911,7 +917,11 @@ const PromptMeterOptimizer = {
         // Only the forms that address the model. "I want to lose weight" is the user's
         // own goal, and stripping "I want to" turned it into the order "Lose weight".
         // "I want to know how X" is handled by the curiosity rule above.
-        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+would\s+like\s+you\s+to|i\s+(?:just\s+|really\s+)?want\s+you\s+to|i\s+need\s+you\s+to|i\s+(?:would\s+like|want|need)\s+to\s+(?=(?:understand|learn)\b(?!\s+(?:how|what|why|when|where|which|who|if|whether)\b)))\b\s*/gim,
+        // Neither fires when the sentence goes on to ask for something else: "I want to
+        // learn React but ..., so can you give me a roadmap?" became "Learn React but
+        // ..." (and, via intentRewrites, "Explain React but ...") -- the request is the
+        // roadmap, and the goal is its subject.
+        /(?<=^|[.!?]|[,;]|\n)\s*(?:i\s+would\s+like\s+you\s+to|i\s+(?:just\s+|really\s+)?want\s+you\s+to|i\s+need\s+you\s+to|i\s+(?:would\s+like|want|need)\s+to\s+(?=(?:understand|learn)\b(?!\s+(?:how|what|why|when|where|which|who|if|whether)\b)(?![^.!?\n]*\b(?:but|so|can\s+you|could\s+you|would\s+you|give\s+me|suggest|recommend)\b)))\b\s*/gim,
         /\b(?:pretty\s+please|do\s+me\s+a\s+huge\s+favor(?:\s+and)?|be\s+a\s+sweetheart(?:\s+and)?|my\s+life\s+depends\s+on\s+this|i\s+beg\s+you|i\s+will\s+tip(?:\s+\$?\d[\d,.]*)?)(?:\b|(?<=\d))[,.]?\s*/gi,
         // Live-tested padding. Each is a frame around the request, never the request.
         /(?<=^|[.!?]\s*|\n)\s*(?:you|u)\s+(?:are|r|'re)\s+(?:a|an|the|such\s+a)?\s*(?:genius|best(?:\s+ai)?|legend|lifesaver|life\s+saver|star|gem)\b[!.,\s]*/gi,
@@ -986,8 +996,10 @@ const PromptMeterOptimizer = {
         // reply". Gratitude is either plural or followed by the pronoun.
         // "thanks to" is a preposition ("Thanks to the new API, latency dropped").
         /\b(?:(?:thanks(?!\s+to\b)|thank\s+you)(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble)(?:\s+(?:earlier|before|again|so\s+far))?)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
-        // Urgency padding: an LLM cannot act on it, so it is pure token cost
-        /\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
+        // Urgency padding: an LLM cannot act on it, so it is pure token cost. Not inside
+        // the user's own goal: "what should I do to pay it as soon as possible" is about
+        // the debt, not the reply, and lost its point.
+        /(?<!\bto\s+\w+(?:\s+\w+){0,3}\s)\b(?:asap|as\s+soon\s+as\s+possible|urgently|as\s+quickly\s+as\s+possible|it(?:'?s|\s+is)\s+urgent|this\s+is\s+urgent|quick(?:ly)?\s+please)\b[,!.\s]*/gi,
         // Permission-seeking wrappers
         /\b(?:is\s+it\s+possible\s+(?:for\s+you\s+)?to\s+(?=(?:make|create|write|convert|generate|build|add|change|export|translate|summari[sz]e|draw|design|edit|fix|explain|tell|show|give|list|describe|suggest|recommend|teach|help|find|compare|calculate|solve)\b)|do\s+you\s+think\s+you\s+(?:can|could|might|may|would)(?:\s+be\s+able\s+to)?|are\s+you\s+able\s+to|if\s+(?:it'?s|its)\s+not\s+too\s+much\s+trouble|if\s+you\s+(?:don'?t|do\s+not)\s+mind|whenever\s+you\s+(?:get\s+a\s+chance|can))\b\s*/gi,
         // Meta announcements about the question itself
@@ -1007,7 +1019,10 @@ const PromptMeterOptimizer = {
         // problem, and stripping the marker alone would stop the clause matching the
         // clause-start anchor on the next pass.
         /(?<=^|[.!?;,]|\n)\s*(?:(?:so|and|but|well|ok(?:ay)?|now)\s+)?(?:basically|actually|honestly|literally|seriously|frankly|essentially)(?:\s+speaking)?\b[,\s]*/gi,
-        /\b(?:i\s+guess|i\s+suppose|or\s+so|more\s+or\s+less|if\s+possible|if\s+you\s+can)\b[,!.\s]*/gi,
+        // The sentence's own full stop stays: "evidence if possible." lost its stop. And
+        // not "more or less": "keep the apartment more or less clean" is a looser
+        // standard than "clean", not the same one.
+        /\s*\b(?:i\s+guess|i\s+suppose|or\s+so|if\s+possible|if\s+you\s+can)\b,?/gi,
         // Doubled intensifiers ("very very")
         /\b(very|really|so|super|extremely|totally)\s+\1\b/gi,
         // Emoji runs. Two or more in a row is decoration; a single emoji may be the
@@ -1083,7 +1098,9 @@ const PromptMeterOptimizer = {
         // followed by the ! of !=, and the conjunction between two operators was
         // deleted -- "using ==!=". Real sentence punctuation is followed by a space
         // or the end of the text; an operator is followed by = or more symbol.
-        [/\s*\b(?:because|since|and|but|so|where|when|which|that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
+        // "that" as an object is not a dangling conjunction: "Expand on that." and
+        // "Explain that." lost their object.
+        [/\s*\b(?:because|since|and|but|so|where|when|which|(?<!\b(?:on|about|with|of|in|for|do|did|does|is|was|like|at|to|from|by|explain|mean|means|see|know|fix|change|do|try|use|expand|elaborate|prove|check)\s)that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
         // Two coordinators in a row
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed
@@ -1127,7 +1144,10 @@ const PromptMeterOptimizer = {
 
     // Meta-prompting padding and over-specified constraints.
     fluffReplacements: [
-        [/\b(?:take\s+a\s+deep\s+breath|without\s+any\s+further\s+delay|do\s+not\s+hesitate\s+to|feel\s+free\s+to)\b(?:[,!.\s]*)/gi, ''],
+        [/\b(?:take\s+a\s+deep\s+breath|without\s+any\s+further\s+delay|do\s+not\s+hesitate\s+to)\b(?:[,!.\s]*)/gi, ''],
+        // "Feel free to alter this value" grants a choice; stripped, it became the order
+        // "Alter this value".
+        [/\bfeel\s+free\s+to\b/gi, 'you may'],
         [/\b(?:make\s+sure\s+(?:it\s+is\s+)?(?:brief,\s*)?(?:concise,\s*)?(?:short,\s*)?(?:and\s+)?not\s+long)\b/gi, 'make it concise'],
         [/\b(?:detailed,\s*comprehensive,\s*step-by-step,\s*in-depth\s+explanation|detailed\s+comprehensive\s+explanation)\b/gi, 'detailed explanation']
     ],

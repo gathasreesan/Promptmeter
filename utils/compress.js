@@ -89,6 +89,11 @@ const PromptMeterCompress = {
         // line is doing".
         [/\b(and\s+)?also\s+(tell\s+me|explain|show\s+me)\s+/gi, (m, and, verb) => 'and ' + verb + ' '],
         [/,?\s+and\s+also\s+(?:i\s+want\s+you\s+to\s+)?/gi, ' and '],
+        // A request behind a connective: "..., so can you give me a roadmap?" The
+        // wrapper strippers only see "can you" at a clause start, so this one survived
+        // every pass. It becomes its own sentence: "... start. Give me a roadmap."
+        [/,?\s+(?:and\s+)?(?:so|and)\s+(?:can|could|would|will)\s+(?:you|u)\s+(?:please\s+)?((?:give|tell|show|suggest|recommend|explain|make|write|create|list)\b[^.!?\n]*)\?/gi,
+            '. $1.'],
         // "Explain X ... and explain it simply" / "Explain X. Explain it simply.": the
         // second "explain" only carries the manner, so the manner is all that stays.
         [/^(explain\b[^]*?)(?:,?\s+and\s+|[.!?]\s+)explain\s+it\s+(simply|briefly|in\s+detail|step\s+by\s+step|clearly)\b/i,
@@ -129,6 +134,16 @@ const PromptMeterCompress = {
         [/\bi(?:'m|\s+am)\s+planning\s+to\b/gi, 'I plan to'],
         [/(^|[.!?]\s+)what\s+(?:are|is)\s+the\s+(best|top|cheapest|easiest|fastest)\s+([^.?!]+)[.?!]?/gi,
             (m, lead, sup, rest) => lead + sup.charAt(0).toUpperCase() + sup.slice(1) + ' ' + rest + '?'],
+        // Manner said in four words where one does: "in a very simple way" -> "simply".
+        [/\bin\s+(?:a\s+)?(?:very\s+|really\s+)?(simple|easy|clear|brief|short|detailed|concise)\s+(?:way|manner|terms|language|words)\b/gi,
+            (m, how) => ({ simple: 'simply', easy: 'simply', clear: 'clearly', brief: 'briefly',
+                short: 'briefly', detailed: 'in detail', concise: 'concisely' })[how.toLowerCase()]],
+        [/\bexplain\s+to\s+me\b/gi, 'explain'],
+        // "takes X and then calculates Y and then prints Z": "then" carries the order.
+        [/\band\s+then\s+(?=[a-z])/gi, 'then '],
+        // "Basically what I want is a summary of X" -> "I want a summary of X".
+        [/(^|[.!?]\s+)(?:basically\s+|so\s+)?what\s+(i|we)\s+(?:want|need)\s+is\s+(?=(?:a|an|the)\b)/gi,
+            (m, lead, who) => lead + (who.toLowerCase() === 'i' ? 'I' : 'We') + ' want '],
         // Trailing padding
         [/\s+for\s+me\b(?!\s+(?:and|to)\b)/gi, ''],
         [/\s+as\s+well(?=\s*[.?!]|$)/gi, ''],
@@ -145,7 +160,7 @@ const PromptMeterCompress = {
         // Two passes: one rewrite can set up another ("Help me understand X. Explain it
         // simply." needs the first to become "Explain" before the two can merge).
         const pass = (text) => this.TIGHTEN_RULES.reduce((s, [rx, to]) => s.replace(rx, to), text);
-        let out = pass(pass(masked.masked));
+        let out = this.pronounRepeats(pass(pass(masked.masked)));
         // "I am facing many respiratory issues. List the kinds of respiratory issues":
         // the opening sentence only announces the subject the request names again.
         out = out.replace(/^\s*i(?:'m|\s+am|\s+have\s+been)\s+(?:facing|having|experiencing|dealing\s+with|suffering\s+from|struggling\s+with|getting|seeing)\s+(?:many\s+|some\s+|a\s+lot\s+of\s+|a\s+few\s+|lots\s+of\s+|frequent\s+)?([^.?!]{3,60})[.!]\s+(?=\S)/i,
@@ -164,6 +179,41 @@ const PromptMeterCompress = {
                 (m, verb) => ', ' + verb.toLowerCase())
             .trim();
         return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
+    },
+
+    /**
+     * A two- or three-word subject named again in the same sentence becomes "it":
+     * "the causes of global warming and the effects of global warming and how to reduce
+     * global warming" -> "... the effects of it and how to reduce it". Only after a
+     * preposition or a verb, where "it" reads cleanly, and never for a plural.
+     * @param {string} text - Masked text.
+     * @returns {string}
+     */
+    pronounRepeats: function (text) {
+        const BEFORE = /\b(?:of|on|about|for|with|to|from|in|into|reduce|prevent|stop|use|using|explain|describe|define|improve|avoid|fix|learn|study|understand|affect|affects|cause|causes|control)\s+$/i;
+        return text.split(/(?<=[.!?])\s+/).map((sentence) => {
+            const words = sentence.match(/[A-Za-z][A-Za-z'-]*/g) || [];
+            for (let size = 3; size >= 2; size--) {
+                for (let i = 0; i + size <= words.length; i++) {
+                    const run = words.slice(i, i + size);
+                    if (run.some((w) => this.FUNCTION_WORDS.has(w.toLowerCase()))
+                        || /(?<!s)s$/i.test(run[size - 1])) continue;
+                    const phrase = run.join('\\s+');
+                    const rx = new RegExp('\\b' + phrase + '\\b', 'gi');
+                    const hits = [...sentence.matchAll(rx)];
+                    if (hits.length < 2) continue;
+                    // Keep the first mention; replace the later ones right to left.
+                    let out = sentence;
+                    hits.slice(1).reverse().forEach((hit) => {
+                        if (BEFORE.test(out.slice(0, hit.index))) {
+                            out = out.slice(0, hit.index) + 'it' + out.slice(hit.index + hit[0].length);
+                        }
+                    });
+                    if (out !== sentence) return out;
+                }
+            }
+            return sentence;
+        }).join(' ');
     },
 
     STATUS: {
@@ -237,7 +287,10 @@ const PromptMeterCompress = {
             && (masked.match(/[A-Z]/g) || []).length / letters.length > 0.6;
         const names = new Set();
         // Whole tokens only: starting mid-token made "1NF" yield a name "NF".
-        const word = /(?<![A-Za-z0-9+#])[A-Za-z0-9][A-Za-z0-9+#]*(?:[-.][A-Za-z0-9+#]+)*/g;
+        // Underscores are part of the token: "NAME_1" and "API_KEY" yielded "NAME" and
+        // "API", which the check below (a word boundary after the name) never found
+        // again -- so every prompt with a snake_case identifier was rejected outright.
+        const word = /(?<![A-Za-z0-9_+#])[A-Za-z0-9][A-Za-z0-9_+#]*(?:[-.][A-Za-z0-9_+#]+)*/g;
         let hit;
         while ((hit = word.exec(masked)) !== null) {
             const token = hit[0].replace(/\.$/, '');
@@ -590,14 +643,31 @@ const PromptMeterCompress = {
         // A verb that was never there is still caught by the invention rule below.
         // "give me a list of" -> "list", "tell me" -> "explain": the same request.
         const SAME_TASK = { give: ['list', 'show', 'suggest'], tell: ['explain', 'list'], show: ['list'] };
-        // "give me an explanation of X" is "explain X": the noun was the request.
-        const explanationAsked = (before === 'give' && after === 'explain' && /\bexplanation\b/i.test(original))
-            // "write/give/make a summary of X" is "summarize X".
-            || (/^summari[sz]e$/.test(after || '') && /\bsummary\b/i.test(original));
-        if (before && after !== before && !explanationAsked && !(SAME_TASK[before] || []).includes(after)
+        // "give", "make" and "show" carry no task of their own -- the noun does: "give me
+        // a detailed explanation" IS "explain in detail", and was rejected as give ->
+        // explain, leaving the prompt untouched.
+        const GENERIC = ['give', 'make', 'show', 'tell'];
+        // "write a summary of X" is "summarize X".
+        const summaryAsked = /^summari[sz]e$/.test(after || '') && /\bsummary\b/i.test(original);
+        if (before && after !== before && !GENERIC.includes(before) && !summaryAsked
+            && !(SAME_TASK[before] || []).includes(after)
             && !new RegExp('\\b' + before + '\\b', 'i').test(candidate)) {
             violations.push({ rule: 'task',
                 detail: after ? before + ' -> ' + after : 'the request verb is gone' });
+        }
+
+        // Every request, not just the first. "Translate this and also explain the
+        // grammar" -> "Translate this and the grammar" kept its first verb and lost the
+        // second request entirely. A verb swapped for another (tell -> explain) is a
+        // rewording, so only a net loss counts.
+        const VERBS = /\b(explain|write|create|build|list|describe|compare|summari[sz]e|translate|fix|debug|generate|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|implement|outline|plan|check|find|refactor|proofread|add|remove|include|mention|highlight|plot|test|provide|discuss|elaborate|propose|predict|estimate|evaluate|identify|define|derive|prove|imagine|reason)\b/gi;
+        const verbsOf = (text) => new Set((text.match(VERBS) || []).map((v) => v.toLowerCase()));
+        const hadVerbs = verbsOf(original);
+        const hasVerbs = verbsOf(candidate);
+        const lostVerbs = [...hadVerbs].filter((v) => !hasVerbs.has(v));
+        const gainedVerbs = [...hasVerbs].filter((v) => !hadVerbs.has(v));
+        if (lostVerbs.length > gainedVerbs.length) {
+            violations.push({ rule: 'task', detail: 'request dropped: ' + lostVerbs.join(', ') });
         }
 
         // Invention. Compression removes; anything in the output that was never in
@@ -933,7 +1003,10 @@ const PromptMeterCompress = {
         // capital at the start of a sentence is cosmetic, so only that is folded away.
         // Not a lone "i": "i am" -> "I am" is a grammar fix, not a cosmetic capital.
         const loose = (s) => s.replace(/\s+/g, ' ').trim()
-            .replace(/(^|[.!?]\s+)([a-z])(?=[a-z])/g, (m, lead, c) => lead + c.toUpperCase());
+            .replace(/(^|[.!?]\s+)([a-z])(?=[a-z])/g, (m, lead, c) => lead + c.toUpperCase())
+            // Spacing alone is not a correction either: "P.O." -> "P. O." was shipped as
+            // one, a token longer than the original.
+            .replace(/\s+/g, '');
         // Among the corrected candidates the level allows, the shortest: fixing typos can
         // cost as many tokens as Trim saves ("btwn ram n rom plz" -> "between RAM and
         // ROM"), and falling back to the Fix text then put "please" back in.

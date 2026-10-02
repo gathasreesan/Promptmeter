@@ -327,7 +327,9 @@ const PromptMeterGrammar = {
         // An object pronoun follows a preposition: "between you and me", not "and I".
         // Anchored to the preposition, so an ordinary compound subject ("you and I should
         // meet") is untouched.
-        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b/g,
+        // Not when "I" opens the next clause: "moving to California and I've been
+        // looking" became "and me've been looking".
+        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b(?!['’]|\s+(?:am|was|have|had|will|would|can|could|should|shall|do|did|don't|didn't|went|need|want|think|feel|got|get|know|like|love|hate|tried|saw|see|said|told|found|made|make|use|used|\w+ed)\b)/g,
             '$1 $2 me', "after a preposition the pronoun is 'me', not 'I'"],
 
         [/\bcould\s+care\s+less\b/gi, "couldn't care less",
