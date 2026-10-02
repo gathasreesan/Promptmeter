@@ -181,7 +181,9 @@ const PromptMeterCompress = {
             .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase())
             .replace(/,\s+(Explain|Write|Give|List|Tell|Show|Describe|Create|Make|Help)\b/g,
                 (m, verb) => ', ' + verb.toLowerCase())
-            .trim();
+            .trim()
+            // A rewrite that now opens the prompt ("for a beginner, explain ...").
+            .replace(/^[a-z]/, (c) => c.toUpperCase());
         return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
     },
 

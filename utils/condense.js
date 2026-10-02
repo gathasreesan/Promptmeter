@@ -466,7 +466,7 @@ const PromptMeterCondense = {
                     // "but I didn't really understand what they meant" left "what they
                     // meant" hanging off the sentence before.
                     this.situationalEnd = this.situationalEnd || new RegExp(
-                        '^\\s*(?:$|[.,;:!?\\n)]|(?:so|and|but|because|since|then|also|now|however|therefore|plus|yet|can|could|would|will|please|'
+                        '^\\s*(?:$|[.,;:!?\\n)]|(?:so|and|but|because|since|then|also|now|however|therefore|plus|yet|can|could|would|will|please|i|we|'
                         + this.ASK_WORDS.filter((w) => !/^(?:what|why|how|when|where|which|who|whose|is|are|do|does|did|should|need|want|can|could|would|will|please)$/.test(w)).join('|')
                         + ')\\b)', 'i');
                     if (!this.situationalEnd.test(whole.slice(offset + match.length))) return match;

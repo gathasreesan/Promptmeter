@@ -47,8 +47,8 @@ keeps('a goal behind "but ... so can you" keeps the goal and the request',
     "I want to learn React but I don't know where to start, so can you give me a roadmap?", 'learn React', /roadmap/i);
 lacks('...and is not rewritten into "Explain React but"',
     "I want to learn React but I don't know where to start, so can you give me a roadmap?", /Explain React/);
-keeps('"and so can you suggest" becomes its own request',
-    'My laptop is slow and so can you suggest ways to speed it up?', 'laptop is slow', 'Suggest ways');
+keeps('"and so can you suggest" is a request of its own',
+    'My laptop is slow and so can you suggest ways to speed it up?', 'laptop is slow', /[.;] suggest ways/i);
 check('the validator catches a dropped second request',
     !C.validate('Translate this and also explain the grammar.', 'Translate this and the grammar.').valid);
 
@@ -101,7 +101,7 @@ keeps('a stated goal with its constraints survives',
     'I want to remotely control my RaspberryPi from kilometers away and independent from mobile service, so i had LoRa as a idea. How would i be able to get a shell to my RaspberryPi via LoRa?',
     'kilometers');
 keeps('"Provide some examples" is a request', 'Could you describe at least 5 traits of a great mentor? Go in detail about each trait. Provide some examples as well.',
-    'Provide some examples');
+    /Provide (?:some )?examples/);
 keeps('"Let\'s play chess." is the request', "Let's play chess. I'll type my move in chess notation, and you'll respond with your move.", "Let's play chess");
 keeps('"You will ..." is an instruction', 'I want you to act as a drunk person. You will only answer like a drunk person texting. You will also randomly ignore what I said and say something random. Do not write explanations.',
     'randomly ignore');

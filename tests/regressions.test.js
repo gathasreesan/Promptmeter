@@ -458,7 +458,9 @@ keeps('what happens inthe kernel', 'in the');
 // "in JavaScript" fails validation and the whole fix is thrown away.
 equals('sort an aray in javascirpt', 'Sort an array in JavaScript');
 keeps('diffrence btw tcp and udp in detial', 'between TCP and UDP');
-keeps('btw can u explain recursion', 'By the way');
+// An opening "btw" is filler: expanded, "By the way can you explain" cost two tokens
+// more than the prompt as typed.
+equals('btw can u explain recursion', 'Explain recursion');
 keeps('wat r the advntages of cloud computng', 'What are the advantages');
 keeps('sugest some gud books for dsa', 'good books');
 keeps('tel me a joke abut cats', 'about cats');
