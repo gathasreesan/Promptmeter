@@ -2021,7 +2021,12 @@ const PromptMeterOptimizer = {
             || STRONG.test(String(expand(w)).toLowerCase().split(/\s+/)[0]))).size;
         const caps = new Set((text.match(/\b[A-Z]{2,5}\b/g) || []).map((w) => w.toLowerCase()));
         const wordy = words.filter((w) => !caps.has(w)).length;
-        if (words.length >= 4 && (strongHits === 0 || (wordy >= 6 && strongHits < 2))) {
+        // One strong word is enough for real English ("what is gpt4's current context
+        // window"); it is not enough when most words are not dictionary words at all.
+        const dictWords = words.filter((w) => !caps.has(w) && PM_SPELL && PM_SPELL.known && PM_SPELL.known(w)).length;
+        const thin = wordy >= 6 && strongHits < 2 && dictWords / wordy < 0.5;
+        if (thin) return false;
+        if (words.length >= 4 && strongHits === 0) {
             const dict = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
             const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && PM_SPELL.correctWord(w);
             const strict = words.filter(dict).length;
