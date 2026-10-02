@@ -915,8 +915,10 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
         // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
         // "my dear friend" its "dear".
-        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya|bro+|bruh|dude|buddy|sir|ma'?am|mam)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
-        // (Forms of address too: "bro i have viva tmrw" kept its "Bro".)
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        // Forms of address, only where they address someone: "bro i have viva tmrw" and
+        // "machi please ..." lose them, "Bro code is ..." and "bhai ki shaadi" keep them.
+        /(?<=^|[.!?]|\n)\s*(?:bro+|bruh|dude|buddy|sir|ma'?am|mam|machi|machan|chetta|chechi|bhai|bhaiya|yaar)\b(?=\s*[,!:]|\s+(?:please|pls|plz|kindly|can|could|would|will|tell|explain|help|give|write|i|i'm|im|how|what|why|what's|whats|is|are|do|does|naan|enikku|mujhe|naalaiku|kal)\b)[,!:.\s\-\u2013\u2014]*/gi,
         // "doing great", "doing good", "having a good day" too, and "you're".
         /\b(?:(?:i\s+)?hope\s+(?:you\s+are|you're|ur)\s+(?:doing\s+(?:well|great|good|fine|okay|ok)|having\s+an?\s+(?:good|great|nice)\s+day)(?:\s+today)?|hope\s+this\s+finds\s+you\s+well|how\s+are\s+you(?:\s+doing)?(?:\s+today)?)(?:[,!.?\s]*)/gi,
         /\b(?:i\s+am\s+(?:really\s+)?bored(?:\s+so)?|i'm\s+(?:really\s+)?bored(?:\s+so)?|so\s+i\s+want\s+to|so\s+i\s+need\s+to)\b\s*/gi,

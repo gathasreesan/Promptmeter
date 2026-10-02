@@ -267,6 +267,9 @@ const PromptMeterCompress = {
         'thank you', 'thanks', 'thx'
     ],
 
+    // Asking about a word, its meaning or its translation, in the languages above.
+    FOREIGN_META: /\b(?:mean|means|meaning|translate|translation|word|bedeutet|bedeutung|heißt|übersetz\w*|wort|significa\w*|signifie|sens|palabra|mot|traduc\w*|tradu\w*|parola|palavra|artinya|arti|kata|anlam\w*|kelime|betekent|woord|matlab|arth|shabd)\b|अर्थ|मतलब|शब्द|अनुवाद|അർത്ഥം|വാക്ക്|பொருள்|சொல்|意思|含义|意味|翻译|翻訳|単語|单词|단어|의미|뜻|значит|значение|слово|перевод|معنى|كلمة|ترجم/iu,
+
     /** Letters of any script, with the combining marks Indic scripts are built from. */
     FOREIGN_EDGE: '[\\p{L}\\p{M}\\p{N}]',
 
@@ -282,14 +285,24 @@ const PromptMeterCompress = {
         const E = this.FOREIGN_EDGE;
         const cut = '[\\s,，、،؛!！¡.。।॥:;：；\\-–—🙏😊🙂]*';
         const stop = '[.!?。！？؟।\\n]';
+        // A prompt about words is the one place these words are content: "Was bedeutet
+        // bitte?", "कृपया का अर्थ क्या है?", "Dime el significado de la palabra por favor"
+        // lost the very word they asked about.
+        if (this.FOREIGN_META.test(text)) return text;
         if (!this.foreignRx) {
+            // An address term only where it addresses someone: "bhai, ..." or "bhai
+            // please ..." -- not "bhai ki shaadi" (brother's wedding) or "bro code".
+            const addressed = `(?:${alt(this.FOREIGN_ADDRESS)})(?=\\s*[,!:！，]|\\s+(?:${alt(this.FOREIGN_PLEASE)}|mujhe|mera|meri|main|hum|enikku|ente|njan|naan|enaku|i|can|could|tell|explain|help)(?!${E}))`;
             this.foreignRx = {
-                greet: new RegExp(`^\\s*(?:${alt(this.FOREIGN_GREETINGS)})(?!${E})(?:${cut}(?:${alt(this.FOREIGN_ADDRESS)})(?!${E}))?${cut}`, 'iu'),
-                address: new RegExp(`^\\s*(?:${alt(this.FOREIGN_ADDRESS)})(?!${E})${cut}`, 'iu'),
-                opener: new RegExp(`(^|${stop}\\s*)(?:${alt(this.FOREIGN_PLEASE_OPENERS)})(?=\\S)\\s*`, 'iu'),
+                greet: new RegExp(`^\\s*(?:${alt(this.FOREIGN_GREETINGS)})(?!${E})(?:${cut}${addressed})?${cut}`, 'iu'),
+                address: new RegExp(`^\\s*${addressed}${cut}`, 'iu'),
+                // 请 opens "please explain", but 请客 is "to treat", 请假 "to ask for
+                // leave", 请教 "to consult", 请求 "a request": never cut out of a word.
+                opener: new RegExp(`(^|${stop}\\s*)(?:请问|请(?![客假求教帖柬示愿安辞])|(?:tolong|mohon)(?!\\s*menolong))(?=\\S)\\s*`, 'iu'),
                 please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?\\s*`, 'giu'),
-                // "¡Muchas gracias!": the opening ¡ belongs to the thanks.
-                thanks: new RegExp(`(^|${stop}\\s*|\\s)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
+                // Only a thanks that is its own sentence or follows a comma: "a letter that
+                // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
+                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
             };
         }
         const rx = this.foreignRx;

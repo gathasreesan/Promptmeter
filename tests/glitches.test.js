@@ -200,6 +200,24 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
     'chetta enikku python padikkanam, oru roadmap tharamo please'
 ].forEach((p) => check('only filler removed, never content: ' + p.slice(0, 30),
     C.foreignValid(p, run(p).text), run(p).text));
+// Courtesy words removed in other languages -- and never where they are the content.
+[
+    ['Hindi', 'नमस्ते, कृपया मुझे पायथन में एक फ़ंक्शन लिखकर दें जो सूची को उल्टा करे और समझाएं भी। धन्यवाद!', 'मुझे पायथन में एक फ़ंक्शन लिखकर दें जो सूची को उल्टा करे और समझाएं भी।'],
+    ['Tamil', 'வணக்கம், தயவுசெய்து ஒரு பைதான் நிரல் எழுதவும் மற்றும் விளக்கவும். நன்றி!', 'ஒரு பைதான் நிரல் எழுதவும் மற்றும் விளக்கவும்.'],
+    ['Spanish', 'Hola, ¿puedes explicarme qué es la recursión y también darme un ejemplo en Python, por favor? ¡Muchas gracias!', '¿Puedes explicarme qué es la recursión y también darme un ejemplo en Python?'],
+    ['Portuguese', 'Olá, você pode me explicar o que é aprendizado de máquina, por favor? Obrigado!', 'Você pode me explicar o que é aprendizado de máquina?'],
+    ['Arabic', 'مرحبا، من فضلك اشرح لي ما هي البرمجة الكائنية وأعطني مثالا. شكرا جزيلا', 'اشرح لي ما هي البرمجة الكائنية وأعطني مثالا.'],
+    ['Chinese', '你好，请解释一下什么是递归，并给我一个Python的例子。谢谢！', '解释一下什么是递归，并给我一个Python的例子。'],
+    ['Japanese', 'こんにちは、再帰とは何か説明して、Pythonの例も教えてください。よろしくお願いします。', '再帰とは何か説明して、Pythonの例も教えてください。'],
+    ['Korean', '안녕하세요, 재귀가 무엇인지 설명해 주세요. 감사합니다!', '재귀가 무엇인지 설명해 주세요.'],
+    ['Tanglish', 'machi please naalaiku exam iruku, recursion explain pannunga, nanri', 'Naalaiku exam iruku, recursion explain pannunga']
+].forEach(([lang, p, want]) => check(lang + ': only courtesy removed', run(p).text === want, run(p).text));
+[
+    'Was bedeutet bitte auf Englisch?', '¿Qué significa gracias en inglés?', '请客吃饭的礼仪是什么？', '请假条怎么写？',
+    '请教一下，Python的列表和元组有什么区别？', 'Tolong menolong adalah sikap yang baik, jelaskan artinya',
+    'bhai ki shaadi ke liye speech likho', 'bro code kya hota hai', 'Escribe una carta de agradecimiento que termine con gracias',
+    'कृपया का अर्थ क्या है?', 'Dime el significado de la palabra por favor'
+].forEach((p) => check('courtesy word that IS the content stays: ' + p.slice(0, 24), run(p).text === p, run(p).text));
 keeps('an English request with a German payload is handled, payload untouched',
     'correct my german: ich habe gestern ein buch gelesen und es war sehr gut', /^Correct my German: ich habe gestern ein buch gelesen und es war sehr gut$/);
 keeps('a romanized Malayalam payload is untouched', 'translate to english: ente peru gatha aanu, njan kochiyil thamasikkunnu',
