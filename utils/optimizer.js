@@ -2009,7 +2009,19 @@ const PromptMeterOptimizer = {
         // fixable English typo and at least two are dictionary words: "nveer mind,
         // explin photosynthesis instead" and "that's wrong, try aggain" were skipped
         // whole. Italian and Indonesian stay out: their words are not in the dictionary.
-        if (words.length >= 4 && !words.some((w) => STRONG.test(w))) {
+        // One borrowed English verb is not an English sentence either: "Paki-explain kung
+        // ano ang recursion at bigyan mo ako ng halimbawa" passed on "explain" alone and
+        // had "kung" corrected to "king". Six words or more with a single strong word
+        // must pass the same nearly-all-English test.
+        // A misspelt or shortened strong word counts ("wat", "teh", "u"), and acronyms
+        // ("AI + ML + DL + NLP are importnt") are not words of any language.
+        const expand = (w) => (this.spellingTypos && this.spellingTypos[w])
+            || (this.chatSlangMap && this.chatSlangMap[w]) || w;
+        const strongHits = new Set(words.filter((w) => STRONG.test(w)
+            || STRONG.test(String(expand(w)).toLowerCase().split(/\s+/)[0]))).size;
+        const caps = new Set((text.match(/\b[A-Z]{2,5}\b/g) || []).map((w) => w.toLowerCase()));
+        const wordy = words.filter((w) => !caps.has(w)).length;
+        if (words.length >= 4 && (strongHits === 0 || (wordy >= 6 && strongHits < 2))) {
             const dict = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
             const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && PM_SPELL.correctWord(w);
             const strict = words.filter(dict).length;
@@ -2036,9 +2048,13 @@ const PromptMeterOptimizer = {
             if (this.ENGLISH_MARKERS.has(word) ||
                 acronym(word) ||
                 (PM_SPELL && PM_SPELL.known && PM_SPELL.known(word)) ||
-                shorthand(word) ||
-                (PM_SPELL && word.length >= 4 && PM_SPELL.correctWord && PM_SPELL.correctWord(word))) {
+                shorthand(word)) {
                 known++;
+            } else if (PM_SPELL && word.length >= 4 && PM_SPELL.correctWord && PM_SPELL.correctWord(word)) {
+                // A word the corrector could change is weaker evidence than one it knows:
+                // most foreign words are a letter or two from some English word, and
+                // Tagalog with "explain" in it passed and had "kung" made "king".
+                known += 0.5;
             }
         }
         words = counted;

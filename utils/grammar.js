@@ -163,6 +163,13 @@ const PromptMeterGrammar = {
         'amazon': 'Amazon', 'flipkart': 'Flipkart', 'microsoft excel': 'Microsoft Excel', 'excel': 'Excel',
         'kolkata': 'Kolkata', 'japan': 'Japan', 'china': 'China', 'singapore': 'Singapore', 'goa': 'Goa',
         'montserrat': 'Montserrat', 'diwali': 'Diwali', 'christmas': 'Christmas', 'eid': 'Eid',
+        // Festivals, epics and languages: "Diwali and holi" was capitalised by halves.
+        'holi': 'Holi', 'onam': 'Onam', 'pongal': 'Pongal', 'vishu': 'Vishu', 'navratri': 'Navratri',
+        'durga puja': 'Durga Puja', 'ganesh chaturthi': 'Ganesh Chaturthi', 'raksha bandhan': 'Raksha Bandhan',
+        'ramadan': 'Ramadan', 'ramayana': 'Ramayana', 'mahabharata': 'Mahabharata', 'bhagavad gita': 'Bhagavad Gita',
+        'tamil': 'Tamil', 'telugu': 'Telugu', 'kannada': 'Kannada', 'malayalam': 'Malayalam', 'hindi': 'Hindi',
+        'bengali': 'Bengali', 'marathi': 'Marathi', 'gujarati': 'Gujarati', 'punjabi': 'Punjabi', 'urdu': 'Urdu',
+        'sanskrit': 'Sanskrit', 'hinglish': 'Hinglish',
         'january': 'January', 'february': 'February', 'april': 'April', 'june': 'June', 'july': 'July',
         'august': 'August', 'september': 'September', 'october': 'October', 'november': 'November', 'december': 'December',
         'ielts': 'IELTS', 'toefl': 'TOEFL', 'gre': 'GRE', 'gmat': 'GMAT', 'usa': 'USA',

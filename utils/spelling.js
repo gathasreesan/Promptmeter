@@ -1974,7 +1974,22 @@ PromptMeterSpelling.firstNames = new Set(((typeof PM_FIRST_NAMES !== 'undefined'
     + 'swagger jenkins circleci sonarqube apache tomcat iis linux ubuntu debian fedora centos '
     + 'arch kali macos ios ipados android windows wsl powershell bash zsh vim neovim emacs vscode '
     + 'intellij pycharm eclipse xcode leetcode hackerrank codeforces codechef kaggle gfg geeksforgeeks '
-    + 'neet jee gate upsc gre gmat ielts toefl sat cbse icse ktu vtu anna')
+    + 'neet jee gate upsc gre gmat ielts toefl sat cbse icse ktu vtu anna '
+    // Indian English: food, family, festivals, forms of address, campus words. "chai"
+    // became "chain" and "amma" "ama".
+    + 'chai roti chapati paratha dal daal sambar rasam dosa idli vada pav bhaji biryani pulao '
+    + 'raita paneer ghee masala tikka korma curry naan kulcha lassi jalebi ladoo laddu halwa '
+    + 'payasam kheer gulab jamun samosa pakora chutney achaar thali sadhya appam puttu upma '
+    + 'poha khichdi rajma chole kadai tandoori momos maggi chaat bhel puri '
+    + 'amma appa achan acha amma ammachi appachan ammu chechi chetta chettan etta ettan '
+    + 'akka anna thambi machi machan bhai bhaiya didi dada dadi nani nana chacha chachi '
+    + 'mama mami beta beti yaar ji sahib saheb aunty uncle '
+    + 'diya diyas rangoli mehndi kolam pooja puja aarti prasad mandir gurudwara dargah '
+    + 'shayari ghazal bhajan kathakali bharatanatyam kuchipudi mohiniyattam carnatic hindustani '
+    + 'saree sari kurta dhoti lungi mundu dupatta salwar lehenga sherwani '
+    + 'lakh lakhs crore crores rupee rupees paise '
+    + 'hod od cgpa sgpa backlog backlogs viva vivas internals externals sem sems '
+    + 'prepone preponed intimate needful')
     .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
 // Technical vocabulary the lists lack, one letter from a word they have: "memoization"
 // became "memorization" once long words could be repaired by a missing letter.

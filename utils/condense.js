@@ -480,6 +480,11 @@ const PromptMeterCondense = {
                     // ... but my fingers hurt" lost "I have been trying to" and the rest
                     // read as the order "Learn guitar for 2 months".
                     if (/\bto\s*$/i.test(match)) return match;
+                    // In a message the user is asking to have written, the occasion IS the
+                    // content: "an email to my HOD asking for OD for the hackathon" lost
+                    // the hackathon, and a leave letter would lose the exam it is for.
+                    if (/\b(?:e-?mail|mail|letter|application|message|leave|notice|invitation|speech|caption|post|note|request|reply|excuse)\b/i.test(whole)
+                        && /\b(?:write|draft|compose|send|prepare|create|make|give)\b/i.test(whole)) return match;
                     // The rest still points at what the clause named: "I forgot the
                     // password to my phone, is there a way to get it unlocked?" lost the
                     // phone and kept "it".
