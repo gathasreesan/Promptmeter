@@ -952,7 +952,14 @@ const PromptMeterCompress = {
         // The validator and every rewrite rule read English through [a-z]. On other
         // scripts every check passes vacuously, which is how a Malayalam prompt lost
         // two of its three sentences and still "validated". Decline instead.
-        if (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(prompt)) {
+        // Only the instruction is judged when the prompt carries a payload: "correct my
+        // German: ich habe gestern ..." is an English request, and the payload is never
+        // rewritten anyway.
+        const payloadAt = this.PAYLOAD_MARKER.exec(prompt);
+        const instruction = payloadAt
+            ? prompt.slice(0, payloadAt.index + payloadAt[0].length).replace(/:\s*$/, '')
+            : prompt;
+        if (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(instruction)) {
             return unchanged(this.STATUS.UNSUPPORTED_LANGUAGE,
                 'not English: the rewrite rules and the validator cannot read it');
         }

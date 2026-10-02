@@ -185,6 +185,36 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
         .split('.promptmeter-diff-box {')[1].split('}')[0]));
 
 // ---------------------------------------------------------------------------
+// Languages
+// ---------------------------------------------------------------------------
+[
+    'मुझे पायथन में एक फ़ंक्शन लिखना है जो सूची को उल्टा करे और समझाओ भी',
+    'ஒரு பைதான் நிரல் எழுதவும் மற்றும் விளக்கவும்',
+    '¿Puedes explicarme qué es la recursión y también darme un ejemplo en Python?',
+    'Kannst du mir bitte erklären, wie ein Verbrennungsmotor funktioniert, und auch ein Beispiel geben?',
+    '请解释一下什么是递归，并给我一个Python的例子',
+    'Объясни, что такое рекурсия, и приведи пример на Python',
+    'Tolong jelaskan apa itu rekursi dan berikan contoh dalam Python',
+    'Paki-explain kung ano ang recursion at bigyan mo ako ng halimbawa',
+    'yaar kal mera exam hai dbms ka, normalization samjha do aur examples bhi do',
+    'chetta enikku python padikkanam, oru roadmap tharamo please'
+].forEach((p) => check('declined, not mangled: ' + p.slice(0, 30), run(p).text === p, run(p).text));
+keeps('an English request with a German payload is handled, payload untouched',
+    'correct my german: ich habe gestern ein buch gelesen und es war sehr gut', /^Correct my German: ich habe gestern ein buch gelesen und es war sehr gut$/);
+keeps('a romanized Malayalam payload is untouched', 'translate to english: ente peru gatha aanu, njan kochiyil thamasikkunnu',
+    'ente peru gatha aanu, njan kochiyil thamasikkunnu');
+keeps('a quoted foreign phrase is untouched', 'How do you say "thank you very much" in Japanese and also explain when to use it', '"thank you very much"');
+keeps('"chai" is chai', 'Write a poem in Hinglish about chai and also make it rhyme', 'about chai');
+keeps('"amma" is amma', 'my amma wants a simple payasam recipe and also tips to make it creamy', 'amma', 'payasam');
+keeps('festivals are capitalised alike', 'tell me about diwali and holi and also why we light diyas', 'Diwali and Holi', 'diyas');
+keeps('the occasion of an email stays', 'I need to write an email to my HOD asking for OD for the hackathon and also mention my roll number 21CS045',
+    'hackathon', '21CS045');
+keeps('British spelling stays British', 'please analyse the behaviour of this programme and also suggest how to optimise it',
+    'Analyse the behaviour of this programme', 'optimise');
+keeps('Indian English stays', 'i passed out of college in 2020 and also want to change my career to data science, give a plan', 'passed out of college');
+keeps('messy English is still English', 'wat is teh diffrence btwn ram n rom plz', /difference/i);
+
+// ---------------------------------------------------------------------------
 // Wording that changed the meaning
 // ---------------------------------------------------------------------------
 keeps('"as soon as possible" inside the goal stays',
