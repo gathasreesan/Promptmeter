@@ -1108,7 +1108,9 @@ const PromptMeterOptimizer = {
         // or the end of the text; an operator is followed by = or more symbol.
         // "that" as an object is not a dangling conjunction: "Expand on that." and
         // "Explain that." lost their object.
-        [/\s*\b(?:because|since|and|but|so|where|when|which|(?<!\b(?:on|about|with|of|in|for|do|did|does|is|was|like|at|to|from|by|explain|mean|means|see|know|fix|change|do|try|use|expand|elaborate|prove|check)\s)that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
+        // Never at a sentence start: "However, I need" and "If so, what" are openers,
+        // and lost to this rule they left "4pm., I need".
+        [/(?<!(?:^|[.!?])\s*)(?<!\bif\s*)\s*\b(?:because|since|and|but|so|where|when|which|(?<!\b(?:on|about|with|of|in|for|do|did|does|is|was|like|at|to|from|by|explain|mean|means|see|know|fix|change|do|try|use|expand|elaborate|prove|check)\s)that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
         // Two coordinators in a row
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed

@@ -70,8 +70,11 @@ const PromptMeterProtect = {
         { name: 'relative-path', rx: /\b[\w.-]+(?:\/[\w.-]+)*\/[\w-]+\.\w{1,6}\b/g },
         {
             name: 'filename',
-            rx: /\b[\w.-]+\.(?:js|jsx|ts|tsx|mjs|cjs|py|java|c|cpp|cc|h|hpp|cs|rb|go|rs|php|swift|kt|html|css|scss|json|ya?ml|toml|ini|xml|sql|sh|bash|ps1|bat|md|txt|csv|tsv|log|env|lock)\b/gi
+            rx: /\b[\w.-]+\.(?:js|jsx|ts|tsx|mjs|cjs|py|java|c|cpp|cc|h|hpp|cs|rb|go|rs|php|swift|kt|html|css|scss|json|ya?ml|toml|ini|xml|sql|sh|bash|ps1|bat|md|txt|csv|tsv|log|env|lock|pem|key|crt|cer|pfx|p12|pub|wav|mp3|mp4|mkv|mov|png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?|pptx?|zip|tar|gz|rar|7z|exe|dll|so|apk|ipynb|r|dart|vue|svelte|lua|pl|scala|gradle|tf|proto|db|sqlite|parquet|pkl|h5|onnx|pt|bin|iso|dmg|msi|deb|rpm|conf|cfg|properties|jar|war|class|o|a)\b/gi
         },
+        // A bare extension or dot-name: "from .wav file" became "from. Wav file" and
+        // ".env" ". Env" -- the dot read as a full stop and the word got a capital.
+        { name: 'dot-name', rx: /(?<![\w.])\.(?=[A-Za-z])[A-Za-z0-9]{1,10}\b/g },
 
         // --- Material the user marked as verbatim ----------------------------------
         { name: 'double-quoted', rx: /"[^"\n]{1,300}"/g },

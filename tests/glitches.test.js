@@ -150,6 +150,13 @@ keeps('"Suppose" keeps a hypothesis hypothetical', 'Suppose the universe is infi
 keeps('"Imagine" keeps a role imagined', 'Imagine you are self-aware. What would you tell the world?', /^Imagine/);
 lacks('spacing alone is not shipped as a correction', 'Write an intro for a company at Thane-Belapur Road, P.O. - Vashi', /P\. O\./);
 
+keeps('".wav" is a file type, not a full stop', 'please write a program in C that scans a sound sample from .wav file', 'from .wav file');
+keeps('".env" is a file name', 'bash one-liner: export all values from .env file', 'from .env file');
+keeps('key files keep their names', 'openssl command to encrypt file.txt with a.pem which is the public key and b.pem which is private key',
+    'a.pem', 'b.pem which is');
+keeps('"However," opens a sentence', 'I will come home by 4pm. However, I need to study about 1 hour in between. How much time do I have?', '4pm. However, I need');
+keeps('"If so," opens a sentence', 'Is it true that royal families in Europe practiced incest? If so, what are some examples from history?', 'If so, what');
+
 // ---------------------------------------------------------------------------
 // Spelling that broke names and protocols
 // ---------------------------------------------------------------------------
