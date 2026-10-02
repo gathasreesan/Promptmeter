@@ -1570,8 +1570,18 @@ const PromptMeterSpelling = {
     correctWord: function (word) {
         if (this.cache.has(word)) return this.cache.get(word);
 
-        const result = this.resolve(word) || this.safeEdit(word) || this.inflected(word)
-            || this.droppedLetter(word) || this.split(word);
+        // A real word is not a typo. resolve() declines it, and the fallbacks below then
+        // guessed anyway: "it compiles" became "it complies".
+        // The known-misspellings table still wins: "sentance" and "ned" are attested
+        // because users typed them, not because they are words.
+        const listed = Object.prototype.hasOwnProperty.call(this.misspellings, word);
+        // Nor an inflection built wrongly: "companys" (companies) and "gameing" (gaming)
+        // look like company+s and game+ing, and users type them, but are typos.
+        const malformed = !this.known(word) && /(?:[^aeiou]ys|[^e]eing)$/.test(word);
+        const real = !listed && !malformed
+            && (this.known(word) || this.attested.has(word) || this.formOfKnown(word));
+        const result = real ? null : (this.resolve(word) || this.safeEdit(word) || this.inflected(word)
+            || this.droppedLetter(word) || this.split(word));
         this.cache.set(word, result);
         return result;
     },

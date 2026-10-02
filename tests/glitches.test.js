@@ -171,6 +171,12 @@ keeps('"not only ... but also" becomes "and"', 'Not only explain the theory of r
     'Explain the theory of relativity and give real world examples');
 keeps('"as well as" becomes "and"', 'List the causes of World War 2 as well as the major turning points', 'causes of World War 2 and the major');
 keeps('"as well as you can" is not a connector', 'Do it as well as you can', 'as well as you can');
+keeps('a real inflection is not "corrected"', 'Debug my code: it compiles but the output is wrong', 'it compiles');
+keeps('"companys" is still a typo', 'draft an agreement between two companys', 'two companies');
+keeps('"What are X and when ...?" stays a question', 'What are the symptoms of diabetes and when should I see a doctor?', /^What are the symptoms/);
+check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
+    require('fs').readFileSync(require('path').join(__dirname, '..', 'content.css'), 'utf8')
+        .split('.promptmeter-diff-box {')[1].split('}')[0]));
 
 // ---------------------------------------------------------------------------
 // Wording that changed the meaning

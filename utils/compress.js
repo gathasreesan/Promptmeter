@@ -115,7 +115,9 @@ const PromptMeterCompress = {
         [/,?\s+like\s+(?=(?:what|how|why|when|where|which|who)\b)/gi, ', '],
         // Questions that are really requests, in their shortest form. Condense only:
         // Trim keeps the user's question; Condense trades it for the command.
-        [/(^|[.!?]\s+)what\s+are\s+(?:the\s+|some\s+)?(?:different\s+|various\s+|main\s+)?(types|kinds|forms|categories|causes|symptoms|benefits|advantages|disadvantages|uses|stages|steps|examples|features|applications|effects|signs|risks)\s+of\s+/gi,
+        [/(^|[.!?]\s+)what\s+are\s+(?:the\s+|some\s+)?(?:different\s+|various\s+|main\s+)?(types|kinds|forms|categories|causes|symptoms|benefits|advantages|disadvantages|uses|stages|steps|examples|features|applications|effects|signs|risks)\s+of\s+(?![^.?!]*\b(?:and|or)\s+(?:when|what|how|why|where|which|who|should|can|could|is|are|do|does|will|would)\b)/gi,
+            // Not when another question follows: "What are the symptoms of diabetes and
+            // when should I see a doctor" became "List the symptoms ... and when should I".
             (m, lead, what) => lead + 'List the ' + what.toLowerCase() + ' of '],
         [/(^|[.!?]\s+)how\s+(?:do|can|should)\s+(?:i|we|one)\s+/gi, '$1How to '],
         [/(^|[.!?]\s+)what\s+is\s+the\s+meaning\s+of\s+/gi, '$1Define '],

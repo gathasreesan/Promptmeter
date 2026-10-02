@@ -259,6 +259,9 @@
     padding: 10px var(--space-3);
     border-radius: var(--radius-btn);
     word-break: break-word;
+    /* A list keeps its lines: "1. ... 2. ..." was shown run together on one line,
+       though Apply wrote it back with the line breaks intact. */
+    white-space: pre-wrap;
     border: 1px solid var(--border-color);
     flex: 0 0 auto;
 }
