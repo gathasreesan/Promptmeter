@@ -2855,6 +2855,9 @@ const PromptMeterOptimizer = {
             // sentence removed between them) became "again.... Explain".
             .replace(/\.(?:[ \t]+\.)+(?!\.)/g, '.')
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
+            // A removed "Please," leaves its comma after the previous stop: "who you are.
+            // Please, take in mind" became "who you are., take in mind".
+            .replace(/([.!?])[ \t]*,[ \t]*(?=\S)/g, '$1 ')
             .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             // A word stripped from the end of a sentence leaves its comma behind:
             // "summarize the article, basically." came out as "the article,."

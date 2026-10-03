@@ -286,6 +286,10 @@ keeps('"a ostrich" is still corrected', 'Who would win in a fight between a kang
 keeps('a correction never joins lines', "You are a computational linguist. Let's do some semantic parsing.\nQ: Can you give me an AMR for this?\nA: sure",
     "parsing.\nQ: Can you");
 
+keeps('a removed "Please," leaves no ".,"', 'Everyone already knows who you are. Please, take in mind that you must be brief.',
+    'who you are. Take in mind');
+keeps('"etc.," is not a stray comma', 'I like apples, pears, etc., and also bananas. Explain why.', 'etc.,');
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');
