@@ -369,7 +369,8 @@ const PromptMeterCompress = {
                 address: new RegExp(`^\\s*${addressed}${cut}`, 'iu'),
                 // 请 opens "please explain", but 请客 is "to treat", 请假 "to ask for
                 // leave", 请教 "to consult", 请求 "a request": never cut out of a word.
-                opener: new RegExp(`(^|${stop}\\s*)(?:请问|请(?![客假求教帖柬示愿安辞])|(?:tolong|mohon)(?!\\s*menolong))(?=\\S)\\s*`, 'iu'),
+                // Also right after a removed greeting's mark: "你好，请写 ..." kept its 请.
+                opener: new RegExp(`(^|${stop}\\s*|\\u0007\\s*)(?:请问|请(?![客假求教帖柬示愿安辞])|(?:tolong|mohon)(?!\\s*menolong))(?=\\S)\\s*`, 'iu'),
                 please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?`, 'giu'),
                 // Only a thanks that is its own sentence or follows a comma: "a letter that
                 // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
