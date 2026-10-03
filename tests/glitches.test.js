@@ -288,6 +288,9 @@ keeps('a correction never joins lines', "You are a computational linguist. Let's
 
 keeps('a removed "Please," leaves no ".,"', 'Everyone already knows who you are. Please, take in mind that you must be brief.',
     'who you are. Take in mind');
+keeps('"Co.,Ltd." is a company name', 'Give me an introduction over 200 words for Wuxi Lida Chemical Co.,Ltd., a chemical company in jiangsu',
+    'Co.,Ltd., a chemical company');
+keeps('"please," in mid-sentence goes with its comma', 'Explain this, please, and then give an example.', 'Explain this, then give');
 keeps('"etc.," is not a stray comma', 'I like apples, pears, etc., and also bananas. Explain why.', 'etc.,');
 
 // Wordy phrases: the plain word is not an invention.

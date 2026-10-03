@@ -966,7 +966,9 @@ const PromptMeterOptimizer = {
         // Not before a verb of belief: "Can you believe X?" is not a request wrapper,
         // and stripping it left "Believe X?".
         /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>)(?:\s+also)?)\s*(?:would\s+you\s+mind|would\s+you\s+please|can\s+you\s+please|could\s+you\s+please|could\s+you|would\s+you|can\s+you)\b(?!\s+(?:believe|imagine|guess|tell\s+(?:if|whether)|see\s+why|not)\b)\s*/gim,
-        /\b(?:please|plea+se+|ples+a+s+e*|pl+z+|pl+s+)\b\s*/gi,
+        // With the comma that follows it: "who you are. Please, take in mind" left
+        // "who you are., take in mind".
+        /\b(?:please|plea+se+|ples+a+s+e*|pl+z+|pl+s+)\b,?\s*/gi,
         // (?!\w) after the alternation is load-bearing. \b anchors only the START, and
         // the trailing [,!.\s]* is happy to match nothing, so "ty" matched the first two
         // letters of "types" and the stripper turned "different types of ML" into
@@ -2864,7 +2866,9 @@ const PromptMeterOptimizer = {
             .replace(/(?<!\.)\.\s*\.(?!\.)/g, '.')
             // A removed "Please," leaves its comma after the previous stop: "who you are.
             // Please, take in mind" became "who you are., take in mind".
-            .replace(/([.!?])[ \t]*,[ \t]*(?=\S)/g, '$1 ')
+            // Only with the gap the removal left (". , take"): "Co.,Ltd." is a name, and
+            // became "Co. Ltd. A chemical company" -- 60 corpus prompts a token longer.
+            .replace(/([.!?])[ \t]+,[ \t]*(?=\S)/g, '$1 ')
             .replace(/\s+([,.?!;:])(?![=<>\d])/g, '$1')
             // A word stripped from the end of a sentence leaves its comma behind:
             // "summarize the article, basically." came out as "the article,."
