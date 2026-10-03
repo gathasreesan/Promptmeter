@@ -205,7 +205,7 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
     ['Hindi', 'नमस्ते, कृपया मुझे पायथन में एक फ़ंक्शन लिखकर दें जो सूची को उल्टा करे और समझाएं भी। धन्यवाद!', 'मुझे पायथन में एक फ़ंक्शन लिखकर दें जो सूची को उल्टा करे और समझाएं भी।'],
     ['Tamil', 'வணக்கம், தயவுசெய்து ஒரு பைதான் நிரல் எழுதவும் மற்றும் விளக்கவும். நன்றி!', 'ஒரு பைதான் நிரல் எழுதவும் மற்றும் விளக்கவும்.'],
     ['Spanish', 'Hola, ¿puedes explicarme qué es la recursión y también darme un ejemplo en Python, por favor? ¡Muchas gracias!', '¿Puedes explicarme qué es la recursión y también darme un ejemplo en Python?'],
-    ['Portuguese', 'Olá, você pode me explicar o que é aprendizado de máquina, por favor? Obrigado!', 'Você pode me explicar o que é aprendizado de máquina?'],
+    ['Portuguese', 'Olá, você pode me explicar o que é aprendizado de máquina, por favor? Obrigado!', 'Explique o que é aprendizado de máquina.'],
     ['Arabic', 'مرحبا، من فضلك اشرح لي ما هي البرمجة الكائنية وأعطني مثالا. شكرا جزيلا', 'اشرح لي ما هي البرمجة الكائنية وأعطني مثالا.'],
     ['Chinese', '你好，请解释一下什么是递归，并给我一个Python的例子。谢谢！', '解释一下什么是递归，并给我一个Python的例子。'],
     ['Japanese', 'こんにちは、再帰とは何か説明して、Pythonの例も教えてください。よろしくお願いします。', '再帰とは何か説明して、Pythonの例も教えてください。'],
@@ -228,8 +228,29 @@ check('the card keeps a list on separate lines', /white-space:\s*pre-wrap/.test(
 keeps('a table keeps its tabs and indentation', '----\nWahl zum Schatzmeister\n    abgegebene Stimmen: 505\nBitte zusammenfassen.',
     '----\nWahl zum Schatzmeister\n    abgegebene Stimmen: 505\n');
 keeps('a removed "bitte" leaves one space', 'Hallo, kannst du mir bitte erklären, wie ein Motor funktioniert? Vielen Dank!',
-    'Kannst du mir erklären, wie ein Motor funktioniert?');
+    'Erkläre mir, wie ein Motor funktioniert.');
 keeps('a removed ", пожалуйста," leaves one comma', 'Привет, объясни, пожалуйста, что такое рекурсия. Спасибо!', 'Объясни, что такое рекурсия.');
+// "Can you explain X?" -> "Explain X." in other languages, and only where it is safe.
+[
+    ['Hola, ¿puedes explicarme qué es la fotosíntesis?', 'Explícame qué es la fotosíntesis.'],
+    ['¿Me puedes decir cuál es la capital de Australia?', 'Dime cuál es la capital de Australia.'],
+    ['¿Puedes ayudarme a escribir un correo formal?', 'Ayúdame a escribir un correo formal.'],
+    ["Bonjour, peux-tu m'expliquer la photosynthèse s'il te plaît ? Merci beaucoup !", 'Explique-moi la photosynthèse.'],
+    ["Pouvez-vous m'expliquer le fonctionnement d'un moteur ?", "Expliquez-moi le fonctionnement d'un moteur."],
+    ['Kannst du mir die Photosynthese erklären?', 'Erkläre mir die Photosynthese.'],
+    ['Ciao, puoi spiegarmi cosa sono le reti neurali per favore? Grazie mille!', 'Spiegami cosa sono le reti neurali.'],
+    ['Привет, можешь объяснить, что такое рекурсия?', 'Объясни, что такое рекурсия.'],
+    ['Не могли бы вы объяснить теорию относительности?', 'Объясните теорию относительности.'],
+    ['Gracias por todo. Ahora explícame la fotosíntesis.', 'Ahora explícame la fotosíntesis.'],
+    ['Danke. Kannst du mir die Relativitätstheorie erklären?', 'Erkläre mir die Relativitätstheorie.']
+].forEach(([p, want]) => check('rewritten: ' + p.slice(0, 28), run(p).text === want, run(p).text));
+[
+    '¿Puedes explicarme qué es la recursión y también darme un ejemplo en Python?',
+    'Kannst du mir erklären, was ein Motor ist und wie er funktioniert?',
+    'Merci de m\'aider avec mon code',
+    'Gracias es una palabra, ¿puedes explicarme su origen?'
+].forEach((p) => check('not rewritten: ' + p.slice(0, 28), run(p).text === p, run(p).text));
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');

@@ -266,6 +266,73 @@ const PromptMeterCompress = {
         'dhanyavaad', 'dhanyavad', 'shukriya', 'nanri', 'nandri', 'nanni', 'nandi',
         'thank you', 'thanks', 'thx'
     ],
+    // What a thanks that opens a prompt is for: "Gracias por todo. Ahora explícame ...".
+    FOREIGN_THANKS_FOR: [
+        'por todo', 'por tu ayuda', 'por la ayuda', 'pour tout', 'pour ton aide', 'pour votre aide',
+        'für alles', 'für deine hilfe', 'für ihre hilfe', 'за всё', 'за все', 'за помощь', 'per tutto',
+        "per l'aiuto", 'por tudo', 'pela ajuda', 'for everything', 'for your help', 'for the help'
+    ],
+
+    // "Can you explain X?" -> "Explain X." in the languages whose requests take that shape.
+    // Each rule names the words it may remove and the words it may add, and foreignValid()
+    // holds it to exactly those. Only a single request with no second verb joined on:
+    // "¿Puedes explicarme X y también darme Y?" would read "Explícame X y también darme".
+    FOREIGN_REWRITES: [
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+explicarme\s+([^?¿]+?)\s*\?$/iu, 'Explícame $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'explicarme'], ['explícame']],
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+decirme\s+([^?¿]+?)\s*\?$/iu, 'Dime $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'decirme'], ['dime']],
+        [/^¿?\s*me\s+(?:puedes|podrías|podrias)\s+decir\s+([^?¿]+?)\s*\?$/iu, 'Dime $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'decir'], ['dime']],
+        [/^¿?\s*me\s+(?:puedes|podrías|podrias)\s+explicar\s+([^?¿]+?)\s*\?$/iu, 'Explícame $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'explicar'], ['explícame']],
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+ayudar(?:me)?\s+a\s+([^?¿]+?)\s*\?$/iu, 'Ayúdame a $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'ayudar', 'ayudarme'], ['ayúdame']],
+        [/^(?:peux-tu|pourrais-tu)\s+m'expliquer\s+([^?]+?)\s*\?$/iu, 'Explique-moi $1.',
+            ['peux', 'pourrais', 'tu', "m'expliquer"], ['explique', 'moi']],
+        [/^(?:pouvez-vous|pourriez-vous)\s+m'expliquer\s+([^?]+?)\s*\?$/iu, 'Expliquez-moi $1.',
+            ['pouvez', 'pourriez', 'vous', "m'expliquer"], ['expliquez', 'moi']],
+        [/^(?:peux-tu|pourrais-tu)\s+me\s+dire\s+([^?]+?)\s*\?$/iu, 'Dis-moi $1.',
+            ['peux', 'pourrais', 'tu', 'me', 'dire'], ['dis', 'moi']],
+        [/^(?:kannst|könntest)\s+du\s+mir\s+erklären,\s*([^?]+?)\s*\?$/iu, 'Erkläre mir, $1.',
+            ['kannst', 'könntest', 'du', 'erklären'], ['erkläre']],
+        [/^(?:kannst|könntest)\s+du\s+mir\s+([^?,]+?)\s+erklären\s*\?$/iu, 'Erkläre mir $1.',
+            ['kannst', 'könntest', 'du', 'erklären'], ['erkläre']],
+        [/^(?:você\s+)?(?:pode|poderia|podes)\s+(?:me\s+)?explicar\s+([^?]+?)\s*\?$/iu, 'Explique $1.',
+            ['você', 'pode', 'poderia', 'podes', 'me', 'explicar'], ['explique']],
+        [/^(?:puoi|potresti)\s+spiegarmi\s+([^?]+?)\s*\?$/iu, 'Spiegami $1.',
+            ['puoi', 'potresti', 'spiegarmi'], ['spiegami']],
+        [/^(?:puoi|potresti)\s+dirmi\s+([^?]+?)\s*\?$/iu, 'Dimmi $1.',
+            ['puoi', 'potresti', 'dirmi'], ['dimmi']],
+        // The comma before "что" is required Russian and stays: "Объясни, что такое ...".
+        [/^(?:можешь|ты\s+можешь|не\s+мог\s+бы\s+ты)\s+(?:мне\s+)?объяснить(,?)\s*([^?]+?)\s*\?$/iu, 'Объясни$1 $2.',
+            ['можешь', 'ты', 'не', 'мог', 'бы', 'мне', 'объяснить'], ['объясни']],
+        [/^(?:можете|вы\s+можете|не\s+могли\s+бы\s+вы)\s+(?:мне\s+)?объяснить(,?)\s*([^?]+?)\s*\?$/iu, 'Объясните$1 $2.',
+            ['можете', 'вы', 'не', 'могли', 'бы', 'мне', 'объяснить'], ['объясните']],
+        [/^(?:можешь|ты\s+можешь)\s+(?:мне\s+)?рассказать(,?)\s*([^?]+?)\s*\?$/iu, 'Расскажи$1 $2.',
+            ['можешь', 'ты', 'мне', 'рассказать'], ['расскажи']]
+    ],
+    // A second request joined on, in those languages: the rewrite is skipped.
+    // Not "o"/"ou"/"oder" ("or"): Portuguese "o que é" is "what is", and "or" joins
+    // nouns, not a second request.
+    FOREIGN_SECOND_ASK: /(?<![\p{L}\p{M}])(?:y|e|et|und|и|pero|mais|aber|ma|mas|но|también|aussi|auch|anche|também|тоже|также)(?![\p{L}\p{M}])/iu,
+
+    /**
+     * Applies the first FOREIGN_REWRITES rule that fits a one-sentence prompt.
+     * @returns {Object} { text, removed: [], added: [] }
+     */
+    foreignRewrite: function (text) {
+        const t = text.trim();
+        // One plain sentence only: never a prompt carrying code, quotes or a payload.
+        if (/[\n:"“”«»`]/.test(t)) return { text: text, removed: [], added: [] };
+        for (const [rx, to, removed, added] of this.FOREIGN_REWRITES) {
+            const m = rx.exec(t);
+            const body = m && m[m.length - 1];
+            if (!m || this.FOREIGN_SECOND_ASK.test(body) || /[.!?]/.test(body)) continue;
+            return { text: t.replace(rx, to), removed: removed, added: added };
+        }
+        return { text: text, removed: [], added: [] };
+    },
 
     // Asking about a word, its meaning or its translation, in the languages above.
     FOREIGN_META: /\b(?:mean|means|meaning|translate|translation|word|bedeutet|bedeutung|heißt|übersetz\w*|wort|significa\w*|signifie|sens|palabra|mot|traduc\w*|tradu\w*|parola|palavra|artinya|arti|kata|anlam\w*|kelime|betekent|woord|matlab|arth|shabd)\b|अर्थ|मतलब|शब्द|अनुवाद|അർത്ഥം|വാക്ക്|பொருள்|சொல்|意思|含义|意味|翻译|翻訳|単語|单词|단어|의미|뜻|значит|значение|слово|перевод|معنى|كلمة|ترجم/iu,
@@ -303,7 +370,9 @@ const PromptMeterCompress = {
                 // Only a thanks that is its own sentence or follows a comma: "a letter that
                 // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
                 // After a code span too: "arregla este código: `...` ¡Gracias!".
-                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu')
+                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu'),
+                // A thanks that is the whole first sentence: "Gracias por todo. Ahora ...".
+                thanksOpen: new RegExp(`^\\s*[¡]?(?:${alt(this.FOREIGN_THANKS)})(?:\\s+(?:${alt(this.FOREIGN_THANKS_FOR)}))?(?!${E})\\s*[.!！。]+\\s+(?=\\S)`, 'iu')
             };
         }
         const rx = this.foreignRx;
@@ -322,7 +391,7 @@ const PromptMeterCompress = {
         const cutAt = full.search(/\n|:(?=\s*\S)|\[|(?<![\p{L}\p{M}])(?:folgenden?|folgender|folgendes|following|siguientes?|suivante?s?|seguintes?|seguente|следующ[\p{L}]*|下面|以下)(?![\p{L}\p{M}])/iu);
         const head = cutAt === -1 ? full : full.slice(0, cutAt);
         let rest = cutAt === -1 ? '' : full.slice(cutAt);
-        let out = head.replace(rx.greet, M).replace(rx.address, M);
+        let out = head.replace(rx.greet, M).replace(rx.address, M).replace(rx.thanksOpen, M);
         if (!rest) out = out.replace(rx.thanks, '$1' + M);
         // After a colon only code or quoted spans (masked): "arregla este código: `...`
         // ¡Gracias!" -- the thanks is still the user's.
@@ -353,8 +422,10 @@ const PromptMeterCompress = {
      * thanks, and every number and protected span survived. Han, kana and Hangul have no
      * spaces, so they are compared character by character.
      */
-    foreignValid: function (original, candidate) {
+    foreignValid: function (original, candidate, rewrite) {
         if (!candidate || !candidate.trim()) return false;
+        const extraRemoved = new Set((rewrite && rewrite.removed) || []);
+        const extraAdded = new Set((rewrite && rewrite.added) || []);
         const units = (s) => {
             const out = [];
             (s.toLowerCase().match(/[\p{L}\p{M}\p{N}']+/gu) || []).forEach((run) => {
@@ -366,16 +437,17 @@ const PromptMeterCompress = {
         };
         if (!this.foreignAllowed) {
             this.foreignAllowed = new Set(units([].concat(this.FOREIGN_GREETINGS, this.FOREIGN_ADDRESS,
-                this.FOREIGN_PLEASE, this.FOREIGN_PLEASE_OPENERS, this.FOREIGN_THANKS).join(' ')));
+                this.FOREIGN_PLEASE, this.FOREIGN_PLEASE_OPENERS, this.FOREIGN_THANKS,
+                this.FOREIGN_THANKS_FOR).join(' ')));
         }
         const left = new Map();
         units(candidate).forEach((u) => left.set(u, (left.get(u) || 0) + 1));
         for (const u of units(original)) {
             if (left.get(u)) { left.set(u, left.get(u) - 1); continue; }
-            if (!this.foreignAllowed.has(u)) return false;
+            if (!this.foreignAllowed.has(u) && !extraRemoved.has(u)) return false;
         }
-        // Nothing may appear that was not there.
-        if ([...left.values()].some((n) => n > 0)) return false;
+        // Nothing may appear that was not there -- except a rewrite's own verb form.
+        if ([...left.entries()].some(([u, n]) => n > 0 && !extraAdded.has(u))) return false;
         const nums = (s) => (s.match(/\d+(?:[.,]\d+)*/g) || []).join(' ');
         if (nums(original) !== nums(candidate)) return false;
         return this.verbatimIn(original).every((span) => candidate.indexOf(span) !== -1);
@@ -1117,9 +1189,13 @@ const PromptMeterCompress = {
             // the same few words in every language and cost the most tokens in the
             // scripts BPE splits finely. Only those go, and foreignValid() proves that
             // nothing else did.
-            const trimmed = this.foreignTrim(prompt);
+            const trimmedOnly = this.foreignTrim(prompt);
+            const rw = this.FOREIGN_META.test(prompt) ? null : this.foreignRewrite(trimmedOnly);
+            const rewritten = rw && rw.text !== trimmedOnly && this.foreignValid(prompt, rw.text, rw);
+            const trimmed = rewritten ? rw.text : trimmedOnly;
             const trimmedTokens = PM_C_TOKENIZER ? PM_C_TOKENIZER.countTokens(trimmed) : 0;
-            if (trimmed !== prompt && trimmedTokens < originalTokens && this.foreignValid(prompt, trimmed)) {
+            if (trimmed !== prompt && trimmedTokens < originalTokens
+                && this.foreignValid(prompt, trimmed, rewritten ? rw : null)) {
                 const done = unchanged(this.STATUS.SUCCESSFUL,
                     'not English: only greetings, "please" and thanks were removed');
                 done.text = trimmed;
