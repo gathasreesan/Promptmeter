@@ -251,6 +251,10 @@ keeps('a removed ", пожалуйста," leaves one comma', 'Привет, о�
     'Gracias es una palabra, ¿puedes explicarme su origen?'
 ].forEach((p) => check('not rewritten: ' + p.slice(0, 28), run(p).text === p, run(p).text));
 
+keeps('a second pass keeps French spacing', 'bonjour comment tu va ?', /^comment tu va \?$/i);
+keeps('a second pass keeps an emoji', 'Salut mon amour ❤️', 'Mon amour ❤️');
+keeps('two greetings in a row both go', 'hola, buenas tardes. quisiera reportar una fuga', /^quisiera reportar una fuga$/i);
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');

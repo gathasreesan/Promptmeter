@@ -1135,7 +1135,10 @@ const PromptMeterCompress = {
     compress: function (prompt, options) {
         const first = this.compressOnce(prompt, options);
         if ((options && options.settled) || first.text === prompt) return first;
-        const again = this.compressOnce(first.text, Object.assign({}, options, { settled: true }));
+        // A prompt read as non-English stays non-English: with "bonjour" gone, "comment tu
+        // va ?" looked English and the second pass closed up its French spacing.
+        const again = this.compressOnce(first.text, Object.assign({}, options, { settled: true,
+            foreignOnly: /^not English/.test(first.reason || '') }));
         if (again.text === first.text) return first;
         const corrected = (first.candidates || []).find((c) => c.mode === 'conservative');
         if (!this.validate(prompt, again.text, { alsoAllow: corrected && corrected.text }).valid) return first;
@@ -1184,7 +1187,7 @@ const PromptMeterCompress = {
         const instruction = payloadAt
             ? prompt.slice(0, payloadAt.index + payloadAt[0].length).replace(/:\s*$/, '')
             : prompt;
-        if (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(instruction)) {
+        if (settings.foreignOnly || (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(instruction))) {
             // The English rules cannot read it, but greetings, "please" and thanks are
             // the same few words in every language and cost the most tokens in the
             // scripts BPE splits finely. Only those go, and foreignValid() proves that
