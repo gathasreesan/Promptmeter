@@ -147,7 +147,9 @@ has('apostrophes are not quotes', A.analyze("it's the students' books and teh te
  ['Japanese', 'こんにちは。Pythonで再帰を説明してください。ありがとうございます。'],
  ['Russian', 'Привет! Объясни, пожалуйста, рекурсию в Python на примере. Спасибо.'],
  ['Arabic', 'مرحبا، هل يمكنك شرح الفرق بين TCP و UDP؟ شكرا جزيلا.']]
-    .forEach(([lang, p]) => check(lang + ' left untouched', text(p) === p, text(p)));
+    // Greetings, "please" and thanks may go; nothing else. foreignValid() is the proof.
+    .forEach(([lang, p]) => check(lang + ' loses only greetings, please and thanks',
+        C.foreignValid(p, text(p), C.foreignRewrite(C.foreignTrim(p))), text(p)));
 const hinglish = text('bhai mujhe python mein recursion samjhao please, kal exam hai');
 ['mujhe', 'samjhao', 'kal', 'hai'].forEach((w) => has('Hinglish keeps "' + w + '"', hinglish, w));
 has('Manglish keeps cheyyamo', text('chetta enikku python recursion onnu explain cheyyamo pls'), 'cheyyamo');
@@ -287,7 +289,7 @@ check('three edit levels map to the three tiers', St2.STRICTNESS.fixes === 'cons
 
 // Live ChatGPT testing: worst-case prompts at Trim, exact expected output.
 [
-    ['wat is teh diffrence btwn ram n rom plz explian in simpel words', 'What is the difference between RAM and ROM explain in simple words'],
+    ['wat is teh diffrence btwn ram n rom plz explian in simpel words', 'What is the difference between RAM and ROM explain simply'],
     ['cn u rite a email to my profesor askin for extention on asignment due tmrw', 'Write an email to my professor asking for extension on assignment due tomorrow'],
     ['how 2 make biryani at home step by step 4 beginers', 'How to make biryani at home step by step 4 beginners'],
     ['its raining alot and i could of gone out but i didnt', "It's raining a lot and I could have gone out but I didn't"],
@@ -389,6 +391,37 @@ check('round 2: clear questions get no "unclear request" advice',
     ['how many hours of sleep does an adult need', 'wifi keeps disconnecting every few minutes on my windows 11 laptop',
         'is it safe to drink water from the tap in goa', 'the api returns 401 even tho the token is valid']
         .every((p) => !A.analyze(p, []).findings.some((f) => /Does not clearly state/.test(f.explanation || ''))));
+
+// The screenshot case and its relatives: two-letter drops, words that are real but
+// wrong in context, tool names, two requests typed as one.
+[
+    ['expalin a diffent type of ml+flat explain ai', 'Explain a different type of ML+flat. Explain AI'],
+    ['write a pyhton progam to revrse a strng', 'Write a Python program to reverse a string'],
+    ['tell me abut nural netwroks and deep lerning', 'Tell me about neural networks and deep learning'],
+    ['how dose a compter work', 'How does a computer work'],
+    ['whats the diffcult part of lerning calculas', "What's the difficult part of learning calculus"],
+    ['pls explan the informtion in this tabel', 'Explain the information in this table'],
+    ['explain recursion give examples', 'Explain recursion. Give examples'],
+    ['write a function that sorts a list in python', 'Write a function that sorts a list in Python'],
+    ['Please explain this again. I did not understand. Please explain this again simply.', 'Explain this again. Explain this again simply.'],
+].forEach(([input, want]) => {
+    const got = C.compress(input, { budgetMs: 1e5, maxMode: 'balanced' }).text;
+    check('similar: ' + input.slice(0, 40), got === want, got);
+});
+check('similar: tool names are not typos', ['deno', 'vite', 'pnpm', 'kubectl'].every((w) => Sp.correctWord(w) === null));
+check('similar: two-letter drops resolve', [['diffent', 'different'], ['probly', 'probably'], ['diffcult', 'difficult'], ['informtion', 'information']]
+    .every(([t, w]) => Sp.correctWord(t) === w));
+
+// Title-case typos: capitalised words mid-sentence were skipped as names.
+const para = 'Artificial Inelligence + Machine Learing ar important technologies in today’s world. AI can help students + teachers sae tie, but it can also creat problems - especially when peple depend on it too mch. Technology > traditional mehods in sme situations, while traditional learning > technology in othrs.';
+const paraOut = C.compress(para, { budgetMs: 1e5, maxMode: 'conservative' }).text;
+check('title case: every typo in the screenshot paragraph fixed',
+    ['Artificial Intelligence', 'Machine Learning are important', 'save time', 'create problems', 'people depend', 'too much',
+        'traditional methods', 'some situations', 'in others'].every((w) => paraOut.includes(w)), paraOut);
+check('title case: names are never corrected',
+    ['Valentina', 'Angelin', 'Sreesan', 'Adwaith', 'Rajagiri', 'Matthews', 'Harrison', 'Kathryn', 'Thiruvananthapuram']
+        .every((n) => C.compress('Please write a short note to ' + n + ' about the meeting.', { budgetMs: 1e5, maxMode: 'conservative' }).text.includes(n)));
+check('title case: AR stays AR', C.compress('the AR headset is new', { budgetMs: 1e5 }).text.includes('AR headset'));
 
 check('wikipedia misspelling list is loaded', Sp.correctWord('compatable') === 'compatible'
     && Sp.correctWord('adres') === 'address', [Sp.correctWord('compatable'), Sp.correctWord('adres')]);

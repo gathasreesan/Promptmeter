@@ -156,12 +156,20 @@ const PromptMeterGrammar = {
         'css': 'CSS', 'json': 'JSON', 'api': 'API', 'pdf': 'PDF', 'sop': 'SOP',
         // Exams, products and names live testing turned up ("neet" became "nest").
         'neet': 'NEET', 'jee': 'JEE', 'upsc': 'UPSC', 'cbse': 'CBSE', 'icse': 'ICSE',
+        'deno': 'Deno', 'node.js': 'Node.js', 'knn': 'KNN', 'svm': 'SVM', 'llm': 'LLM', 'llms': 'LLMs',
         'nasa': 'NASA', 'seo': 'SEO', 'fps': 'FPS', 'gst': 'GST', 'ceo': 'CEO', 'faq': 'FAQ',
         'ui': 'UI', 'ux': 'UX', 'pc': 'PC', 'hr': 'HR', 'apa': 'APA', 'mla': 'MLA',
         'minecraft': 'Minecraft', 'valorant': 'Valorant', 'elden ring': 'Elden Ring', 'fortnite': 'Fortnite',
         'amazon': 'Amazon', 'flipkart': 'Flipkart', 'microsoft excel': 'Microsoft Excel', 'excel': 'Excel',
         'kolkata': 'Kolkata', 'japan': 'Japan', 'china': 'China', 'singapore': 'Singapore', 'goa': 'Goa',
         'montserrat': 'Montserrat', 'diwali': 'Diwali', 'christmas': 'Christmas', 'eid': 'Eid',
+        // Festivals, epics and languages: "Diwali and holi" was capitalised by halves.
+        'holi': 'Holi', 'onam': 'Onam', 'pongal': 'Pongal', 'vishu': 'Vishu', 'navratri': 'Navratri',
+        'durga puja': 'Durga Puja', 'ganesh chaturthi': 'Ganesh Chaturthi', 'raksha bandhan': 'Raksha Bandhan',
+        'ramadan': 'Ramadan', 'ramayana': 'Ramayana', 'mahabharata': 'Mahabharata', 'bhagavad gita': 'Bhagavad Gita',
+        'tamil': 'Tamil', 'telugu': 'Telugu', 'kannada': 'Kannada', 'malayalam': 'Malayalam', 'hindi': 'Hindi',
+        'bengali': 'Bengali', 'marathi': 'Marathi', 'gujarati': 'Gujarati', 'punjabi': 'Punjabi', 'urdu': 'Urdu',
+        'sanskrit': 'Sanskrit', 'hinglish': 'Hinglish',
         'january': 'January', 'february': 'February', 'april': 'April', 'june': 'June', 'july': 'July',
         'august': 'August', 'september': 'September', 'october': 'October', 'november': 'November', 'december': 'December',
         'ielts': 'IELTS', 'toefl': 'TOEFL', 'gre': 'GRE', 'gmat': 'GMAT', 'usa': 'USA',
@@ -206,6 +214,12 @@ const PromptMeterGrammar = {
         [/\bthey're\s+(?=(?:own|house|home|car|books?|jobs?|names?|code|work|ideas?|answers?|team|parents|friends|kids|children)\b)/gi,
             'their ', "'they're' (they are) should be 'their' (belonging to them)"],
         [/\bthier\b/gi, 'their', "'thier' is a misspelling of 'their'"],
+        [/\bsave\s+tie\b/gi, 'save time', "'save tie' should be 'save time'"],
+        // Real words typed for others, where the neighbours decide: "tell me abut",
+        // "how dose a computer work".
+        [/\b(me|you|us|talk|talking|think|know|ask|learn|more|all|something|anything|nothing|much|questions?|info|information|story|care|worry|sure)\s+abut\b/gi, '$1 about', "'abut' should be 'about'"],
+        [/\b(how|what|why|where|when|who|which|it|he|she|this|that)\s+dose\b(?!\s+of\b)/gi, '$1 does', "'dose' should be 'does'"],
+        [/^dose\s+(?=(?:it|this|that|he|she|a|an|the|anyone|someone|my|your)\b)/i, 'Does ', "'dose' should be 'does'"],
         // Dictation and autocorrect slips, each pinned to a context that decides it.
         [/(?<!\bday\s)\bto\s+(day|morrow|night)\b(?!\s+(?:to|by|after|\d))/gi, (m, w) => 'to' + w.toLowerCase(), "'to day' should be one word"],
         [/\bthe\s+different\s+(?=between\b)/gi, 'the difference ', "'different' should be 'difference' here"],
@@ -224,7 +238,8 @@ const PromptMeterGrammar = {
         [/\b(had|have|has|having)\s+(knew|went|did|saw|took|ate|wrote|gave|broke|spoke|drove|began|drank|swam|ran|came|forgot|chose|stole|froze|rode|threw|grew|flew|hid|bit)\b/gi,
             (m, aux, v, offset, str) => /^(?:have|has)$/i.test(aux) && /\b(?:yesterday|last\s+(?:year|week|month|night|time|summer|winter)|ago|in\s+(?:19|20)\d\d)\b/i.test(str) ? v : aux + ' ' + ({ knew: 'known', went: 'gone', did: 'done', saw: 'seen', took: 'taken', ate: 'eaten', wrote: 'written', gave: 'given', broke: 'broken', spoke: 'spoken', drove: 'driven', began: 'begun', drank: 'drunk', swam: 'swum', ran: 'run', came: 'come', forgot: 'forgotten', chose: 'chosen', stole: 'stolen', froze: 'frozen', rode: 'ridden', threw: 'thrown', grew: 'grown', flew: 'flown', hid: 'hidden', bit: 'bitten' })[v.toLowerCase()],
             "past participle after 'have'"],
-        [/\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
+        // Not after an inverted auxiliary: "why haven't we seen" became "haven't we saw".
+        [/(?<!\b(?:have|has|had|haven't|hasn't|hadn't|havent|hasnt|hadnt|having)\s+)\b(i|we|they|you|he|she)\s+(seen|done)\b(?!\s+(?:by|with|that))/gi,
             (m, s, v) => s + ' ' + (v.toLowerCase() === 'seen' ? 'saw' : 'did'), "'seen/done' needs 'have'; the past tense is 'saw/did'"],
         [/(?<!\bhow\s)\b(the|these|those|my|your|our|their|his|her|both)\s+([a-z]+[^su\W]s)\s+is\b(?!\s+(?:this|that|it|[a-z]+ing)\b)/gi,
             (m, det, noun) => /(?:ics|news|series|species|ss)$|^(?:datas|informations|advices|feedbacks|researches|knowledges|equipments|furnitures|luggages|softwares|homeworks|evidences)$/i.test(noun) ? m : `${det} ${noun} are`, "a plural subject takes 'are'"],
@@ -232,6 +247,15 @@ const PromptMeterGrammar = {
             "who's ", "'whose' should be 'who's' (who is)"],
         [/(?<!\b(?:some|any|the|your|my|his|her|our|their|good|this|that|much|of|for|need|needs|want|get|give|an?|great|useful|free|expert|more|no)\s)\badvice\s+(?=(?:me|you|him|her|us|them|my|on\s+(?:how|what|which|whether)))/gi, 'advise ', "'advice' (noun) should be 'advise' (verb)"],
         [/\bto\s+advice\b/gi, 'to advise', "'advice' (noun) should be 'advise' (verb)"],
+        // "how to do we get": "how to" and "how do we" crossed.
+        [/\b(how|what|why|where|when)\s+to\s+(do|does|did|can|could|should|would|will|is|are)\s+(?=(?:i|we|you|they|he|she|it|one)\b)/gi,
+            '$1 $2 ', "'how to do we' should be 'how do we'"],
+        // "i a facing" / "i an going": "am" with a letter dropped, before an -ing verb.
+        [/\b(i)\s+an?\s+(?=[a-z]{2,}ing\b)/gi, (m, i) => (i === 'i' ? 'I' : i) + ' am ', "'I a' should be 'I am'"],
+        // "different kind of", "many type of": a plural quantifier takes the plural.
+        [/(?<!\b(?:a|an|one|each|every|this|that|same|any)\s)\b(different|various|several|many|multiple|all|these|those|other|two|three|four|five|few)\s+(kind|type|sort|form|category|variety|way|reason|cause|symptom|example|method|step|stage|use|benefit|advantage|disadvantage)\s+of\b/gi,
+            (m, q, noun) => q + ' ' + ({ category: 'categories', variety: 'varieties' }[noun.toLowerCase()] || noun + 's') + ' of',
+            "a plural quantifier takes a plural noun"],
         [/\b(on|about|know|decide|choose|sure|idea|wondering|tell\s+me|ask|see)\s+witch\b(?!\s+(?:hunts?|craft|hats?|doctors?|trials?))/gi, '$1 which', "'witch' should be 'which'"],
         [/(?<!\b(?:the|today's|bad|good|nice|this)\s)\bweather\s+(?=(?:to|or\s+not|i|you|we|he|she|they|it)\b)/gi, 'whether ', "'weather' should be 'whether'"],
         [/^(me|him|her)\s+and\s+(him|her|me)\s+(?=(?:went|are|were|did|have|go|got|had|will|can)\b)/i,
@@ -311,7 +335,9 @@ const PromptMeterGrammar = {
         // An object pronoun follows a preposition: "between you and me", not "and I".
         // Anchored to the preposition, so an ordinary compound subject ("you and I should
         // meet") is untouched.
-        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b/g,
+        // Not when "I" opens the next clause: "moving to California and I've been
+        // looking" became "and me've been looking".
+        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b(?!['’]|\s+(?:am|was|have|had|will|would|can|could|should|shall|do|did|don't|didn't|went|need|want|think|feel|got|get|know|like|love|hate|tried|saw|see|said|told|found|made|make|use|used|\w+ed)\b)/g,
             '$1 $2 me', "after a preposition the pronoun is 'me', not 'I'"],
 
         [/\bcould\s+care\s+less\b/gi, "couldn't care less",
@@ -658,6 +684,9 @@ const PromptMeterGrammar = {
         out = out.replace(/\b([Aa])\s+([a-z]\w+)/g, (match, article, word, offset, whole) => {
             const vowelSound = soundsVowel(word);
             if (!vowelSound) return match;
+            // An article is never followed by a verb or a conjunction: "A is sick, B is
+            // happy" names a person A, and became "An is sick".
+            if (/^(?:is|are|was|were|isn't|wasn't|has|had|and|or|if|also|always|often|ought|owes|owns|enters|eats|ends|asks|uses)$/i.test(word)) return match;
 
             // A capital "A" in the middle of a sentence is a label, not an article.
             // "Class A ordinary shares" was becoming "Class An ordinary shares", and so
