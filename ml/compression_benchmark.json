@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T04:02:04.073Z",
+  "generatedAt": "2026-10-03T05:17:32.758Z",
   "sample": "sample.jsonl",
   "prompts": 31401,
   "tokenizer": {
@@ -10,63 +10,63 @@
   "overall": {
     "prompts": 31401,
     "originalTokens": 1781367,
-    "optimizedTokens": 1754892,
-    "overallReduction": 1.49,
+    "optimizedTokens": 1754410,
+    "overallReduction": 1.51,
     "medianReductionWhenCompressed": 5.88,
-    "compressedShare": 24.4,
-    "meanLatencyMs": 9.202,
+    "compressedShare": 25.1,
+    "meanLatencyMs": 27.377,
     "modes": {
-      "balanced": 5924,
-      "none": 21603,
-      "aggressive": 1560,
-      "conservative": 2314
+      "balanced": 5905,
+      "none": 21400,
+      "conservative": 2494,
+      "aggressive": 1602
     }
   },
-  "netTokensSavedAtRepeats": 2647500,
+  "netTokensSavedAtRepeats": 2695700,
   "byLength": {
     "long": {
       "prompts": 3471,
       "originalTokens": 1089742,
-      "optimizedTokens": 1077223,
+      "optimizedTokens": 1077261,
       "overallReduction": 1.15,
       "medianReductionWhenCompressed": 1.2,
-      "compressedShare": 42.7,
-      "meanLatencyMs": 35.139,
+      "compressedShare": 43.8,
+      "meanLatencyMs": 28.845,
       "modes": {
-        "balanced": 1134,
-        "none": 1767,
-        "aggressive": 291,
-        "conservative": 279
+        "balanced": 1123,
+        "conservative": 302,
+        "aggressive": 317,
+        "none": 1729
       }
     },
     "medium": {
       "prompts": 7236,
       "originalTokens": 403794,
-      "optimizedTokens": 396295,
-      "overallReduction": 1.86,
-      "medianReductionWhenCompressed": 3.08,
-      "compressedShare": 37.1,
-      "meanLatencyMs": 11.087,
+      "optimizedTokens": 396137,
+      "overallReduction": 1.9,
+      "medianReductionWhenCompressed": 3.13,
+      "compressedShare": 37.7,
+      "meanLatencyMs": 9.257,
       "modes": {
-        "balanced": 2362,
-        "none": 4022,
-        "aggressive": 340,
-        "conservative": 512
+        "balanced": 2350,
+        "none": 3978,
+        "aggressive": 352,
+        "conservative": 556
       }
     },
     "short": {
       "prompts": 20694,
       "originalTokens": 287831,
-      "optimizedTokens": 281374,
-      "overallReduction": 2.24,
-      "medianReductionWhenCompressed": 11.11,
-      "compressedShare": 16.9,
-      "meanLatencyMs": 4.193,
+      "optimizedTokens": 281012,
+      "overallReduction": 2.37,
+      "medianReductionWhenCompressed": 11.76,
+      "compressedShare": 17.5,
+      "meanLatencyMs": 33.466,
       "modes": {
-        "none": 15814,
-        "balanced": 2428,
-        "conservative": 1523,
-        "aggressive": 929
+        "none": 15693,
+        "balanced": 2432,
+        "conservative": 1636,
+        "aggressive": 933
       }
     }
   },
@@ -74,61 +74,61 @@
     "analysis": {
       "prompts": 650,
       "originalTokens": 52868,
-      "optimizedTokens": 52355,
-      "overallReduction": 0.97,
+      "optimizedTokens": 52339,
+      "overallReduction": 1,
       "medianReductionWhenCompressed": 3.13,
-      "compressedShare": 23.8,
-      "meanLatencyMs": 12.69,
+      "compressedShare": 24.5,
+      "meanLatencyMs": 10.349,
       "modes": {
-        "none": 469,
-        "balanced": 124,
-        "conservative": 29,
-        "aggressive": 28
+        "none": 465,
+        "balanced": 122,
+        "conservative": 30,
+        "aggressive": 33
       }
     },
     "code": {
       "prompts": 3014,
       "originalTokens": 340233,
-      "optimizedTokens": 335710,
-      "overallReduction": 1.33,
+      "optimizedTokens": 335681,
+      "overallReduction": 1.34,
       "medianReductionWhenCompressed": 2.56,
-      "compressedShare": 43.4,
-      "meanLatencyMs": 17.069,
+      "compressedShare": 43.6,
+      "meanLatencyMs": 14.345,
       "modes": {
-        "balanced": 1086,
-        "none": 1141,
-        "aggressive": 190,
-        "conservative": 597
+        "balanced": 1081,
+        "none": 1136,
+        "aggressive": 197,
+        "conservative": 600
       }
     },
     "explain": {
       "prompts": 4071,
       "originalTokens": 119458,
-      "optimizedTokens": 117009,
-      "overallReduction": 2.05,
+      "optimizedTokens": 116992,
+      "overallReduction": 2.06,
       "medianReductionWhenCompressed": 10.53,
       "compressedShare": 20.9,
-      "meanLatencyMs": 6.387,
+      "meanLatencyMs": 5.267,
       "modes": {
         "none": 3020,
-        "balanced": 628,
-        "conservative": 224,
-        "aggressive": 199
+        "balanced": 629,
+        "conservative": 222,
+        "aggressive": 200
       }
     },
     "factual": {
       "prompts": 6699,
       "originalTokens": 212599,
-      "optimizedTokens": 208451,
+      "optimizedTokens": 208458,
       "overallReduction": 1.95,
-      "medianReductionWhenCompressed": 9.3,
-      "compressedShare": 21.1,
-      "meanLatencyMs": 6.026,
+      "medianReductionWhenCompressed": 10,
+      "compressedShare": 22.2,
+      "meanLatencyMs": 97.752,
       "modes": {
-        "balanced": 1133,
-        "none": 4923,
-        "conservative": 446,
-        "aggressive": 197
+        "balanced": 1137,
+        "none": 4850,
+        "conservative": 512,
+        "aggressive": 200
       }
     },
     "howto": {
@@ -138,7 +138,7 @@
       "overallReduction": 2.53,
       "medianReductionWhenCompressed": 9.09,
       "compressedShare": 44,
-      "meanLatencyMs": 7.136,
+      "meanLatencyMs": 5.897,
       "modes": {
         "aggressive": 592,
         "none": 849,
@@ -149,61 +149,61 @@
     "math": {
       "prompts": 1927,
       "originalTokens": 259375,
-      "optimizedTokens": 255915,
-      "overallReduction": 1.33,
-      "medianReductionWhenCompressed": 2.62,
-      "compressedShare": 23.2,
-      "meanLatencyMs": 16.25,
+      "optimizedTokens": 255874,
+      "overallReduction": 1.35,
+      "medianReductionWhenCompressed": 2.7,
+      "compressedShare": 23.5,
+      "meanLatencyMs": 13.353,
       "modes": {
-        "none": 1389,
-        "conservative": 97,
-        "balanced": 376,
-        "aggressive": 65
+        "none": 1387,
+        "conservative": 100,
+        "balanced": 368,
+        "aggressive": 72
       }
     },
     "other": {
       "prompts": 8780,
       "originalTokens": 387443,
-      "optimizedTokens": 382967,
-      "overallReduction": 1.16,
+      "optimizedTokens": 382638,
+      "overallReduction": 1.24,
       "medianReductionWhenCompressed": 5.88,
-      "compressedShare": 15.3,
-      "meanLatencyMs": 6.22,
+      "compressedShare": 16.5,
+      "meanLatencyMs": 4.979,
       "modes": {
-        "none": 6965,
-        "balanced": 1252,
-        "aggressive": 98,
-        "conservative": 465
+        "none": 6855,
+        "conservative": 573,
+        "balanced": 1248,
+        "aggressive": 104
       }
     },
     "roleplay": {
       "prompts": 822,
       "originalTokens": 124621,
-      "optimizedTokens": 122552,
-      "overallReduction": 1.66,
-      "medianReductionWhenCompressed": 2.7,
-      "compressedShare": 44.8,
-      "meanLatencyMs": 25.548,
+      "optimizedTokens": 122538,
+      "overallReduction": 1.67,
+      "medianReductionWhenCompressed": 2.71,
+      "compressedShare": 44.6,
+      "meanLatencyMs": 21.619,
       "modes": {
-        "none": 389,
-        "balanced": 313,
-        "aggressive": 51,
-        "conservative": 69
+        "none": 390,
+        "balanced": 311,
+        "aggressive": 53,
+        "conservative": 68
       }
     },
     "writing": {
       "prompts": 3717,
       "originalTokens": 240058,
-      "optimizedTokens": 236354,
-      "overallReduction": 1.54,
-      "medianReductionWhenCompressed": 4.44,
-      "compressedShare": 27.7,
-      "meanLatencyMs": 11.754,
+      "optimizedTokens": 236311,
+      "overallReduction": 1.56,
+      "medianReductionWhenCompressed": 4.39,
+      "compressedShare": 27.9,
+      "meanLatencyMs": 9.698,
       "modes": {
-        "balanced": 864,
-        "none": 2458,
-        "aggressive": 140,
-        "conservative": 255
+        "balanced": 861,
+        "none": 2448,
+        "aggressive": 151,
+        "conservative": 257
       }
     }
   },
@@ -211,29 +211,29 @@
     "note": "Candidates rejected by the validator, and which rule rejected them. These are preservation proxies, not a measure of answer quality.",
     "byMode": {
       "conservative": {
-        "tried": 27778,
-        "rejected": 228
+        "tried": 27967,
+        "rejected": 229
       },
       "balanced": {
-        "tried": 27858,
-        "rejected": 630
+        "tried": 27841,
+        "rejected": 627
       },
       "aggressive": {
-        "tried": 1936,
-        "rejected": 140
+        "tried": 1987,
+        "rejected": 153
       }
     },
     "violationsByRule": {
-      "verbatim": 157,
+      "verbatim": 159,
       "empty": 20,
-      "constraint": 306,
+      "constraint": 313,
       "format": 23,
-      "task": 34,
-      "name": 738,
-      "invention": 98,
+      "task": 33,
+      "name": 739,
+      "invention": 99,
       "list-item": 117,
-      "numbers": 51,
-      "payload": 1
+      "numbers": 50,
+      "payload": 2
     }
   },
   "downstreamQuality": {
@@ -272,6 +272,14 @@
       "to": 6,
       "original": "hello, can you generate a docs with examples for me?",
       "compressed": "Generate a docs with examples."
+    },
+    {
+      "category": "other",
+      "mode": "conservative",
+      "from": 5,
+      "to": 3,
+      "original": "halo apa kabar",
+      "compressed": "apa kabar"
     },
     {
       "category": "writing",
@@ -328,14 +336,6 @@
       "to": 3,
       "original": "can you write sql code for me",
       "compressed": "Write SQL code"
-    },
-    {
-      "category": "factual",
-      "mode": "balanced",
-      "from": 5,
-      "to": 3,
-      "original": "Can you get naughty?",
-      "compressed": "Get naughty?"
     }
   ]
 }
