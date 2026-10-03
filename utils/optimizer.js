@@ -850,6 +850,9 @@ const PromptMeterOptimizer = {
         [/\bin\s+an?\s+(?:detailed|elaborate)\s+(?:manner|way)\b/gi, 'in detail'],
         // Abstract nouns around the real subject: "how the process of photosynthesis
         // works" is "how photosynthesis works", "the concept of recursion" is "recursion".
+        // Before it: "when you are in the process of choosing" left "when you are in
+        // choosing". The whole phrase goes in front of an -ing verb.
+        [/\bin\s+the\s+process\s+of\s+(?=\w+ing\b)/gi, ''],
         [/\bthe\s+(?:process|concept|idea|notion|topic|subject)\s+of\s+(?=[a-z])/gi, ''],
         // "some of the best places" -> "the best places"; "some of the X" -> "some X"
         [/\bsome\s+of\s+the\s+(best|top|most|greatest|finest)\b/gi, 'the $1'],
@@ -1531,13 +1534,17 @@ const PromptMeterOptimizer = {
         const nouns = 'explanation|overview|summary|description|rundown|walkthrough|breakdown';
         const pattern = new RegExp(
             '(?:^|(?<=[.!?]\\s))\\s*(?:please\\s+)?(?:give|provide|write|show|make)\\s+'
-            + '(?:me\\s+)?(?:an?\\s+)?(' + adjectives + ')\\s+(?:' + nouns + ')\\s+'
+            + '(?:me\\s+)?(?:an?\\s+)?(' + adjectives + ')\\s+(' + nouns + ')\\s+'
             + '(?:of|on|about|for)\\s+([^.!?]+)', 'gi');
 
-        return text.replace(pattern, (match, adjective, object) => {
+        // The verb follows the noun: "a brief summary of X" is "summarize X briefly", and
+        // was "Explain X briefly" -- which the validator rightly read as losing "summary".
+        const VERB_FOR = { summary: 'Summarize', rundown: 'Summarize', overview: 'Summarize',
+            description: 'Describe' };
+        return text.replace(pattern, (match, adjective, noun, object) => {
             const adverb = this.ADVERB_FOR[adjective.toLowerCase()];
             if (!adverb) return match;
-            return 'Explain ' + object.trim() + ' ' + adverb;
+            return (VERB_FOR[noun.toLowerCase()] || 'Explain') + ' ' + object.trim() + ' ' + adverb;
         });
     },
 

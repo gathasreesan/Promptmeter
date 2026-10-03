@@ -141,6 +141,17 @@ const PromptMeterCompress = {
             (m, how) => ({ simple: 'simply', easy: 'simply', clear: 'clearly', brief: 'briefly',
                 short: 'briefly', detailed: 'in detail', concise: 'concisely' })[how.toLowerCase()]],
         [/\bexplain\s+to\s+me\b/gi, 'explain'],
+        // Wordy phrases with a plain equivalent of the same meaning.
+        [/\bprior\s+to\b/gi, 'before'],
+        [/\bwhether\s+or\s+not\b/gi, 'whether'],
+        [/\bthe\s+reason\s+why\b/gi, 'why'],
+        [/\b(?:various\s+different|different\s+various)\b/gi, 'various'],
+        [/\bfirst\s+and\s+foremost\b/gi, 'first'],
+        [/\ba\s+majority\s+of\b/gi, 'most'],
+        [/(^|[.!?]\s+)it\s+is\s+(?:important|essential|crucial|necessary|vital)\s+that\s+you\s+(\w)/gi,
+            (m, lead, c) => lead + c.toUpperCase()],
+        [/(^|[.!?]\s+)i\s+(?:am|was|'m)\s+wondering\s+(?:whether|if)\s+you\s+(?:could|can|would|might)\s+(?:please\s+)?(\w)/gi,
+            (m, lead, c) => lead + c.toUpperCase()],
         // Connectors longer than "and": "Not only explain X but also give Y" and "the
         // causes as well as the turning points". Not "as well as possible/you can".
         [/\bnot\s+only\s+([^.?!]+?),?\s+but\s+also\s+/gi, '$1 and '],
@@ -681,6 +692,12 @@ const PromptMeterCompress = {
     REWRITE_WORDS: new Set(['quickly', 'many', "i'm", 'im', 'summarize', 'summarise', 'teach', 'define', 'plan', 'one', 'them',
         'simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
         'beginner', 'should', 'how', 'explain', 'concisely', 'shortly',
+        // Plain words for wordy phrases: "in spite of the fact that" -> "although", "in a
+        // timely manner" -> "promptly", "take into consideration" -> "consider", "make a
+        // decision" -> "decide", "in close proximity to" -> "near", "in the near future"
+        // -> "soon". The invention rule rejected every one as a word the user never wrote.
+        'although', 'promptly', 'consider', 'decide', 'near', 'soon', 'most', 'before', 'after',
+        'daily', 'every', 'first', 'clearly', 'needs', 'need', 'often', 'usually', 'despite',
         // Corrections the grammar rules make from a different word in the original.
         "they're", "it's", "you're", "who's", 'than', 'whether', 'which', 'their', 'there',
         'losing', 'advise', 'known', 'saw', 'bought', 'fewer', 'are', 'write', 'between', 'and',
@@ -915,7 +932,9 @@ const PromptMeterCompress = {
         // grammar" -> "Translate this and the grammar" kept its first verb and lost the
         // second request entirely. A verb swapped for another (tell -> explain) is a
         // rewording, so only a net loss counts.
-        const VERBS = /\b(explain|write|create|build|list|describe|compare|summari[sz]e|translate|fix|debug|generate|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|implement|outline|plan|check|find|refactor|proofread|add|remove|include|mention|highlight|plot|test|provide|discuss|elaborate|propose|predict|estimate|evaluate|identify|define|derive|prove|imagine|reason)\b/gi;
+        // As verbs only: after an article or possessive they are nouns -- "for the reason
+        // that" -> "because" was rejected as dropping the request "reason".
+        const VERBS = /(?<!\b(?:the|a|an|my|your|our|their|this|that|no|any)\s)\b(explain|write|create|build|list|describe|compare|summari[sz]e|translate|fix|debug|generate|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|implement|outline|plan|check|find|refactor|proofread|add|remove|include|mention|highlight|plot|test|provide|discuss|elaborate|propose|predict|estimate|evaluate|identify|define|derive|prove|imagine|reason)\b/gi;
         const verbsOf = (text) => new Set((text.match(VERBS) || []).map((v) => v.toLowerCase()));
         const hadVerbs = verbsOf(original);
         const hasVerbs = verbsOf(candidate);

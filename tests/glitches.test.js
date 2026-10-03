@@ -290,6 +290,22 @@ keeps('a removed "Please," leaves no ".,"', 'Everyone already knows who you are.
     'who you are. Take in mind');
 keeps('"etc.," is not a stray comma', 'I like apples, pears, etc., and also bananas. Explain why.', 'etc.,');
 
+// Wordy phrases: the plain word is not an invention.
+[
+    ['Summarize the article in spite of the fact that it is long.', 'Summarize the article although it is long.'],
+    ['Suggest ways to reduce costs in a timely manner.', 'Suggest ways to reduce costs promptly.'],
+    ["Take into consideration the user's budget and suggest a laptop.", "Consider the user's budget and suggest a laptop."],
+    ['Describe the house that is located in close proximity to the river.', 'Describe the house that is located near the river.'],
+    ['Explain how to make a decision when you are in the process of choosing a career.', 'Explain how to decide when you are choosing a career.'],
+    ['Write an essay for the reason that I need it for class.', 'Write an essay because I need it for class.'],
+    ['Give a brief summary of the main points of the article.', 'Summarize the main points of the article briefly.'],
+    ['List the steps we should take prior to launching the product.', 'List the steps we should take before launching the product.'],
+    ['Explain whether or not it is possible to travel faster than light.', 'Explain whether it is possible to travel faster than light.'],
+    ['Explain the reason why the sky is blue.', 'Explain why the sky is blue.'],
+    ['It is important that you explain each step clearly.', 'Explain each step clearly.'],
+    ['I am wondering whether you could explain the theory of evolution.', 'Explain the theory of evolution.']
+].forEach(([p, want]) => check('wordy: ' + p.slice(0, 30), run(p).text === want, run(p).text));
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');
