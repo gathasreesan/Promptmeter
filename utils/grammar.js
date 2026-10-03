@@ -684,6 +684,9 @@ const PromptMeterGrammar = {
         out = out.replace(/\b([Aa])\s+([a-z]\w+)/g, (match, article, word, offset, whole) => {
             const vowelSound = soundsVowel(word);
             if (!vowelSound) return match;
+            // An article is never followed by a verb or a conjunction: "A is sick, B is
+            // happy" names a person A, and became "An is sick".
+            if (/^(?:is|are|was|were|isn't|wasn't|has|had|and|or|if|also|always|often|ought|owes|owns|enters|eats|ends|asks|uses)$/i.test(word)) return match;
 
             // A capital "A" in the middle of a sentence is a label, not an article.
             // "Class A ordinary shares" was becoming "Class An ordinary shares", and so

@@ -279,6 +279,13 @@ keeps('a ;-chained command stays', 'msfdb init;service postgresql start;msfconso
     'msfdb init;service postgresql start;msfconsole');
 keeps('"make a plan" is not a command', 'make a 4 week workout plan to loose 5 kg', /^Make a 4 week workout plan to lose 5 kg/);
 
+keeps('unfenced C++ keeps its identifiers', '#include <bits/stdc++.h>\nusing namespace std;int n，m，mod，ans，INF = 0x3f3f3f3f;\nexplain this code pls',
+    'int n，m，mod，ans，INF = 0x3f3f3f3f;');
+keeps('a letter naming a person is not an article', 'A is sick, B is happy and takes medicine. Does A feel better?', /^A is sick/);
+keeps('"a ostrich" is still corrected', 'Who would win in a fight between a kangaroo and a ostrich', 'an ostrich');
+keeps('a correction never joins lines', "You are a computational linguist. Let's do some semantic parsing.\nQ: Can you give me an AMR for this?\nA: sure",
+    "parsing.\nQ: Can you");
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');

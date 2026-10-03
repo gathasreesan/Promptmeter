@@ -79,6 +79,9 @@ const PromptMeterProtect = {
         { name: 'shell-line', rx: /^[ \t]*(?:[!$][ \t]?[A-Za-z][\w.+-]*|(?:sudo|pip3?|npm|npx|yarn|pnpm|git|mkdir|apt(?:-get)?|brew|docker|kubectl|gcc|g\+\+|wget|chmod|chown|ssh|scp|conda|systemctl|msfdb|msfconsole|nmap)[ \t])[^\n]*$/gm },
         // (Not "make", "cat", "touch", "echo", "export", "python", "node" ...: they open
         // ordinary English requests -- "make a 4 week workout plan".)
+        // Code pasted without a fence: "int n，m，mod，ans" had "ans" expanded to "answer".
+        // Lines that only code opens, or that end statements with ";" around braces or "=".
+        { name: 'code-line', rx: /^[ \t]*(?:#include\b|#define\b|using\s+namespace\b|from\s+[\w.]+\s+import\b|def\s+\w+\s*\(|function\s+\w+\s*\(|(?:public|private|protected|static)\s+[\w<>\[\]]+|[^\n]*;[^\n]*[{}=][^\n]*$|[^\n]*[{}=][^\n]*;\s*$)[^\n]*$/gm },
         { name: 'command-chain', rx: /\b[\w.-]+(?:[ \t][\w.-]+)*;[\w.-]+(?:[ \t;][\w.-]+)*/g },
         // A bare extension or dot-name: "from .wav file" became "from. Wav file" and
         // ".env" ". Env" -- the dot read as a full stop and the word got a capital.

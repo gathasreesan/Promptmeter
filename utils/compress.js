@@ -1300,7 +1300,12 @@ const PromptMeterCompress = {
         // cost as many tokens as Trim saves ("btwn ram n rom plz" -> "between RAM and
         // ROM"), and falling back to the Fix text then put "please" back in.
         if (!chosen) {
+            // A correction keeps the prompt's lines and costs a token or two at most: a
+            // 497-token prompt came back 507 with its lines run together, and "spelling
+            // corrections applied" was the reason given.
+            const lines = (s) => s.split('\n').length;
             scored.filter((c) => c.valid && allowed(c.mode) && loose(c.text) !== loose(prompt)
+                && lines(c.text) === lines(prompt) && c.tokens <= originalTokens + 2
                 && (!settings.mode || c.mode === settings.mode))
                 .forEach((c) => { if (!chosen || c.tokens < chosen.tokens) chosen = c; });
             if (chosen) correctedOnly = true;
