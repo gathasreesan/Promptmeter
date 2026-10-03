@@ -261,6 +261,17 @@ keeps('"After that," keeps "that"', 'Create a workout plan for beginners. After 
 keeps('"why I feel that." keeps "that"', 'Explain why I feel that.', 'feel that');
 lacks('a closing 🙏 goes', 'Explain recursion and suggest next steps? 🙏', /🙏/);
 
+// From 980 generated prompts in 17 languages.
+keeps('Tamil "say" is not "word"', 'வணக்கம், கடல் பற்றி ஒரு கவிதை எழுதவும் பிறகு சுருக்கமாக சொல்லவும். நன்றி!',
+    /^கடல் பற்றி ஒரு கவிதை எழுதவும் பிறகு சுருக்கமாக சொல்லவும்\.$/);
+keeps('a Chinese thanks run on to the request goes', '你好，请写一首关于大海的诗，然后简短一点谢谢！', /^写一首关于大海的诗，然后简短一点$/);
+keeps('a Japanese closing run on to the request goes', '光合成について説明してください、そして短くしてくださいよろしくお願いします。',
+    /^光合成について説明してください、そして短くしてください$/);
+keeps('Manglish "hai," is a greeting', 'hai, please kadalinekkurichu oru kavitha ezhuthu koode churukki parayu. nanni',
+    /^kadalinekkurichu oru kavitha ezhuthu koode churukki parayu\.?$/i);
+['சொல் என்பதன் பொருள் என்ன?', '这个词谢谢是什么意思？', 'hai kya yeh sahi hai']
+    .forEach((p) => check('still untouched: ' + p, run(p).text === p, run(p).text));
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');

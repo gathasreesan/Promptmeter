@@ -245,7 +245,9 @@ const PromptMeterCompress = {
         'السلام عليكم', 'أهلا', 'नमस्ते', 'नमस्कार', 'हेलो', 'हाय', 'வணக்கம்', 'ഹായ്', 'ഹലോ',
         'നമസ്കാരം', 'namaste', 'namaskar', 'vanakkam', 'hi', 'hello', 'hey'
     ],
-    FOREIGN_ADDRESS: ['bhai', 'bhaiya', 'yaar', 'bro', 'chetta', 'chechi', 'machi', 'machan', 'dude'],
+    // "hai" is Malayalam/Hinglish "hi" here, and Hindi "is" elsewhere -- as an address
+    // it goes only before a comma or a request word, like the others.
+    FOREIGN_ADDRESS: ['bhai', 'bhaiya', 'yaar', 'bro', 'chetta', 'chechi', 'machi', 'machan', 'dude', 'hai'],
     FOREIGN_PLEASE: [
         'por favor', "s'il vous plaît", "s'il te plaît", 'svp', 'bitte', 'per favore', 'per piacere',
         'lütfen', 'alsjeblieft', 'alstublieft', 'пожалуйста', 'من فضلك', 'لو سمحت', 'कृपया',
@@ -335,7 +337,9 @@ const PromptMeterCompress = {
     },
 
     // Asking about a word, its meaning or its translation, in the languages above.
-    FOREIGN_META: /\b(?:mean|means|meaning|translate|translation|word|bedeutet|bedeutung|heißt|übersetz\w*|wort|significa\w*|signifie|sens|palabra|mot|traduc\w*|tradu\w*|parola|palavra|artinya|arti|kata|anlam\w*|kelime|betekent|woord|matlab|arth|shabd)\b|अर्थ|मतलब|शब्द|अनुवाद|അർത്ഥം|വാക്ക്|பொருள்|சொல்|意思|含义|意味|翻译|翻訳|単語|单词|단어|의미|뜻|значит|значение|слово|перевод|معنى|كلمة|ترجم/iu,
+    // Whole words outside Han/kana/Hangul: Tamil "சொல்" ("word") matched inside
+    // "சொல்லவும்" ("say") and every Tamil prompt with "say" in it was skipped.
+    FOREIGN_META: /\b(?:mean|means|meaning|translate|translation|word|bedeutet|bedeutung|heißt|übersetz\w*|wort|significa\w*|signifie|sens|palabra|mot|traduc\w*|tradu\w*|parola|palavra|artinya|arti|kata|anlam\w*|kelime|betekent|woord|matlab|arth|shabd)\b|(?<![\p{L}\p{M}])(?:अर्थ|मतलब|शब्द|अनुवाद|അർത്ഥം|വാക്ക്|பொருள்|சொல்|значит|значение|слово|слова|перевод\p{L}*|(?:ال)?معنى|(?:ال)?كلمة|ترجم\p{L}*)(?![\p{L}\p{M}])|意思|含义|意味|翻译|翻訳|単語|单词|단어|의미|뜻/iu,
 
     /** Letters of any script, with the combining marks Indic scripts are built from. */
     FOREIGN_EDGE: '[\\p{L}\\p{M}\\p{N}]',
@@ -370,7 +374,9 @@ const PromptMeterCompress = {
                 // Only a thanks that is its own sentence or follows a comma: "a letter that
                 // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
                 // After a code span too: "arregla este código: `...` ¡Gracias!".
-                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*)[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu'),
+                // Han and kana run on without a break: "举个例子谢谢！", "…くださいよろしく
+                // お願いします。" -- a CJK thanks may follow a CJK character directly.
+                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*|(?<=[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}])(?=[谢多あよ감]))[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu'),
                 // A thanks that is the whole first sentence: "Gracias por todo. Ahora ...".
                 thanksOpen: new RegExp(`^\\s*[¡]?(?:${alt(this.FOREIGN_THANKS)})(?:\\s+(?:${alt(this.FOREIGN_THANKS_FOR)}))?(?!${E})\\s*[.!！。]+\\s+(?=\\S)`, 'iu')
             };
