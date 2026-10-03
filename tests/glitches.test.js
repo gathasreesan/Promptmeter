@@ -255,6 +255,12 @@ keeps('a second pass keeps French spacing', 'bonjour comment tu va ?', /^comment
 keeps('a second pass keeps an emoji', 'Salut mon amour ❤️', 'Mon amour ❤️');
 keeps('two greetings in a row both go', 'hola, buenas tardes. quisiera reportar una fuga', /^quisiera reportar una fuga$/i);
 
+// From 2,000 generated prompts.
+keeps('"Hi, Please ..." is not a name', 'Hi, Please suggest a name for my bakery and then give an example? thx', /^Suggest a name for my bakery/);
+keeps('"After that," keeps "that"', 'Create a workout plan for beginners. After that, tell me how to practice it.', 'After that,');
+keeps('"why I feel that." keeps "that"', 'Explain why I feel that.', 'feel that');
+lacks('a closing 🙏 goes', 'Explain recursion and suggest next steps? 🙏', /🙏/);
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');

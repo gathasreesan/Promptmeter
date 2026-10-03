@@ -513,7 +513,15 @@ const PromptMeterCompress = {
     // Capitalised shorthand people type that names nothing, and the assistant itself,
     // which "Hey ChatGPT," addresses rather than asks about.
     NOT_NAMES: new Set(['ok', 'okay', 'lol', 'omg', 'pls', 'plz', 'asap', 'btw', 'tbh', 'imo',
-        'thx', 'ty', 'hi', 'hey', 'chatgpt', 'gpt', 'ai']),
+        'thx', 'ty', 'hi', 'hey', 'chatgpt', 'gpt', 'ai',
+        // Capitalised after a greeting, a request word read as a name: "Hi, Please
+        // suggest ..." blocked every shorter version as having lost the name "Please".
+        'hello', 'please', 'kindly', 'can', 'could', 'would', 'will', 'shall', 'should', 'may',
+        'explain', 'write', 'give', 'tell', 'list', 'show', 'make', 'create', 'describe', 'summarize',
+        'summarise', 'compare', 'suggest', 'recommend', 'help', 'draft', 'plan', 'outline', 'review',
+        'analyze', 'analyse', 'translate', 'fix', 'solve', 'calculate', 'add', 'mention', 'include',
+        'keep', 'provide', 'highlight', 'also', 'then', 'and', 'but', 'so', 'thanks', 'thank', 'i',
+        'what', 'how', 'why', 'when', 'where', 'which', 'who', 'is', 'are', 'do', 'does', 'the', 'my']),
 
     /**
      * Terms that name something: an inner capital (MongoDB, iPhone), all caps (BASE,

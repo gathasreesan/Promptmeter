@@ -945,6 +945,8 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]\s*|\n)\s*(?:(?:can|could)\s+you\s+(?:please\s+)?)?help\s+me\s+(?:with|out\s+with)\s+something(?:\s+quick)?[.!:,]\s*/gi,
         /(?<=^|[.!?,]\s*|\n)\s*(?:lol|lmao|omg|brb|haha+|hehe+)(?!\w)[,!.\s]*/gi,
         /\bmany\s+thanks\b[!.\s]*/gi,
+        // A sign-off emoji closing the prompt ("... next steps? 🙏") is courtesy too.
+        /\s*(?:🙏|😊|🙂|☺️|🤗)+\s*$/gu,
         // Courtesy in another language on an English request: "namaste, please explain",
         // "Hola! Can you explain recursion? Gracias". Openers at a sentence start, thanks
         // only closing the prompt.
@@ -1114,11 +1116,11 @@ const PromptMeterOptimizer = {
         // followed by the ! of !=, and the conjunction between two operators was
         // deleted -- "using ==!=". Real sentence punctuation is followed by a space
         // or the end of the text; an operator is followed by = or more symbol.
-        // "that" as an object is not a dangling conjunction: "Expand on that." and
-        // "Explain that." lost their object.
+        // "that" only where a conjunction left it ("so that.", "now that."): as an object
+        // it is the content -- "Expand on that.", "After that,", "why I feel that."
         // Never at a sentence start: "However, I need" and "If so, what" are openers,
         // and lost to this rule they left "4pm., I need".
-        [/(?<!(?:^|[.!?])\s*)(?<!\bif\s*)\s*\b(?:because|since|and|but|so|where|when|which|(?<!\b(?:on|about|with|of|in|for|do|did|does|is|was|like|at|to|from|by|explain|mean|means|see|know|fix|change|do|try|use|expand|elaborate|prove|check)\s)that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
+        [/(?<!(?:^|[.!?])\s*)(?<!\bif\s*)\s*\b(?:because|since|and|but|so|where|when|which|(?<=\b(?:so|such|now|given|provided)\s)that|who|if|although|however)\s*([,.;!?])(?=\s|$)/gi, '$1'],
         // Two coordinators in a row
         [/\b(?:and|but|or)\s+(and|but|or)\b/gi, '$1'],
         // A stranded leading connective once the opening clause was removed
