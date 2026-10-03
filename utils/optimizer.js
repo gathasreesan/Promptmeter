@@ -994,7 +994,9 @@ const PromptMeterOptimizer = {
         /(?<=\b(?:need|want|have|got|get|is|was|are|takes?|took)\s+)like\s+(?=(?:a|an|the|some|\d+)\b)/gi,
         // Not after do/did/does: "Do you know Flutter?" is a question, and removing
         // "you know" left "Do Flutter?".
-        /(?<!\b(?:do|did|does|don't|didn't|doesn't)\s+)\b(?:you\s+know|i\s+mean|(?<!\b(?:was|is|are|were|be|been|looks?|feels?|seems?|sounds?|tastes?|smells?)\s)like(?=\s*,)|like\s+i\s+said|as\s+i\s+said|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff)\b[,!.\s]*/gi,
+        // "you know" / "I mean" as verbs keep their object: "Assuming that you know that
+        // this is a joke" became "Assuming that that this is a joke".
+        /(?<!\b(?:do|did|does|don't|didn't|doesn't|that|if|whether|as)\s+)\b(?:(?:you\s+know|i\s+mean)(?!\s+(?:that|what|how|why|where|when|which|who|whom|if|whether|the|a|an|about|this|these|those|it|him|her|them|any|anything|everything|nothing|something|my|your|his|our|their)\b)|(?<!\b(?:was|is|are|were|be|been|looks?|feels?|seems?|sounds?|tastes?|smells?)\s)like(?=\s*,)|like\s+i\s+said|as\s+i\s+said|if\s+that\s+makes\s+sense|or\s+something|or\s+whatever|and\s+stuff)\b[,!.\s]*/gi,
         // Hedging, apology and self-deprecation
         /\b(?:sorry\s+(?:if|for)\s+(?:this\s+is|the)\s+(?:a\s+)?(?:dumb|stupid|silly|basic|long|obvious)[\w\s]{0,12}|i\s+know\s+this\s+(?:might\s+be|is|sounds)\s+(?:a\s+)?(?:basic|dumb|stupid|silly|obvious)[\w\s]{0,12}|this\s+may(?:be)?\s+(?:be\s+)?(?:a\s+)?(?:dumb|stupid|basic)\s+question|not\s+sure\s+if\s+(?:this|that)(?:'s|\s+is)\s+(?:right|correct|clear)|correct\s+me\s+if\s+(?:i'?m|i\s+am)\s+wrong|i\s+hope\s+(?:this|that)\s+makes\s+sense|(?:i\s+was\s+)?just\s+wondering|(?:i\s+was\s+)?just\s+curious|out\s+of\s+curiosity)\b[,!.\s]*/gi,
         // Sign-offs and gratitude tails
