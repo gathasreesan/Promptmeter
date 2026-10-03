@@ -72,6 +72,14 @@ const PromptMeterProtect = {
             name: 'filename',
             rx: /\b[\w.-]+\.(?:js|jsx|ts|tsx|mjs|cjs|py|java|c|cpp|cc|h|hpp|cs|rb|go|rs|php|swift|kt|html|css|scss|json|ya?ml|toml|ini|xml|sql|sh|bash|ps1|bat|md|txt|csv|tsv|log|env|lock|pem|key|crt|cer|pfx|p12|pub|wav|mp3|mp4|mkv|mov|png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?|pptx?|zip|tar|gz|rar|7z|exe|dll|so|apk|ipynb|r|dart|vue|svelte|lua|pl|scala|gradle|tf|proto|db|sqlite|parquet|pkl|h5|onnx|pt|bin|iso|dmg|msi|deb|rpm|conf|cfg|properties|jar|war|class|o|a)\b/gi
         },
+        // Shell commands typed without a code fence: "!pip install transformers" became
+        // "! Pip install transformers" and "msfdb init;service postgresql start" was
+        // respaced and capitalised. A notebook "!cmd" line, a "$ cmd" line, a line that
+        // opens with a common command, or commands chained with ";".
+        { name: 'shell-line', rx: /^[ \t]*(?:[!$][ \t]?[A-Za-z][\w.+-]*|(?:sudo|pip3?|npm|npx|yarn|pnpm|git|mkdir|apt(?:-get)?|brew|docker|kubectl|gcc|g\+\+|wget|chmod|chown|ssh|scp|conda|systemctl|msfdb|msfconsole|nmap)[ \t])[^\n]*$/gm },
+        // (Not "make", "cat", "touch", "echo", "export", "python", "node" ...: they open
+        // ordinary English requests -- "make a 4 week workout plan".)
+        { name: 'command-chain', rx: /\b[\w.-]+(?:[ \t][\w.-]+)*;[\w.-]+(?:[ \t;][\w.-]+)*/g },
         // A bare extension or dot-name: "from .wav file" became "from. Wav file" and
         // ".env" ". Env" -- the dot read as a full stop and the word got a capital.
         { name: 'dot-name', rx: /(?<![\w.])\.(?=[A-Za-z])[A-Za-z0-9]{1,10}\b/g },

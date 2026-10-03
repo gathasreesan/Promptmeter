@@ -272,6 +272,13 @@ keeps('Manglish "hai," is a greeting', 'hai, please kadalinekkurichu oru kavitha
 ['சொல் என்பதன் பொருள் என்ன?', '这个词谢谢是什么意思？', 'hai kya yeh sahi hai']
     .forEach((p) => check('still untouched: ' + p, run(p).text === p, run(p).text));
 
+// Shell commands typed without a code fence.
+keeps('notebook !pip lines stay', '!pip install transformers\n!pip install langchain\n\nApply silent options',
+    '!pip install transformers\n!pip install langchain');
+keeps('a ;-chained command stays', 'msfdb init;service postgresql start;msfconsole\nWhat does each command do?',
+    'msfdb init;service postgresql start;msfconsole');
+keeps('"make a plan" is not a command', 'make a 4 week workout plan to loose 5 kg', /^Make a 4 week workout plan to lose 5 kg/);
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');
