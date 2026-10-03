@@ -323,12 +323,40 @@ const PromptMeterCompress = {
         [/^(?:можете|вы\s+можете|не\s+могли\s+бы\s+вы)\s+(?:мне\s+)?объяснить(,?)\s*([^?]+?)\s*\?$/iu, 'Объясните$1 $2.',
             ['можете', 'вы', 'не', 'могли', 'бы', 'мне', 'объяснить'], ['объясните']],
         [/^(?:можешь|ты\s+можешь)\s+(?:мне\s+)?рассказать(,?)\s*([^?]+?)\s*\?$/iu, 'Расскажи$1 $2.',
-            ['можешь', 'ты', 'мне', 'рассказать'], ['расскажи']]
+            ['можешь', 'ты', 'мне', 'рассказать'], ['расскажи']],
+        // Hindi: "क्या आप मुझे X समझा सकते हैं?" -> "मुझे X समझाइए।"
+        [/^क्या\s+आप\s+([^?？।]+?)\s+(समझा|बता|लिख|दे|सिखा|दिखा)\s+(?:सकते|सकती)\s+हैं\s*[?？]$/u,
+            (m, body, verb) => body + ' ' + ({ 'समझा': 'समझाइए', 'बता': 'बताइए', 'लिख': 'लिखिए', 'दे': 'दीजिए', 'सिखा': 'सिखाइए', 'दिखा': 'दिखाइए' })[verb] + '।',
+            ['क्या', 'आप', 'सकते', 'सकती', 'हैं', 'समझा', 'बता', 'लिख', 'दे', 'सिखा', 'दिखा'],
+            ['समझाइए', 'बताइए', 'लिखिए', 'दीजिए', 'सिखाइए', 'दिखाइए']],
+        // Hinglish: "kya aap mujhe X samjha sakte ho?" -> "mujhe X samjhao"
+        [/^kya\s+(?:aap|tum|tu)\s+([^?]+?)\s+(samjha|bata|likh|de|sikha|dikha)\s+(?:sakte|sakti|sakta)\s+(?:ho|hain|hai)\s*\?$/iu,
+            (m, body, verb) => body + ' ' + ({ samjha: 'samjhao', bata: 'batao', likh: 'likho', de: 'do', sikha: 'sikhao', dikha: 'dikhao' })[verb.toLowerCase()],
+            ['kya', 'aap', 'tum', 'tu', 'sakte', 'sakti', 'sakta', 'ho', 'hain', 'hai', 'samjha', 'bata', 'likh', 'de', 'sikha', 'dikha'],
+            ['samjhao', 'batao', 'likho', 'do', 'sikhao', 'dikhao']],
+        // Chinese: "你能帮我X吗？" / "你可以解释一下X吗？" -> "帮我X。" / "解释一下X。"
+        [/^(?:你|您)(?:能不能|可不可以|能否|能|可以)(?:请)?([^？?]+?)(?:吗)?[？?]$/u, '$1。',
+            ['你', '您', '能', '不', '可', '以', '否', '请', '吗'], []],
+        // Japanese: "…を教えていただけますか？" -> "…を教えてください。"
+        [/^([^？?]+?)て(?:いただけ|もらえ|くれ)(?:ます|ません)か[？?]$/u, '$1てください。',
+            ['い', 'た', 'だ', 'け', 'ま', 'す', 'か', 'も', 'ら', 'え', 'く', 'れ', 'せ', 'ん'], ['く', 'だ', 'さ', 'い']],
+        // Korean: "…해 주실 수 있나요?" -> "…해 주세요."
+        [/^([^?？]+?)\s*주실\s*수\s*있(?:나요|을까요|습니까|어요)\s*[?？]$/u, '$1 주세요.',
+            ['주', '실', '수', '있', '나', '요', '을', '까', '습', '니', '어'], ['주', '세', '요']],
+        // Arabic: "هل يمكنك أن تشرح X؟" / "هل يمكنك شرح X؟" -> "اشرح X."
+        [/^هل\s+يمكنك\s+(?:أن\s+تشرح|شرح)\s+([^؟?]+?)\s*[؟?]$/u, 'اشرح $1.', ['هل', 'يمكنك', 'أن', 'تشرح', 'شرح'], ['اشرح']],
+        [/^هل\s+يمكنك\s+(?:أن\s+تكتب|كتابة)\s+([^؟?]+?)\s*[؟?]$/u, 'اكتب $1.', ['هل', 'يمكنك', 'أن', 'تكتب', 'كتابة'], ['اكتب']],
+        // Indonesian: "Bisakah kamu menjelaskan X?" -> "Jelaskan X."
+        [/^(?:bisakah|bisa|dapatkah)\s+(?:kamu|anda|kau)\s+(?:tolong\s+)?menjelaskan\s+([^?]+?)\s*\?$/iu, 'Jelaskan $1.',
+            ['bisakah', 'bisa', 'dapatkah', 'kamu', 'anda', 'kau', 'tolong', 'menjelaskan'], ['jelaskan']],
+        // Turkish: "X açıklayabilir misin?" -> "X açıkla."
+        [/^([^?]+?)\s+açıklayabilir\s+mi(?:sin|siniz)\s*\?$/iu, '$1 açıkla.', ['açıklayabilir', 'misin', 'misiniz'], ['açıkla']],
+        [/^([^?]+?)\s+anlatabilir\s+mi(?:sin|siniz)\s*\?$/iu, '$1 anlat.', ['anlatabilir', 'misin', 'misiniz'], ['anlat']]
     ],
     // A second request joined on, in those languages: the rewrite is skipped.
     // Not "o"/"ou"/"oder" ("or"): Portuguese "o que é" is "what is", and "or" joins
     // nouns, not a second request.
-    FOREIGN_SECOND_ASK: /(?<![\p{L}\p{M}])(?:y|e|et|und|и|pero|mais|aber|ma|mas|но|también|aussi|auch|anche|também|тоже|также)(?![\p{L}\p{M}])/iu,
+    FOREIGN_SECOND_ASK: /(?<![\p{L}\p{M}])(?:y|e|et|und|и|pero|mais|aber|ma|mas|но|también|aussi|auch|anche|também|тоже|также|aur|और|dan|ve|लेकिन|lekin)(?![\p{L}\p{M}])/iu,
 
     /**
      * Applies the first FOREIGN_REWRITES rule that fits a one-sentence prompt.
@@ -340,7 +368,9 @@ const PromptMeterCompress = {
         if (/[\n:"“”«»`]/.test(t)) return { text: text, removed: [], added: [] };
         for (const [rx, to, removed, added] of this.FOREIGN_REWRITES) {
             const m = rx.exec(t);
-            const body = m && m[m.length - 1];
+            // Every captured part, not the last: in the Hindi rule the last group is the
+            // verb, and "X समझा सकते हैं और Y दे सकते हैं" had only its second verb rewritten.
+            const body = m && m.slice(1).filter(Boolean).join(' ');
             if (!m || this.FOREIGN_SECOND_ASK.test(body) || /[.!?]/.test(body)) continue;
             return { text: t.replace(rx, to), removed: removed, added: added };
         }
@@ -430,7 +460,10 @@ const PromptMeterCompress = {
             out = out.replace(/^([¿¡"'“(]*)(\p{Ll})/u, (m, lead, c) => lead + c.toUpperCase());
         }
         // A greeting with one word left is not a shorter prompt: "Hallo Vicuna" -> "Vicuna".
-        const words = (s) => (s.match(/[\p{L}\p{M}]+/gu) || []).length;
+        // Han, kana and Hangul characters count one each: unspaced, "你能帮我写一首诗吗"
+        // was one "word" and the greeting before it could never be removed.
+        const words = (s) => (s.match(/[\p{L}\p{M}]+/gu) || []).length
+            + (s.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) || []).length;
         if (!out.trim() || (words(out) < 2 && words(masked.masked) >= 2)) return text;
         return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
     },

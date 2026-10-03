@@ -306,6 +306,24 @@ keeps('"etc.," is not a stray comma', 'I like apples, pears, etc., and also bana
     ['I am wondering whether you could explain the theory of evolution.', 'Explain the theory of evolution.']
 ].forEach(([p, want]) => check('wordy: ' + p.slice(0, 30), run(p).text === want, run(p).text));
 
+// Request rewrites in eight more languages.
+[
+    ['नमस्ते, क्या आप मुझे रिकर्शन समझा सकते हैं?', 'मुझे रिकर्शन समझाइए।'],
+    ['क्या आप समुद्र पर एक कविता लिख सकते हैं?', 'समुद्र पर एक कविता लिखिए।'],
+    ['kya aap mujhe recursion samjha sakte ho?', 'mujhe recursion samjhao'],
+    ['你好，你能帮我写一首关于大海的诗吗？', '帮我写一首关于大海的诗。'],
+    ['你可以解释一下什么是递归吗？', '解释一下什么是递归。'],
+    ['재귀에 대해 설명해 주실 수 있나요?', '재귀에 대해 설명해 주세요.'],
+    ['هل يمكنك أن تشرح التمثيل الضوئي؟', 'اشرح التمثيل الضوئي.'],
+    ['Bisakah kamu menjelaskan apa itu rekursi?', 'Jelaskan apa itu rekursi.'],
+    ['Bana Osmanlı tarihini anlatabilir misiniz?', 'Bana Osmanlı tarihini anlat.']
+].forEach(([p, want]) => check('rewritten: ' + p.slice(0, 24), run(p).text === want, run(p).text));
+// The exact encoder sees the Japanese saving; the heuristic one used here does not, so
+// the rewrite itself is checked.
+check('rewritten: Japanese ていただけますか', C.foreignRewrite('再帰について教えていただけますか？').text === '再帰について教えてください。');
+check('two Hindi requests are not half-rewritten',
+    run('क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?').text === 'क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?');
+
 // Courtesy inside the material the user pasted is the material.
 keeps('a message to answer keeps its courtesy', 'Como responder essa mensagem\n\nOi Tony, boa tarde!! Por favor me avise. Obrigada',
     'Por favor me avise. Obrigada');
