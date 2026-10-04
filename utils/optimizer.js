@@ -1340,6 +1340,11 @@ const PromptMeterOptimizer = {
         if (englishEnough) str = str.replace(this.compiled.typos, match => {
             const replacement = this.compiled.typoMap[match.toLowerCase()];
             if (replacement === undefined) return match;
+            // A word the user pressed Keep on (or added to the dictionary) stays as typed:
+            // the table ran before that check, so Keep on "explian" did nothing.
+            if (preserve && (typeof preserve.has === 'function'
+                ? preserve.has(match.toLowerCase())
+                : Array.isArray(preserve) && preserve.some((w) => String(w).toLowerCase() === match.toLowerCase()))) return match;
             if (issues && replacement.toLowerCase() !== match.toLowerCase()) {
                 issues.push({
                     type: 'spelling',
