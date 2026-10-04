@@ -33,5 +33,5 @@ ml/corpus/
 # something reproducible. Ignored rather than deleted: it is not mine to remove.
 dashboard/node_modules.zip
 
-# Local Claude Code settings for this machine.
+# Local editor settings for this machine.
 .claude/

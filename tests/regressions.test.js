@@ -119,7 +119,7 @@ equals('i want to know about recursion, and i want to know about memoization',
 equals('i am curious about ml, then i want to see examples',
     'Explain ML, then show examples');
 keeps('help me understand joins, and also help me understand indexes',
-    'and also explain indexes');
+    'and explain indexes');
 
 // The connective itself must survive: dropping it leaves two unlinked commands.
 keeps('i want to learn ml, and i want to learn dl', 'and');
@@ -128,7 +128,7 @@ keeps('i want to learn ml, and i want to learn dl', 'and');
 dropsExact('i want to learn ml, and i want to learn dl', 'and Explain');
 
 // A rewrite at a sentence boundary must not eat the space after the full stop.
-keeps('i want to learn ml. i want to learn dl', '. Explain');
+keeps('i want to learn ml. i want to learn dl', '. Teach me');
 // ...without breaking decimals.
 keeps('explain pi which is 3.14 exactly', '3.14');
 
@@ -318,6 +318,295 @@ keeps('we met yesterday to discuss it', ' met ');
 keeps('this is a non issue for us', 'non issue');
 keeps('the stat we need is the median', 'stat');
 keeps('I sent it to the com port', 'com port');
+
+// ---------------------------------------------------------------------------
+// The English vocabulary tables ran on every language. looksEnglish already guarded the
+// open-ended corrector -- "an English dictionary on German text corrects bitte to bite"
+// -- but spellingTypos and chatSlangMap were applied unconditionally, and they contain
+// "mich" -> "much" and "liste" -> "list". Measured over 6,000 real prompts, German came
+// back with "die mich neugierig anschauen" rewritten to "die much neugierig anschauen".
+// ---------------------------------------------------------------------------
+keeps('ob Emily und Mia die mich neugierig anschauen mit mir duschen duerfen', 'mich');
+keeps('Die Zeiten koennen morgens oder abends sein, je nachdem wann sie mich brauchen.', 'mich');
+keeps('Erstelle eine Zusammenfassung der Meinungen als Liste', 'Liste');
+keeps('Welche Regeln muss ich erfuellen um eine Liste mit Geburtstagen anzufertigen?', 'Liste');
+drops('Grazie mille per il tuo aiuto', 'mile');
+// ...while English, including messy English, is still corrected.
+keeps('A room w/o windows is dark', 'without');
+keeps('plz explain recursion tmrw', 'tomorrow');
+keeps('can u explain b4 the exam', 'before');
+keeps('i am havng an issue with my funciton', 'function');
+keeps('can u pls explain how stupd gatha is', 'stupid');
+
+// ---------------------------------------------------------------------------
+// Every stripper ends in [,!.\s]*, so it eats the punctuation that TRAILS the phrase it
+// removes but never the comma that introduced it: "review this code for me, thanks so
+// much:" closed up as "review this code for me,:".
+// ---------------------------------------------------------------------------
+dropsExact('review this code for me, thanks so much: def f(): pass', ',:');
+dropsExact('help me, please: y=2', ',:');
+dropsExact('summarize this, thanks in advance: z=3', ',:');
+dropsExact('fix it for me, thanks!: a=4', ',:');
+// ...without eating commas that are doing real work.
+keeps('list three things: speed, cost, accuracy', 'speed, cost, accuracy');
+keeps('the total was 1,000.50 dollars, explain the tax', '1,000.50');
+
+// ---------------------------------------------------------------------------
+// "dma" (Data Mining and Analysis) was rewritten to "dam". At three letters neither edit
+// distance nor edit shape can tell a typo from an acronym -- "dma"/"dam" and "teh"/"the"
+// are both single transpositions -- and techAcronymMap can only protect the acronyms
+// somebody remembered to list, never the user's own course codes or team initialisms.
+// Two independent signals settle it: how common the destination is, and whether the
+// letters kept their order.
+// ---------------------------------------------------------------------------
+keeps('explain dma', 'dma');
+keeps('teach me dma and dsa', 'dma');
+keeps('i have a dma exam tomorrow', 'dma');
+keeps('what is dma and dbms', 'dbms');
+drops('explain dma', 'dam');
+drops('teach me dma', 'dam');
+// Transposed three-letter initialisms in general, not just the one that was reported.
+drops('explain rma process', 'ram');
+drops('explain mpa degree', 'map');
+// ...while three-letter typos are still corrected, whether they are common words
+// ("teh" -> "the") or merely dropped vowels ("mch" -> "much", not a top-1000 word).
+keeps('teh cat sat', 'The');
+keeps('do you wan coffee or tea', 'want');
+keeps('people depend on it too mch', 'much');
+keeps('i adn you', 'and');
+
+// ---------------------------------------------------------------------------
+// "helao i has exam tomo which is exm which is which is dma so teach" came back with
+// "which is" still in it twice. The adjacent-duplicate rule could not see it: the two
+// surviving copies are not adjacent, because the clause the writer abandoned sits
+// between them. What makes it droppable is that the abandoned middle says nothing new.
+// ---------------------------------------------------------------------------
+equals('helao i has exam tomo which is exm which is which is dma so teach',
+       'I have exam tomorrow which is dma so teach');
+equals('i have an exam tomorrow which is exam which is dma',
+       'I have an exam tomorrow which is dma');
+equals('the file which is file which is corrupted', 'The file which is corrupted');
+equals('a function that is function that is broken', 'A function that is broken');
+// A middle that carries new information is a real clause and stays, both of them.
+keeps('the tool which is free which is open source', 'free');
+keeps('the tool which is free which is open source', 'open source');
+keeps('a library that is fast that is reliable', 'fast');
+keeps('the exam which is tomorrow which is dma', 'tomorrow');
+
+// ---------------------------------------------------------------------------
+// Prompts built around + & | > and initialisms went uncorrected: single letters and
+// acronyms dragged the English ratio under the bar, so both language gates skipped
+// the typo tables and the corrector.
+// ---------------------------------------------------------------------------
+equals('a + b + c teh diffrence', 'A + b + c the difference');
+equals('AI + ML + DL + NLP are importnt', 'AI + ML + DL + NLP are important');
+equals('a & b | c teh diffrence', 'A & b | c the difference');
+equals('stacks&queues wiht exmaples', 'Stacks&queues with examples');
+equals('data mining > ML in my opinon', 'Data mining > ML in my opinion');
+// Counting fixable typos as English must not let German through: "mich" is one
+// letter from "much" and "und" from "and".
+keeps('ob Emily und Mia die mich neugierig anschauen', 'mich');
+// "um" is a word outside English and only a filler inside it.
+keeps('Welche Regeln muss ich erfuellen um eine Liste anzufertigen?', 'erfuellen um eine');
+keeps('Explique a recursividade com um exemplo simples', 'com um exemplo');
+drops('um uh explain joins pls', 'um');
+
+// ---------------------------------------------------------------------------
+// A connector starts a new clause. "+ can u pls tell me" kept its wrapper because
+// the clause-start rules only knew . ! ? , ; and a newline.
+// ---------------------------------------------------------------------------
+equals('explain recursion + can u pls tell me teh diffrence between stacks and queues',
+       'Explain recursion + tell me the difference between stacks and queues');
+equals('data mining -> can u pls explian apriori algoritm', 'Data mining -> explain apriori algorithm');
+equals('notes on os & hey chatgpt can u add exmaples', 'Notes on OS & add examples');
+equals('i need notes on dbms + also can you plz explian normalisation wiht exmaples',
+       'I need notes on dbms + also explain normalisation with examples');
+equals('explain recursion hey chatgpt thanks', 'Explain recursion');
+equals('hey chatgpt so basically i want u to explain recursion', 'Explain recursion');
+// Not a wrapper, not a vocative: left alone.
+keeps('can you believe this + explain it', 'can you believe');
+keeps('vector u + vector v, find the angle', 'vector u');
+keeps('the hey chatgpt jingle is catchy', 'hey ChatGPT jingle');
+
+// ---------------------------------------------------------------------------
+// Typos the corrector let through: a missing doubled consonant read as a regular
+// inflection, and misspellings hiding in the attested-word list.
+// ---------------------------------------------------------------------------
+keeps('the error occured twice', 'occurred');
+keeps('from the begining please', 'beginning');
+keeps('fix this sentance', 'sentence');
+keeps('difference between stacks and queus', 'queues');
+// American spellings with a single l are words, not typos.
+keeps('the job was canceled', 'canceled');
+keeps('labeled data for training', 'labeled');
+
+// ---------------------------------------------------------------------------
+// Live report: "give mea tour plan to raom in kochi for a day" became "...to ram...",
+// and "ned" was never corrected. Each case below is one cause.
+// ---------------------------------------------------------------------------
+equals('give mea tour plan to raom in kochi for a day', 'Give me a tour plan to roam in Kochi for a day');
+equals('i ned help with my code', 'I need help with my code');
+keeps('ask Ned about the report', 'Ned');                        // the name stays
+keeps('waht is the formla for area of circle', 'formula');       // a dropped letter, not "formal"
+keeps('how to cok biriyani at hom', 'cook biriyani at home');    // two-letter words are English evidence
+keeps('teh results', 'The');                                     // a swap beats an omission ("tech")
+keeps('best plces to vist in munnar', 'places');                 // inflection of a corrected base
+keeps('write notes on algoritms', 'algorithms');
+keeps('tellme abt recursion', 'Tell me');
+keeps('what happens inthe kernel', 'in the');
+// The constraint "in java" must not be read out of "in javascirpt", or the corrected
+// "in JavaScript" fails validation and the whole fix is thrown away.
+equals('sort an aray in javascirpt', 'Sort an array in JavaScript');
+keeps('diffrence btw tcp and udp in detial', 'between TCP and UDP');
+// An opening "btw" is filler: expanded, "By the way can you explain" cost two tokens
+// more than the prompt as typed.
+equals('btw can u explain recursion', 'Explain recursion');
+keeps('wat r the advntages of cloud computng', 'What are the advantages');
+keeps('sugest some gud books for dsa', 'good books');
+keeps('tel me a joke abut cats', 'about cats');
+keeps('the two buildings abut each other', 'abut');
+
+// ---------------------------------------------------------------------------
+// Shorter Trim. Each rewrite drops only words that carry nothing.
+// ---------------------------------------------------------------------------
+equals('could you kindly summarize the following paragraph for me in a few sentences so that it is easy to understand',
+       'Summarize the following paragraph in a few sentences simply');
+equals('what are some of the best places that i can visit in kerala during the month of december with my family',
+       'What are the best places to visit in Kerala in December with my family');
+equals('can you explain to me in detail how the process of photosynthesis works in plants step by step',
+       'Explain in detail how photosynthesis works in plants step by step');
+equals('basically what i want is a list of 10 project ideas for my final year computer science engineering project using machine learning',
+       'List 10 project ideas for my final year computer science engineering project using machine learning');
+keeps('can you please check whether my sentence is grammatically correct or not: me and him went', 'grammatically correct:');
+keeps('explain the concept of recursion in programming to me like i am a 10 year old child', "like I'm 10");
+keeps('what is the best way for me to learn dsa in a short amount of time', 'best way to learn DSA quickly');
+keeps('can you give me a detailed explanation of what is the difference between tcp and udp with some examples',
+      'Explain the difference between TCP and UDP');
+keeps('can you tell me what are some of the most common mistakes beginners make', 'the most common mistakes');
+keeps('some of the students failed the test', 'Some students');
+
+// Meaning that Trim used to lose.
+keeps('give me ideas for my final year project', 'for my final year project');   // not "ideas year project"
+keeps('convert this code from java to python and also explain what each line is doing', 'explain what each line is doing');
+keeps('tell me what a closure is and give an example', 'what a closure is');
+keeps('i am really confused about pointers in c, can you explain them with a simple example', 'pointers');
+
+// ---------------------------------------------------------------------------
+// Live report: "give me the different types of respiratory pr5oblems" was neither
+// corrected nor shortened. The digit split the word for every later step, and the
+// validator then demanded the "5" survive as a number.
+// ---------------------------------------------------------------------------
+equals('give me the different types of respiratory pr5oblems', 'List the types of respiratory problems');
+equals('the pr0blem is in my c0de', 'The problem is in my code');
+keeps('write a s3cret message', 'secret');
+// Names with digits are not typos.
+keeps('explain k8s pods and mp3 encoding', 'mp3');
+keeps('h2o and web3 basics', 'h2o and web3');
+keeps('py3k and b2b sales', 'Py3k');
+keeps('s3 bucket vs ec2 instance', 'ec2');
+keeps('covid19 vaccine types', 'covid19');
+keeps('what are the different kinds of clouds', 'the kinds of clouds');
+keeps('tell me the symptoms of dengue', 'List the symptoms of dengue');
+
+// ---------------------------------------------------------------------------
+// Live report: a prompt typed with mistakes was barely optimised, the same prompt
+// typed correctly was fully optimised. Typos hid the words the shortening rules key on.
+// ---------------------------------------------------------------------------
+equals('hi chatpt i have and exam tommrow give me notes for dma', 'Give me notes for dma');
+equals('thanku so much, now cn u writ a sumary of this artical', 'Summarize this article');
+equals('i wnt u to wirte an emial to my manger askin for leave', 'Write an email to my manager asking for leave');
+equals('culd u sugest sum gud books for lerning pyhton', 'Suggest some good books for learning Python');
+equals('i hav an assignmnt due tmrw, explian photosynthsis', 'Explain photosynthesis');
+keeps('wat r the advantges and disadvantges of socal media', 'advantages and disadvantages of social media');
+keeps('there is and error in my code', 'an error');
+keeps('i have apples and oranges', 'apples and oranges');
+keeps('i have and use a mac', 'have and use');
+keeps('find the sum of two numbers in python', 'sum of two numbers');
+keeps('the writ of habeas corpus', 'writ');
+// A summary of a given length is not "summarize N words".
+keeps('write a summary of 200 words on climate change', 'summary of 200 words');
+// The topic stays when the request is only a generic noun.
+keeps('hello i am preparing for my interview so can you give me some tips', 'interview');
+keeps('Explain memoization with an example', 'memoization');
+
+// ---------------------------------------------------------------------------
+// Live report: "i have and exam tomrw i need notes for dma + sdu" showed "already
+// concise". The card hid every correction that saved no tokens, "tomrw" was unknown,
+// and "I need ..." did not count as a request, so the exam clause stayed.
+// ---------------------------------------------------------------------------
+equals('i have and exam tomrw i need notes for dma + sdu', 'I need notes for dma + sdu');
+equals('i have an exam tomorrow i need you to explain deadlocks', 'Explain deadlocks');   // not "dreadlocks"
+keeps('i have an exam tomorrow i want to cry', 'I want to cry');      // a feeling, not a request
+keeps('see u tomorow', 'tomorrow');
+keeps('the tomb was empty', 'tomb');
+// The sweep of forty messy prompts.
+keeps('how to mak a resume for internshp with no experiance', 'no experience');
+keeps('how meny calories in a banana', 'many calories');
+keeps('why is the sky blu during the day', 'sky blue');
+keeps('buy a blu-ray player', 'blu-ray');
+keeps('recomend a laptop for gameing', 'gaming');
+keeps('wats the best way to lern guitar by myslef', "What's the best way");
+equals('i want to learn react from scratch', 'Teach me React from scratch');
+equals('i want to learn ml, and i want to learn dl', 'Teach me ML and DL');
+
+// ---------------------------------------------------------------------------
+// Live report: "i a facing many rspiratory issues what are the different kind of
+// respiratory issues that can exist" kept "i a", "kind", the run-on and the filler.
+// ---------------------------------------------------------------------------
+equals('i a facing many rspiratory issues what are the different kind of respiratory issues that can exist',
+       'I am facing many respiratory issues. What are the kinds of respiratory issues');
+keeps('i an going to college', 'I am going');
+keeps('there are two way of doing it', 'two ways');
+keeps('some kind of magic', 'kind of magic');          // singular is right here
+keeps('a different type of ML', 'a different type');    // and here
+keeps('i am learning python how do i install it', 'Python. How do I');
+keeps('i wonder what causes rain', 'wonder what');       // a clause, not a run-on
+keeps('i have an exam tomorrow which is exam which is dma', 'tomorrow which is dma');
+equals('i have a doubt what is recursion', 'What is recursion');
+keeps('i am not sure how to start', 'I am not sure');    // "i" -> "I" is a real fix
+
+// Condense is a real step beyond Trim.
+['modifiers', 'analysis', 'compress'].forEach((name) => {
+    Object.assign(global, require(path.join(__dirname, '..', 'utils', name + '.js')));
+});
+const cond = (p) => PromptMeterCompress.compress(p, { budgetMs: 1e5, maxMode: 'aggressive' }).text;
+[['i a facing many rspiratory issues what are the different kind of respiratory issues that can exist',
+  'List the kinds of respiratory issues'],
+ ['what are the symptoms of dengue', 'List the symptoms of dengue'],
+ ['how do i install python on windows', 'How to install Python on windows'],
+ ['what is the meaning of entropy', 'Define entropy'],
+ ['i wonder what causes rain', 'What causes rain?'],
+ ['i am not sure how to start a blog', 'How to start a blog?'],
+ ['could you please help me understand how neural networks actually work, i am a beginner and i dont really know much about machine learning',
+  'Explain how neural networks work for a beginner'],
+ ['i would like you to generate some catchy names for my new bakery', 'Generate catchy names for my new bakery']
+].forEach(([p, want]) => {
+    const got = cond(p);
+    if (got === want) passed++;
+    else { failed++; console.log('FAIL  condense ' + JSON.stringify(p) + '\n      expected ' + JSON.stringify(want) + '\n      got      ' + JSON.stringify(got)); }
+});
+
+// ---------------------------------------------------------------------------
+// Live report: "how to do we get a good and optimised promt ans also why do we need a
+// good and optimised promt" -- "ans" became "answer", "how to do we" stayed, and the
+// repeated phrase was said twice. A repeat is said once; both questions survive.
+// ---------------------------------------------------------------------------
+equals('how to do we get a good and optimised promt ans also why do we need a good and optimised promt',
+       'How do we get and why do we need a good and optimised prompt');
+keeps('cats ans dogs', 'cats and dogs');
+keeps('give me the ans', 'the answer');
+keeps('ans of question 5', 'Answer of question 5');
+equals('how do i write a cover letter and why do i need a cover letter', 'How do I write and why do I need a cover letter');
+equals('what is machine learning and how does machine learning work', 'What is machine learning and how does it work');
+equals('explain the water cycle and also draw a diagram of the water cycle', 'Explain the water cycle and draw a diagram of it');
+equals('what is a good resume and how do i write a good resume', 'What is a good resume and how do I write one');
+equals('what are the best laptops and where can i buy the best laptops', 'What are the best laptops and where can I buy them');
+// Not repeats, or not safe to fold.
+keeps('explain the difference between the stack and the heap', 'the stack and the heap');
+keeps('compare the old phone and the new phone', 'the new phone');
+keeps('write a story about a dog and a cat, and make the dog the hero', 'make the dog the hero');
+keeps('how do i learn python and also why should i learn python', 'why should I learn Python');
+keeps('solve x + 2 = 5 and x + 2 = 7', 'x + 2 = 7');
 
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

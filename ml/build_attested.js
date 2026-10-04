@@ -115,6 +115,29 @@ execSync(`curl -sL "${WIKI}"`, { maxBuffer: 16 * 1024 * 1024 }).toString().split
 });
 console.log(Object.keys(misspellings).length, 'misspellings kept');
 
+// First names, so a capitalised typo next to a name is read as part of the name:
+// "Christine Burnette" is a person, not "Christine Brunette". A public list of ~4,900
+// mostly Western names, plus common Indian names it lacks.
+// Two public lists: the first is mostly women's names, the second covers men's.
+const NAMES_URLS = ['https://raw.githubusercontent.com/dominictarr/random-name/master/first-names.txt',
+    'https://raw.githubusercontent.com/smashew/NameDatabases/master/NamesDatabases/first%20names/us.txt'];
+const INDIAN_NAMES = ('aarav aditya advait adwaith akash akhil amal amit anand ananya anil anjali ankit anu '
+    + 'anusha arjun arun aryan ashok ashwin bhavya deepak deepika dhruv divya gatha gautam geetha gopal '
+    + 'hari harish ishaan jaya jayesh jithin joshi karthik kavya kiran kripa krishna lakshmi manoj meera '
+    + 'meenakshi mohan nandini naveen neha nikhil nithin nithya pooja pranav prasad praveen preethi priya '
+    + 'rahul raj rajesh rakesh ramesh ravi rohit sachin sai sanjay sara sarath shalini shreya shruti sneha '
+    + 'sreya sreesan sruthi suresh swathi tara varun vijay vikram vinod vishnu vivek angelin anjali '
+    + 'abhishek aishwarya fathima muhammed mohammed nisha reshma soumya sreelakshmi athira aswathy '
+    + 'gokul jishnu sidharth sreehari vineeth abhijith amrutha anagha anupama devika gopika keerthana').split(' ');
+const firstNames = new Set(INDIAN_NAMES);
+NAMES_URLS.forEach((url) => {
+    try {
+        execSync(`curl -sfL "${url}"`, { maxBuffer: 4 * 1024 * 1024 }).toString().split('\n')
+            .map((n) => n.trim().toLowerCase()).filter((n) => /^[a-z]{2,}$/.test(n)).forEach((n) => firstNames.add(n));
+    } catch (e) { console.log('names list unavailable:', url); }
+});
+console.log(firstNames.size, 'first names');
+
 console.log(`${docs.size} distinct words, ${sorted.length} attested, ${rejected.length} rejected as typos`);
 console.log('sample rejected:', rejected.slice(0, 25).join(', '));
 ['toes', 'exerts', 'bot', 'risky', 'como', 'habe', 'genera', 'erotic', 'sentience', 'sane', 'lust', 'teh', 'thier', 'recieve', 'definately', 'shoud'].forEach((w) =>
@@ -128,8 +151,10 @@ if (!args.includes('--dry')) {
         'const PM_ATTESTED_WORDS = ' + JSON.stringify(sorted.join(' ')) + ';',
         "// Common misspelling -> fix, from Wikipedia's machine-readable list.",
         'const PM_MISSPELLINGS = ' + JSON.stringify(misspellings) + ';',
-        "if (typeof window !== 'undefined') { window.PM_ATTESTED_WORDS = PM_ATTESTED_WORDS; window.PM_MISSPELLINGS = PM_MISSPELLINGS; }",
-        "if (typeof module !== 'undefined' && module.exports) module.exports = { PM_ATTESTED_WORDS, PM_MISSPELLINGS };",
+        '// First names: a capitalised word beside one is part of a name, never a typo.',
+        'const PM_FIRST_NAMES = ' + JSON.stringify([...firstNames].sort().join(' ')) + ';',
+        "if (typeof window !== 'undefined') { window.PM_ATTESTED_WORDS = PM_ATTESTED_WORDS; window.PM_MISSPELLINGS = PM_MISSPELLINGS; window.PM_FIRST_NAMES = PM_FIRST_NAMES; }",
+        "if (typeof module !== 'undefined' && module.exports) module.exports = { PM_ATTESTED_WORDS, PM_MISSPELLINGS, PM_FIRST_NAMES };",
         ''
     ].join('\n'));
     console.log('wrote', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024).toFixed(1) + ' KB');

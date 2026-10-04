@@ -239,8 +239,11 @@ statusOf('Hi! I hope you are well. ' + MATH + ' Thanks so much in advance!',
 // and the request for an explanation both gone -- and validate, because every check
 // reads [a-z] and found nothing to object to.
 const ML = 'ദയവായി എനിക്ക് പൈത്തണിൽ ഒരു ഫംഗ്ഷൻ എഴുതാൻ സഹായിക്കാമോ? ഒരു ലിസ്റ്റിലെ എല്ലാ ഇരട്ട സംഖ്യകളുടെയും തുക കണ്ടെത്തുന്ന ഒരു ഫംഗ്ഷൻ എഴുതുക. ദയവായി കോഡിന് വിശദീകരണം നൽകുക.';
-check('Malayalam prompt comes back whole',
-    statusOf(ML, 'Malayalam prompt', S.UNSUPPORTED_LANGUAGE).text === ML);
+// It is now optimised, but only by dropping "ദയവായി" (please): all three sentences,
+// the sum-of-evens function and the request for an explanation stay.
+const mlOut = statusOf(ML, 'Malayalam prompt', S.SUCCESSFUL).text;
+check('Malayalam keeps every sentence', mlOut.split(/[?.]/).filter((s) => s.trim()).length === 3, mlOut);
+check('Malayalam loses only "please"', K.foreignValid(ML, mlOut) && !/ദയവായി/.test(mlOut), mlOut);
 check('condense no longer prunes a script it cannot read',
     PromptMeterCondense.condense(ML) === ML);
 
@@ -254,8 +257,17 @@ check('padded story keeps its constraints', paddedStory.text.indexOf(STORY) !== 
 
 // Shorter candidates exist but each drops a requirement said politely. These used to
 // validate: "to not mention" matched no constraint pattern.
-const haiku = statusOf('Can you write a haiku about rain? I would like it to not mention water at all. I hope that makes sense and I appreciate your help very much.',
-    'polite negative constraint', S.UNSAFE_COMPRESSION);
+// The condenser now keeps the polite constraint, so the prompt compresses safely.
+const HAIKU = 'Can you write a haiku about rain? I would like it to not mention water at all. I hope that makes sense and I appreciate your help very much.';
+const haikuOk = statusOf(HAIKU, 'polite negative constraint kept', S.SUCCESSFUL);
+check('the polite constraint survives', /not mention water/.test(haikuOk.text), haikuOk.text);
+// And when a rewrite does drop it, the validator still refuses it: stub the rewriter
+// to produce exactly the candidate that used to ship.
+const realAnalyzeForHaiku = PromptMeterAnalysis.analyze;
+PromptMeterAnalysis.analyze = (p) => Object.assign(realAnalyzeForHaiku.call(PromptMeterAnalysis, p),
+    { optimized: 'Write a haiku about rain. And I appreciate your help very much.' });
+const haiku = statusOf(HAIKU, 'a rewrite that drops the polite constraint', S.UNSAFE_COMPRESSION);
+PromptMeterAnalysis.analyze = realAnalyzeForHaiku;
 check('unsafe: the original is returned', haiku.text === haiku.original);
 check('unsafe: the reason names the lost constraint', /mention/.test(haiku.reason), haiku.reason);
 rejects('a requirement wrapped in "appreciate it if" is caught',

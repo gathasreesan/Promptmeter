@@ -1057,6 +1057,23 @@ const PromptMeterSpelling = {
     // Below this length a word carries too little signal: "th", "hw" and "ur" have dozens
     // of plausible expansions and no way to choose between them.
     MIN_LENGTH: 3,
+
+    // At exactly MIN_LENGTH a correction is only accepted when the word it lands on is
+    // among the commonest English words. Three letters carry almost no signal: "dma" and
+    // "dam" are one transposition apart, and so are "teh" and "the", so neither edit
+    // distance nor edit shape can tell a typo from an acronym at that length.
+    //
+    // Frequency can. The words three-letter typos actually land on are the few hundred
+    // commonest in the language -- the(0), and(3), that(9), this(10), want(221) -- while
+    // the words that acronyms collide with are far down the list: dam(4177), das(4195),
+    // dim(4401). "dma" meaning Data Mining and Analysis was being rewritten to "dam" for
+    // want of this test.
+    //
+    // A list of known acronyms cannot fix this, because the acronyms that matter are the
+    // user's own: their course codes, their team's initialisms, their project names.
+    // Requiring the destination to be a top-1000 word declines all of those at once and
+    // still fixes every three-letter typo anyone actually makes.
+    SHORT_WORD_MAX_RANK: 1000,
     // Words longer than this are served by the skeleton index alone.
     MAX_DELETE_LENGTH: 12,
 
@@ -1162,6 +1179,30 @@ const PromptMeterSpelling = {
         return out;
     },
 
+    gapped: function (word) {
+        if (word.length < 5) return [];
+        if (!this.gapIndex) {
+            this.gapIndex = new Map();
+            this.rank.forEach((index, w) => {
+                const key = w[0] + w[w.length - 1];
+                if (!this.gapIndex.has(key)) this.gapIndex.set(key, []);
+                this.gapIndex.get(key).push(w);
+            });
+        }
+        // The two missing letters must sit together ("diff[er]ent", "prob[ab]ly"): a
+        // contiguous drop is a slip; two scattered ones are usually a different word.
+        const contiguous = (w) => {
+            if (w.length === word.length + 1) return true;
+            for (let i = 1; i < w.length - 2; i++) {
+                if (w.slice(0, i) + w.slice(i + 2) === word) return true;
+            }
+            return false;
+        };
+        return (this.gapIndex.get(word[0] + word[word.length - 1]) || []).filter((w) =>
+            (w.length === word.length + 1 || w.length === word.length + 2)
+            && this.isSubsequence(word, w) && contiguous(w));
+    },
+
     budget: function (word, candidate) {
         const longest = Math.max(word.length, candidate.length);
         return Math.min(this.MAX_DISTANCE, Math.max(1, Math.floor(longest / 3)));
@@ -1241,7 +1282,9 @@ const PromptMeterSpelling = {
             word.replace(/ence$/, 'ense')];
         const stems = (w) => {
             const out = [];
-            const add = (stem) => { if (stem.length >= 3) out.push(stem, stem + 'e'); };
+            // A stem with no vowel is an abbreviation, not a word to inflect: "plc" made
+            // "plces" pass as plc + es, so it was never corrected to "places".
+            const add = (stem) => { if (stem.length >= 3 && /[aeiouy]/.test(stem)) out.push(stem, stem + 'e'); };
             let m;
             if ((m = /^(.+)ies$/.exec(w))) out.push(m[1] + 'y');
             if ((m = /^(.+)ied$/.exec(w))) out.push(m[1] + 'y');
@@ -1435,10 +1478,110 @@ const PromptMeterSpelling = {
         return hits.size === 1 ? [...hits][0] : null;
     },
 
+    /**
+     * A typo in an inflected word whose base is in the dictionary but whose inflection
+     * is not: "plces" is "plce" + s, and "plce" corrects to "place". The ranked list
+     * holds base forms, so "places" was never a candidate.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    inflected: function (word) {
+        if (word.length < 5 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const real = (w) => w !== word && (this.known(w) || this.attested.has(w));
+        const found = new Set();
+        for (const ending of ['s', 'es', 'ies', 'ed', 'ing', 'ly']) {
+            if (!word.endsWith(ending) || word.length - ending.length < 3) continue;
+            const base = this.resolve(word.slice(0, -ending.length));
+            if (!base) continue;
+            // Rebuilt the way English spells it -- "accommodate" + ed is "accommodated",
+            // not "accommodateed" -- and accepted only when the result is a listed word.
+            const vowel = /^[aeiouy]/.test(ending);
+            const stem = vowel && base.endsWith('e') ? base.slice(0, -1)
+                : ending === 'ies' && base.endsWith('y') ? base.slice(0, -1) : base;
+            const rebuilt = stem + (ending === 'ies' ? 'ies' : ending);
+            if (real(rebuilt)) found.add(rebuilt);
+        }
+        return found.size === 1 ? [...found][0] : null;
+    },
+
+    /**
+     * One letter missing from a long word that is attested but not in the ranked list:
+     * "photosynthsis", "disadvantges". The ranked list is only a few thousand words,
+     * so long subject vocabulary is attested-only and was never a candidate. Seven
+     * letters and up, and exactly one word may fit.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    droppedLetter: function (word) {
+        if (word.length < 7 || word.length > 24 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const fits = new Set();
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        // Middle positions only. A letter added right after the first ("deadlocks" ->
+        // "dreadlocks") or at the end ("aggrieve" -> "aggrieved") turns a real word
+        // the lists lack into a different real word; measured on a large English word
+        // list those two positions made most of this rule's false corrections.
+        for (let i = 2; i < word.length; i++) {
+            for (const c of letters) {
+                const w = word.slice(0, i) + c + word.slice(i);
+                // Attested-only targets: ranked words were already weighed by resolve(),
+                // which declines "memoization" -> "memorization" on purpose. Any ranked
+                // word in reach also blocks the guess, for the same reason.
+                if (this.known(w)) return null;
+                if (this.attested.has(w)) fits.add(w);
+            }
+        }
+        return fits.size === 1 ? [...fits][0] : null;
+    },
+
+    // Function words that run into their neighbour when the space is missed.
+    SPLIT_WORDS: new Set('a an the to of in on is it me my you we and or for be do at by as so if up'.split(' ')),
+    PREFIX_LIKE: new Set('a an for in on at be as up by'.split(' ')),
+
+    /**
+     * Two words typed without the space between them: "mea" (me a), "inthe", "tellme".
+     * Last resort, after every single-word correction has declined, and only when one
+     * half is a common function word and exactly one split fits -- anything looser
+     * turns rare real words into pairs.
+     * @param {string} word
+     * @returns {string|null}
+     */
+    split: function (word) {
+        // Short words only, and the other half must be common: measured on Wikipedia's
+        // misspelling list, longer splits read prefixes as words ("inbalance" -> "in
+        // balance", "forhead" -> "for head") and rare halves made "nestin" "nest in".
+        if (word.length < 3 || word.length > 7 || !/^[a-z]+$/.test(word)) return null;
+        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        const common = (w) => w.length >= 2 && this.rank.has(w) && this.rank.get(w) < 1500;
+        const fits = [];
+        for (let i = 1; i < word.length; i++) {
+            const left = word.slice(0, i);
+            const right = word.slice(i);
+            // "for", "in", "a", "at", "be", "as", "up" double as prefixes (forehead,
+            // imbalance, accustom), so they are only ever the second half.
+            const ok = (this.SPLIT_WORDS.has(left) && !this.PREFIX_LIKE.has(left) && common(right))
+                || (this.SPLIT_WORDS.has(right) && common(left));
+            if (ok) fits.push(left + ' ' + right);
+        }
+        return fits.length === 1 ? fits[0] : null;
+    },
+
     correctWord: function (word) {
         if (this.cache.has(word)) return this.cache.get(word);
 
-        const result = this.resolve(word) || this.safeEdit(word);
+        // A real word is not a typo. resolve() declines it, and the fallbacks below then
+        // guessed anyway: "it compiles" became "it complies".
+        // The known-misspellings table still wins: "sentance" and "ned" are attested
+        // because users typed them, not because they are words.
+        const listed = Object.prototype.hasOwnProperty.call(this.misspellings, word);
+        // Nor an inflection built wrongly: "companys" (companies) and "gameing" (gaming)
+        // look like company+s and game+ing, and users type them, but are typos.
+        const malformed = !this.known(word) && /(?:[^aeiou]ys|[^e]eing)$/.test(word);
+        const real = !listed && !malformed
+            && (this.known(word) || this.attested.has(word) || this.formOfKnown(word));
+        const result = real ? null : (this.resolve(word) || this.safeEdit(word) || this.inflected(word)
+            || this.droppedLetter(word) || this.split(word));
         this.cache.set(word, result);
         return result;
     },
@@ -1450,8 +1593,25 @@ const PromptMeterSpelling = {
      */
     resolve: function (word) {
         if (word.length < this.MIN_LENGTH) return null;
-        if (this.known(word) || this.attested.has(word) || this.formOfKnown(word)) return null;
+        if (this.known(word)) return null;
+        // An explicit misspelling outranks the attested list: that list is mined from real
+        // text, so it holds real typos too ("sentance" was attested and never corrected).
         if (Object.prototype.hasOwnProperty.call(this.misspellings, word)) return this.misspellings[word];
+        // A missing doubled consonant: "occured", "begining", "refering". formOfKnown
+        // reads them as occur+ed and begin+ing, so they passed as words. When the
+        // dictionary has the doubled spelling, that is the word that was meant.
+        const undoubled = /^(.*[aeiou])([bdfgklmnprtvz])(ed|ing|er|ence)$/.exec(word);
+        // Not after -el/-al: "canceled", "labeled", "traveled" are American spellings.
+        if (undoubled && !/[ae]l$/.test(undoubled[1] + undoubled[2])) {
+            const doubled = undoubled[1] + undoubled[2] + undoubled[2] + undoubled[3];
+            if (this.known(doubled)) return doubled;
+        }
+        // A silent e kept before -ing: "gameing", "useing". formOfKnown reads them as
+        // game+ing and use+ing; English drops the e. Not "ageing" or "queueing", which
+        // are attested spellings and return above.
+        const keptE = /^(.*[^aeiouy])eing$/.exec(word);
+        if (keptE && !this.attested.has(word) && this.known(keptE[1] + 'e')) return keptE[1] + 'ing';
+        if (this.attested.has(word) || this.formOfKnown(word)) return null;
 
         // A skeleton of one consonant carries almost no evidence -- "bee" reduces to "b",
         // which it shares with "be", "by", "buy" and a dozen others, and the ranking then
@@ -1488,6 +1648,17 @@ const PromptMeterSpelling = {
             });
         });
         truncated.forEach(candidate => candidates.add(candidate));
+        // Two letters dropped ("diffent" for "different", "probly" for "probably"):
+        // a gap no single-edit index can see. Only words that keep both end letters,
+        // are one or two letters longer, and contain the typo in order -- and every
+        // one still has to pass the same plausibility and ranking as the rest.
+        // Fallback only, and only when exactly one word fits: measured on 37k real
+        // misspellings, letting these compete with closer candidates was right barely
+        // half the time.
+        if (candidates.size === 0) {
+            const gaps = this.gapped(word).filter((candidate) => this.isPlausibleEdit(word, candidate));
+            if (gaps.length === 1) candidates.add(gaps[0]);
+        }
 
         // Closest fit wins; equal fits are separated by frequency, which is what the
         // dictionary's ordering is for. An earlier version abandoned the correction
@@ -1507,12 +1678,60 @@ const PromptMeterSpelling = {
             if (gap > this.budget(word, candidate)) return;
             scored.push({ word: candidate, gap: gap });
 
+            // On a tie, a reading where the user only DROPPED letters beats one where they
+            // typed a wrong one: "hom" is "home" with a letter missing, and "him" only by
+            // frequency. Omission is the commonest typo; substitution needs a slip.
+            // A swap keeps every letter, so it ranks above an omission: "teh" is "the",
+            // not "tech".
+            const shape = (w) => (w.length === word.length && this.isTransposition(word, w)) ? 2
+                : (w.length > word.length && this.isSubsequence(word, w)) ? 1 : 0;
             if (gap < bestDistance ||
-                (gap === bestDistance && this.rank.get(candidate) < this.rank.get(best))) {
+                (gap === bestDistance && shape(candidate) > shape(best)) ||
+                (gap === bestDistance && shape(candidate) === shape(best)
+                    && this.rank.get(candidate) < this.rank.get(best))) {
                 best = candidate;
                 bestDistance = gap;
             }
         });
+
+        // Two swapped letters keep every letter the user typed, which is stronger
+        // evidence than any dropped or added one. "raom" is one edit from "ram" (drop a
+        // letter) and one from "roam" (swap two), and frequency picked "ram" -- but only
+        // because "roam" is in the attested list, not the ranked dictionary, so it was
+        // never a candidate. When the best guess throws away one of the letters the user
+        // typed, a single same-length swap onto a real word wins. Not when the guess ADDS
+        // a letter: a dropped letter is the commonest typo of all, and "formla" is
+        // "formula", not "formal". Four letters and up: at three a swap is how acronyms
+        // look ("dma", "dsa").
+        if (word.length >= 4 && (!best || best.length < word.length)) {
+            const swaps = new Set();
+            for (let i = 1; i < word.length - 1; i++) {
+                if (word[i] === word[i + 1]) continue;
+                const swapped = word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2);
+                if (this.known(swapped) || this.attested.has(swapped)) swaps.add(swapped);
+            }
+            if (swaps.size === 1) {
+                best = [...swaps][0];
+                bestDistance = 1;
+            }
+        }
+
+        // A three-letter word has too little signal to overrule what the user typed, so it
+        // has to clear one of two bars. See SHORT_WORD_MAX_RANK.
+        if (best && word.length <= this.MIN_LENGTH) {
+            const rank = this.rank.get(best);
+            const common = rank !== undefined && rank < this.SHORT_WORD_MAX_RANK;
+            // Dropped letters keep their order, transpositions do not, and that is what
+            // separates a typo from an acronym at this length: "mch" is a subsequence of
+            // "much", while "dma" is not one of "dam" and "dsa" is not one of "das".
+            // Frequency alone could not make this call -- "much"(1860) is rarer than
+            // "ram"(1692) -- so order is the second, independent signal.
+            const dropped = this.isSubsequence(word, best);
+            if (!common && !dropped) {
+                this.lastRivals = [];
+                return null;
+            }
+        }
 
         this.lastRivals = best
             ? scored.filter(entry => entry.gap === bestDistance && entry.word !== best)
@@ -1638,7 +1857,31 @@ const PromptMeterSpelling = {
             if (extraKnown && extraKnown.has(lower)) return match;
 
             const capitalised = match[0] !== lower[0];
-            if (capitalised && !this.opensSentence(text, offset)) return match;
+            // A capital mid-sentence usually marks a name, and names are left alone. But
+            // title-case phrases carry typos too: "Artificial Inelligence + Machine
+            // Learing" was skipped whole. A long capitalised word one edit from a common
+            // dictionary word is a typo, not a name; anything shorter or rarer stays.
+            if (capitalised && !this.opensSentence(text, offset)) {
+                if (lower.length < 7) return match;
+                const titled = this.correctWord(lower);
+                // Only a missing or swapped letter: a changed letter is how names differ
+                // from words ("Valentina" is not a typo of "Valentine").
+                const doubled = (w, t) => t.length === w.length - 1
+                    && [...w].some((c, i) => i > 0 && c === w[i - 1] && w.slice(0, i) + w.slice(i + 1) === t);
+                const slip = titled && ((titled.length === lower.length + 1 && this.isSubsequence(lower, titled))
+                    || this.isTransposition(lower, titled) || doubled(lower, titled));
+                if (!titled || !this.known(titled) || !slip) return match;
+                // Beside another capitalised word that is not a dictionary word, it is part
+                // of a name ("Christine Burnette", "Alexandre Dumas"): left alone. Beside
+                // an ordinary word ("Artificial Inelligence") it is a title-case typo.
+                const beside = (text.slice(Math.max(0, offset - 30), offset).match(/([A-Z][a-z]+)\s+$/) || [])[1]
+                    || (text.slice(offset + match.length).match(/^\s+([A-Z][a-z]+)/) || [])[1];
+                if (beside && ((!this.known(beside.toLowerCase()) && !this.correctWord(beside.toLowerCase()))
+                    || this.firstNames.has(beside.toLowerCase()))) return match;
+                if (this.firstNames.has(lower)) return match;
+                corrections.push({ from: match, to: titled });
+                return titled.charAt(0).toUpperCase() + titled.slice(1);
+            }
 
             const fixed = this.correctWord(lower);
             if (!fixed || fixed === lower) return match;
@@ -1698,10 +1941,91 @@ PromptMeterSpelling.attested = new Set(((typeof PM_ATTESTED_WORDS !== 'undefined
     ? PM_ATTESTED_WORDS
     : (typeof require !== 'undefined' ? require('./attested-words.js').PM_ATTESTED_WORDS : '')
 ).split(' ').filter(Boolean));
+PromptMeterSpelling.firstNames = new Set(((typeof PM_FIRST_NAMES !== 'undefined')
+    ? PM_FIRST_NAMES
+    : (typeof require !== 'undefined' ? require('./attested-words.js').PM_FIRST_NAMES || '' : '')
+).split(' ').filter(Boolean));
+// Tool and library names short enough to look like typos of common words: "deno"
+// became "demo". Exempt like any attested word, never a target.
+('deno bun vite pnpm npx webpack rollup esbuild nextjs nuxt svelte sveltekit astro remix '
+    + 'tailwind kotlin rustc cargo gradle maven numpy scipy pandas sklearn keras pytorch '
+    + 'fastapi flask django laravel rails nginx redis kafka spark hadoop terraform ansible '
+    + 'kubectl helm grafana jupyter colab figma canva notion jira trello calculus '
+    // Short forms students and engineers type in lowercase: course codes, subjects,
+    // degrees, tech. "dma" (data mining and analytics) is not "dam".
+    + 'dma dbms rdbms dsa coa daa toc nlp iot ece eee cse mca bca btech mtech ooad erp crm hci '
+    + 'vlsi dsp cad gis dbs bfs dfs lru lfu fifo lifo tds ctc emi cgpa sgpa sdlc stlc uat etl eda '
+    + 'pca knn svm jwt orm cli sdk ide gui mvc oop sql nosql dsl ocr nlu llm rag mlops devops cicd '
+    // Protocols, formats and platforms. "wss" became "was", "fiverr" "fiver".
+    + 'wss ws http https ftp sftp ssh tcp udp smtp imap pop3 dns dhcp ssl tls mqtt grpc rest soap '
+    + 'graphql webrtc websocket websockets oauth saml ldap vpn lan nat ipv4 ipv6 json yaml toml xml '
+    + 'csv tsv pdf docx xlsx pptx png jpg jpeg svg gif webp mp3 mp4 wav ascii utf utf8 regex '
+    + 'fiverr upwork etsy shopify wix squarespace wordpress woocommerce paypal stripe razorpay paytm '
+    + 'gpay upi zomato swiggy flipkart myntra amazon ebay tiktok instagram insta youtube whatsapp '
+    + 'telegram snapchat linkedin reddit quora discord slack zoom gmail outlook github gitlab bitbucket '
+    + 'vercel netlify heroku firebase supabase mongodb postgres postgresql mysql sqlite mariadb oracle '
+    + 'dynamodb cassandra neo4j elasticsearch kibana prometheus docker k8s openshift aws gcp '
+    + 'azure lambda ec2 s3 rds iam cloudfront bigquery snowflake databricks airflow dbt tableau powerbi '
+    + 'matplotlib seaborn plotly opencv tensorflow huggingface langchain llamaindex ollama openai chatgpt '
+    + 'gemini claude copilot midjourney dalle stable diffusion arduino raspberry esp32 esp8266 nodemcu '
+    + 'stm32 verilog vhdl matlab simulink labview autocad solidworks ansys blender unity unreal godot '
+    + 'golang rustlang typescript javascript nodejs reactjs vuejs angularjs jquery bootstrap sass scss '
+    + 'npm yarn pip conda venv virtualenv poetry pytest jest mocha cypress selenium playwright postman '
+    + 'swagger jenkins circleci sonarqube apache tomcat iis linux ubuntu debian fedora centos '
+    + 'arch kali macos ios ipados android windows wsl powershell bash zsh vim neovim emacs vscode '
+    + 'intellij pycharm eclipse xcode leetcode hackerrank codeforces codechef kaggle gfg geeksforgeeks '
+    + 'neet jee gate upsc gre gmat ielts toefl sat cbse icse ktu vtu anna '
+    // Indian English: food, family, festivals, forms of address, campus words. "chai"
+    // became "chain" and "amma" "ama".
+    + 'chai roti chapati paratha dal daal sambar rasam dosa idli vada pav bhaji biryani pulao '
+    + 'raita paneer ghee masala tikka korma curry naan kulcha lassi jalebi ladoo laddu halwa '
+    + 'payasam kheer gulab jamun samosa pakora chutney achaar thali sadhya appam puttu upma '
+    + 'poha khichdi rajma chole kadai tandoori momos maggi chaat bhel puri '
+    + 'amma appa achan acha amma ammachi appachan ammu chechi chetta chettan etta ettan '
+    + 'akka anna thambi machi machan bhai bhaiya didi dada dadi nani nana chacha chachi '
+    + 'mama mami beta beti yaar ji sahib saheb aunty uncle '
+    + 'diya diyas rangoli mehndi kolam pooja puja aarti prasad mandir gurudwara dargah '
+    + 'shayari ghazal bhajan kathakali bharatanatyam kuchipudi mohiniyattam carnatic hindustani '
+    + 'saree sari kurta dhoti lungi mundu dupatta salwar lehenga sherwani '
+    + 'lakh lakhs crore crores rupee rupees paise '
+    + 'hod od cgpa sgpa backlog backlogs viva vivas internals externals sem sems '
+    + 'prepone preponed intimate needful')
+    .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
+// Technical vocabulary the lists lack, one letter from a word they have: "memoization"
+// became "memorization" once long words could be repaired by a missing letter.
+('memoization memoize memoized memoizing tokenization tokenize tokenizer tokenizers '
+    + 'serialization deserialization serialize deserialize virtualization containerization '
+    + 'parallelization vectorization vectorize quantization quantize linearizability '
+    + 'idempotent idempotency polymorphism encapsulation inheritance instantiation '
+    + 'instantiate refactoring refactor middleware dataframe dataframes hashmap hashmaps '
+    + 'hashtable hashtables backpropagation regularization hyperparameter hyperparameters '
+    + 'embeddings embedding transpile transpiler minification minify debounce debouncing '
+    + 'throttling mutex mutexes semaphore semaphores enum enums tuple tuples iterable '
+    + 'iterator iterators coroutine coroutines async boolean booleans nullable getter '
+    + 'getters setter setters runtime runtimes webhook webhooks localhost namespace '
+    + 'namespaces subnet subnets kubernetes dockerfile monorepo microservice microservices '
+    + 'deadlock deadlocks livelock livelocks spinlock spinlocks')
+    .split(' ').forEach((w) => PromptMeterSpelling.attested.add(w));
 // Known misspellings with their fix (same generated file). Looked up before ranking.
 PromptMeterSpelling.misspellings = (typeof PM_MISSPELLINGS !== 'undefined')
     ? PM_MISSPELLINGS
     : (typeof require !== 'undefined' ? require('./attested-words.js').PM_MISSPELLINGS || {} : {});
+// Typos the generated table lacks and the edit search cannot reach: "queu" has a
+// one-consonant skeleton, and "queues" and "sentence" sit behind attested look-alikes.
+Object.assign(PromptMeterSpelling.misspellings = Object.assign({}, PromptMeterSpelling.misspellings), {
+    queu: 'queue', queus: 'queues', qeue: 'queue', qeues: 'queues',
+    sentance: 'sentence', sentances: 'sentences',
+    // "Ned" the name is attested, so the lowercase typo of "need" passed as a word.
+    ned: 'need', neds: 'needs', neded: 'needed', neding: 'needing',
+    // A real tie (formula minus a letter, formal with two swapped) that the shape
+    // ranking resolves the wrong way for this word.
+    formla: 'formula', formlas: 'formulas', formlae: 'formulae',
+    // "thos" is one edit from "this" and from "those"; the commoner word won, and
+    // "avoid thos dangers" became "avoid this dangers".
+    thos: 'those', tho: 'though', thier: 'their', theirr: 'their', wich: 'which',
+    becuase: 'because', becasue: 'because', untill: 'until', occured: 'occurred',
+    becoz: 'because', bcoz: 'because'
+});
 
 PromptMeterSpelling.rank = new Map();
 PromptMeterSpelling.skeletonIndex = new Map();

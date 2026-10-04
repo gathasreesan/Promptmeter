@@ -41,6 +41,9 @@ const PM_C_PROTECT = (typeof PromptMeterProtect !== 'undefined')
 const PM_C_OPTIMIZER = (typeof PromptMeterOptimizer !== 'undefined')
     ? PromptMeterOptimizer
     : (typeof require !== 'undefined' ? require('./optimizer.js').PromptMeterOptimizer : null);
+const PM_C_SPELL = (typeof PromptMeterSpelling !== 'undefined')
+    ? PromptMeterSpelling
+    : (typeof require !== 'undefined' ? require('./spelling.js').PromptMeterSpelling : null);
 
 const PM_C_CONDENSE = (typeof PromptMeterCondense !== 'undefined')
     ? PromptMeterCondense
@@ -81,8 +84,16 @@ const PromptMeterCompress = {
         [/\bthe\s+(?:concept|idea|notion|topic)\s+of\s+/gi, ''],
         // Requests
         [/\bgive\s+me\s+(?:a\s+list\s+of|some)\s+/gi, 'list '],
-        [/\b(?:and\s+)?also\s+(?:tell\s+me|explain|show\s+me)\s+/gi, 'and '],
+        // Only "also" goes: the verb is the second request. Dropping it turned
+        // "convert this and also explain what each line is doing" into "and what each
+        // line is doing".
+        [/\b(and\s+)?also\s+(tell\s+me|explain|show\s+me)\s+/gi, (m, and, verb) => 'and ' + verb + ' '],
         [/,?\s+and\s+also\s+(?:i\s+want\s+you\s+to\s+)?/gi, ' and '],
+        // A request behind a connective: "..., so can you give me a roadmap?" The
+        // wrapper strippers only see "can you" at a clause start, so this one survived
+        // every pass. It becomes its own sentence: "... start. Give me a roadmap."
+        [/,?\s+(?:and\s+)?(?:so|and)\s+(?:can|could|would|will)\s+(?:you|u)\s+(?:please\s+)?((?:give|tell|show|suggest|recommend|explain|make|write|create|list)\b[^.!?\n]*)\?/gi,
+            '. $1.'],
         // "Explain X ... and explain it simply" / "Explain X. Explain it simply.": the
         // second "explain" only carries the manner, so the manner is all that stays.
         [/^(explain\b[^]*?)(?:,?\s+and\s+|[.!?]\s+)explain\s+it\s+(simply|briefly|in\s+detail|step\s+by\s+step|clearly)\b/i,
@@ -102,6 +113,58 @@ const PromptMeterCompress = {
         [/\b(?:because|since|as)\s+i(?:'m|\s+am)\s+new\s+to\s+(\w+)/gi, 'for a $1 beginner'],
         // "like" before a question word is filler: "like what it is and how it works"
         [/,?\s+like\s+(?=(?:what|how|why|when|where|which|who)\b)/gi, ', '],
+        // Questions that are really requests, in their shortest form. Condense only:
+        // Trim keeps the user's question; Condense trades it for the command.
+        [/(^|[.!?]\s+)what\s+are\s+(?:the\s+|some\s+)?(?:different\s+|various\s+|main\s+)?(types|kinds|forms|categories|causes|symptoms|benefits|advantages|disadvantages|uses|stages|steps|examples|features|applications|effects|signs|risks)\s+of\s+(?![^.?!]*\b(?:and|or)\s+(?:when|what|how|why|where|which|who|should|can|could|is|are|do|does|will|would)\b)/gi,
+            // Not when another question follows: "What are the symptoms of diabetes and
+            // when should I see a doctor" became "List the symptoms ... and when should I".
+            (m, lead, what) => lead + 'List the ' + what.toLowerCase() + ' of '],
+        [/(^|[.!?]\s+)how\s+(?:do|can|should)\s+(?:i|we|one)\s+/gi, '$1How to '],
+        [/(^|[.!?]\s+)what\s+is\s+the\s+meaning\s+of\s+/gi, '$1Define '],
+        [/(^|[.!?]\s+)what\s+does\s+(.{1,40}?)\s+mean\b\??/gi, '$1Define $2'],
+        [/(^|[.!?]\s+)is\s+it\s+possible\s+to\s+/gi, '$1Can I '],
+        [/(^|[.!?]\s+)i\s+wonder\s+(what|how|why|which|where|when|who|whether|if)\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, q, rest) => lead + q.charAt(0).toUpperCase() + q.slice(1) + ' ' + rest + '?'],
+        [/(^|[.!?]\s+)i(?:'m|\s+am)\s+not\s+sure\s+how\s+to\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, rest) => lead + 'How to ' + rest + '?'],
+        // Who it is for, in two words: ", I am a beginner and I don't know much about
+        // machine learning" -> " for a beginner".
+        [/,?\s*(?:and\s+|as\s+|since\s+|because\s+)?i(?:'m|\s+am)\s+(?:a\s+)?(?:complete\s+|total\s+|absolute\s+)?(beginner|newbie|novice)(?:\s+(?:and|so)\s+i\s+(?:do\s*n[o']?t|don'?t)\s+(?:really\s+)?know\s+(?:much|anything)\s+about\s+[^.,;?!]+)?/gi, ' for a $1'],
+        [/\basking\s+(?:him|her|them)\s+for\b/gi, 'asking for'],
+        [/\b(generate|give|list|suggest|write|share|provide|recommend|create|make)\s+(me\s+)?some\s+(?=(?:[a-z]+\s+)?[a-z]+s\b)/gi, '$1 $2'],
+        [/\ball\s+the\s+(?=(?:[a-z]+\s+)?[a-z]+s\b)/gi, 'all '],
+        [/\bi(?:'m|\s+am)\s+planning\s+to\b/gi, 'I plan to'],
+        [/(^|[.!?]\s+)what\s+(?:are|is)\s+the\s+(best|top|cheapest|easiest|fastest)\s+([^.?!]+)[.?!]?/gi,
+            (m, lead, sup, rest) => lead + sup.charAt(0).toUpperCase() + sup.slice(1) + ' ' + rest + '?'],
+        // Manner said in four words where one does: "in a very simple way" -> "simply".
+        [/\bin\s+(?:a\s+)?(?:very\s+|really\s+)?(simple|easy|clear|brief|short|detailed|concise)\s+(?:way|manner|terms|language|words)\b/gi,
+            (m, how) => ({ simple: 'simply', easy: 'simply', clear: 'clearly', brief: 'briefly',
+                short: 'briefly', detailed: 'in detail', concise: 'concisely' })[how.toLowerCase()]],
+        [/\bexplain\s+to\s+me\b/gi, 'explain'],
+        // Wordy phrases with a plain equivalent of the same meaning.
+        [/\bprior\s+to\b/gi, 'before'],
+        [/\bwhether\s+or\s+not\b/gi, 'whether'],
+        [/\bthe\s+reason\s+why\b/gi, 'why'],
+        [/\b(?:various\s+different|different\s+various)\b/gi, 'various'],
+        [/\bfirst\s+and\s+foremost\b/gi, 'first'],
+        [/\ba\s+majority\s+of\b/gi, 'most'],
+        [/(^|[.!?]\s+)it\s+is\s+(?:important|essential|crucial|necessary|vital)\s+that\s+you\s+(\w)/gi,
+            (m, lead, c) => lead + c.toUpperCase()],
+        [/(^|[.!?]\s+)i\s+(?:am|was|'m)\s+wondering\s+(?:whether|if)\s+you\s+(?:could|can|would|might)\s+(?:please\s+)?(\w)/gi,
+            (m, lead, c) => lead + c.toUpperCase()],
+        // Connectors longer than "and": "Not only explain X but also give Y" and "the
+        // causes as well as the turning points". Not "as well as possible/you can".
+        [/\bnot\s+only\s+([^.?!]+?),?\s+but\s+also\s+/gi, '$1 and '],
+        [/\bas\s+well\s+as\b(?!\s+(?:possible|you|i|we|they|he|she|it|can|could))/gi, 'and'],
+        // "I don't understand pointers in C, can you explain it simply" -> "Explain
+        // pointers in C simply": the confusion names the subject, the request points at it.
+        [/(^|[.!?]\s+)i\s+(?:don'?t|do\s+not)\s+(?:really\s+)?(?:understand|get)\s+([^.?!,]+?),?\s+(?:so\s+)?(?:(?:can|could|would)\s+(?:you|u)\s+(?:please\s+)?)?explain\s+(?:it|this|that|them)\b/gi,
+            (m, lead, what) => lead + 'Explain ' + what],
+        // "takes X and then calculates Y and then prints Z": "then" carries the order.
+        [/\band\s+then\s+(?=[a-z])/gi, 'then '],
+        // "Basically what I want is a summary of X" -> "I want a summary of X".
+        [/(^|[.!?]\s+)(?:basically\s+|so\s+)?what\s+(i|we)\s+(?:want|need)\s+is\s+(?=(?:a|an|the)\b)/gi,
+            (m, lead, who) => lead + (who.toLowerCase() === 'i' ? 'I' : 'We') + ' want '],
         // Trailing padding
         [/\s+for\s+me\b(?!\s+(?:and|to)\b)/gi, ''],
         [/\s+as\s+well(?=\s*[.?!]|$)/gi, ''],
@@ -118,7 +181,15 @@ const PromptMeterCompress = {
         // Two passes: one rewrite can set up another ("Help me understand X. Explain it
         // simply." needs the first to become "Explain" before the two can merge).
         const pass = (text) => this.TIGHTEN_RULES.reduce((s, [rx, to]) => s.replace(rx, to), text);
-        let out = pass(pass(masked.masked));
+        let out = this.pronounRepeats(pass(pass(masked.masked)));
+        // "I am facing many respiratory issues. List the kinds of respiratory issues":
+        // the opening sentence only announces the subject the request names again.
+        out = out.replace(/^\s*i(?:'m|\s+am|\s+have\s+been)\s+(?:facing|having|experiencing|dealing\s+with|suffering\s+from|struggling\s+with|getting|seeing)\s+(?:many\s+|some\s+|a\s+lot\s+of\s+|a\s+few\s+|lots\s+of\s+|frequent\s+)?([^.?!]{3,60})[.!]\s+(?=\S)/i,
+            (m, subject, offset, whole) => {
+                const rest = whole.slice(m.length).toLowerCase();
+                const head = subject.trim().toLowerCase().split(/\s+/).pop().replace(/s$/, '');
+                return head.length > 3 && rest.includes(head) ? '' : m;
+            });
         if (out === masked.masked) return text;
         out = out
             .replace(/[ \t]{2,}/g, ' ')
@@ -127,8 +198,310 @@ const PromptMeterCompress = {
             .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase())
             .replace(/,\s+(Explain|Write|Give|List|Tell|Show|Describe|Create|Make|Help)\b/g,
                 (m, verb) => ', ' + verb.toLowerCase())
-            .trim();
+            .trim()
+            // A rewrite that now opens the prompt ("for a beginner, explain ...").
+            .replace(/^[a-z]/, (c) => c.toUpperCase());
         return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
+    },
+
+    /**
+     * A two- or three-word subject named again in the same sentence becomes "it":
+     * "the causes of global warming and the effects of global warming and how to reduce
+     * global warming" -> "... the effects of it and how to reduce it". Only after a
+     * preposition or a verb, where "it" reads cleanly, and never for a plural.
+     * @param {string} text - Masked text.
+     * @returns {string}
+     */
+    pronounRepeats: function (text) {
+        const BEFORE = /\b(?:of|on|about|for|with|to|from|in|into|reduce|prevent|stop|use|using|explain|describe|define|improve|avoid|fix|learn|study|understand|affect|affects|cause|causes|control)\s+$/i;
+        return text.split(/(?<=[.!?])\s+/).map((sentence) => {
+            const words = sentence.match(/[A-Za-z][A-Za-z'-]*/g) || [];
+            for (let size = 3; size >= 2; size--) {
+                for (let i = 0; i + size <= words.length; i++) {
+                    const run = words.slice(i, i + size);
+                    if (run.some((w) => this.FUNCTION_WORDS.has(w.toLowerCase()))
+                        || /(?<!s)s$/i.test(run[size - 1])) continue;
+                    const phrase = run.join('\\s+');
+                    const rx = new RegExp('\\b' + phrase + '\\b', 'gi');
+                    const hits = [...sentence.matchAll(rx)];
+                    if (hits.length < 2) continue;
+                    // Keep the first mention; replace the later ones right to left.
+                    let out = sentence;
+                    hits.slice(1).reverse().forEach((hit) => {
+                        if (BEFORE.test(out.slice(0, hit.index))) {
+                            out = out.slice(0, hit.index) + 'it' + out.slice(hit.index + hit[0].length);
+                        }
+                    });
+                    if (out !== sentence) return out;
+                }
+            }
+            return sentence;
+        }).join(' ');
+    },
+
+    // ---------------------------------------------------------------------------
+    // Prompts the English rules cannot read
+    // ---------------------------------------------------------------------------
+
+    // Greetings, "please" and thanks, by language. Removing any of them changes the tone
+    // of a prompt and never what it asks: the same rule the English strippers follow.
+    // Address terms ("bhai", "chetta", "machi") are greetings in code-mixed prompts.
+    FOREIGN_GREETINGS: [
+        'hola', 'buenos días', 'buenas tardes', 'buenas noches', 'bonjour', 'bonsoir', 'salut',
+        'hallo', 'guten tag', 'guten morgen', 'servus', 'olá', 'oi', 'bom dia', 'boa tarde',
+        'boa noite', 'ciao', 'buongiorno', 'buonasera', 'salve', 'halo', 'selamat pagi',
+        'selamat siang', 'selamat malam', 'merhaba', 'selam', 'goedemorgen', 'goedendag',
+        'привет', 'здравствуйте', 'добрый день', 'доброе утро', '你好', '您好', '大家好',
+        'こんにちは', 'こんばんは', 'おはようございます', '안녕하세요', 'مرحبا', 'مرحباً',
+        'السلام عليكم', 'أهلا', 'नमस्ते', 'नमस्कार', 'हेलो', 'हाय', 'வணக்கம்', 'ഹായ്', 'ഹലോ',
+        'നമസ്കാരം', 'namaste', 'namaskar', 'vanakkam', 'hi', 'hello', 'hey'
+    ],
+    // "hai" is Malayalam/Hinglish "hi" here, and Hindi "is" elsewhere -- as an address
+    // it goes only before a comma or a request word, like the others.
+    FOREIGN_ADDRESS: ['bhai', 'bhaiya', 'yaar', 'bro', 'chetta', 'chechi', 'machi', 'machan', 'dude', 'hai'],
+    FOREIGN_PLEASE: [
+        'por favor', "s'il vous plaît", "s'il te plaît", 'svp', 'bitte', 'per favore', 'per piacere',
+        'lütfen', 'alsjeblieft', 'alstublieft', 'пожалуйста', 'من فضلك', 'لو سمحت', 'कृपया',
+        'कृपा करके', 'ദയവായി', 'ദയവു ചെയ്ത്', 'தயவுசெய்து', 'தயவு செய்து', 'please', 'pls', 'plz', 'kindly'
+    ],
+    // Only where they open the request: "请解释" and "Tolong jelaskan" are "please explain",
+    // but 请 and tolong also appear inside ordinary words and phrases.
+    FOREIGN_PLEASE_OPENERS: ['请问', '请', 'tolong', 'mohon'],
+    FOREIGN_THANKS: [
+        'muchas gracias', 'gracias de antemano', 'gracias', 'merci beaucoup', "merci d'avance",
+        'merci par avance', 'merci', 'vielen dank im voraus', 'vielen dank', 'danke im voraus',
+        'danke schön', 'danke sehr', 'danke', 'desde já obrigado', 'desde já obrigada', 'obrigado',
+        'obrigada', 'grazie mille', 'grazie in anticipo', 'grazie', 'terima kasih banyak',
+        'terima kasih', 'teşekkür ederim', 'teşekkürler', 'dank je wel', 'dank je', 'bedankt',
+        'заранее спасибо', 'спасибо заранее', 'большое спасибо', 'спасибо', '谢谢你', '谢谢您', '谢谢',
+        '多谢', 'ありがとうございます', 'ありがとう', 'よろしくお願いします', '감사합니다',
+        'شكرا جزيلا', 'شكراً', 'شكرا', 'बहुत धन्यवाद', 'धन्यवाद', 'शुक्रिया', 'നന്ദി', 'நன்றி',
+        'dhanyavaad', 'dhanyavad', 'shukriya', 'nanri', 'nandri', 'nanni', 'nandi',
+        'thank you', 'thanks', 'thx'
+    ],
+    // What a thanks that opens a prompt is for: "Gracias por todo. Ahora explícame ...".
+    FOREIGN_THANKS_FOR: [
+        'por todo', 'por tu ayuda', 'por la ayuda', 'pour tout', 'pour ton aide', 'pour votre aide',
+        'für alles', 'für deine hilfe', 'für ihre hilfe', 'за всё', 'за все', 'за помощь', 'per tutto',
+        "per l'aiuto", 'por tudo', 'pela ajuda', 'for everything', 'for your help', 'for the help'
+    ],
+
+    // "Can you explain X?" -> "Explain X." in the languages whose requests take that shape.
+    // Each rule names the words it may remove and the words it may add, and foreignValid()
+    // holds it to exactly those. Only a single request with no second verb joined on:
+    // "¿Puedes explicarme X y también darme Y?" would read "Explícame X y también darme".
+    FOREIGN_REWRITES: [
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+explicarme\s+([^?¿]+?)\s*\?$/iu, 'Explícame $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'explicarme'], ['explícame']],
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+decirme\s+([^?¿]+?)\s*\?$/iu, 'Dime $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'decirme'], ['dime']],
+        [/^¿?\s*me\s+(?:puedes|podrías|podrias)\s+decir\s+([^?¿]+?)\s*\?$/iu, 'Dime $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'decir'], ['dime']],
+        [/^¿?\s*me\s+(?:puedes|podrías|podrias)\s+explicar\s+([^?¿]+?)\s*\?$/iu, 'Explícame $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'explicar'], ['explícame']],
+        [/^¿?\s*(?:me\s+)?(?:puedes|podrías|podrias)\s+ayudar(?:me)?\s+a\s+([^?¿]+?)\s*\?$/iu, 'Ayúdame a $1.',
+            ['me', 'puedes', 'podrías', 'podrias', 'ayudar', 'ayudarme'], ['ayúdame']],
+        [/^(?:peux-tu|pourrais-tu)\s+m'expliquer\s+([^?]+?)\s*\?$/iu, 'Explique-moi $1.',
+            ['peux', 'pourrais', 'tu', "m'expliquer"], ['explique', 'moi']],
+        [/^(?:pouvez-vous|pourriez-vous)\s+m'expliquer\s+([^?]+?)\s*\?$/iu, 'Expliquez-moi $1.',
+            ['pouvez', 'pourriez', 'vous', "m'expliquer"], ['expliquez', 'moi']],
+        [/^(?:peux-tu|pourrais-tu)\s+me\s+dire\s+([^?]+?)\s*\?$/iu, 'Dis-moi $1.',
+            ['peux', 'pourrais', 'tu', 'me', 'dire'], ['dis', 'moi']],
+        [/^(?:kannst|könntest)\s+du\s+mir\s+erklären,\s*([^?]+?)\s*\?$/iu, 'Erkläre mir, $1.',
+            ['kannst', 'könntest', 'du', 'erklären'], ['erkläre']],
+        [/^(?:kannst|könntest)\s+du\s+mir\s+([^?,]+?)\s+erklären\s*\?$/iu, 'Erkläre mir $1.',
+            ['kannst', 'könntest', 'du', 'erklären'], ['erkläre']],
+        [/^(?:você\s+)?(?:pode|poderia|podes)\s+(?:me\s+)?explicar\s+([^?]+?)\s*\?$/iu, 'Explique $1.',
+            ['você', 'pode', 'poderia', 'podes', 'me', 'explicar'], ['explique']],
+        [/^(?:puoi|potresti)\s+spiegarmi\s+([^?]+?)\s*\?$/iu, 'Spiegami $1.',
+            ['puoi', 'potresti', 'spiegarmi'], ['spiegami']],
+        [/^(?:puoi|potresti)\s+dirmi\s+([^?]+?)\s*\?$/iu, 'Dimmi $1.',
+            ['puoi', 'potresti', 'dirmi'], ['dimmi']],
+        // The comma before "что" is required Russian and stays: "Объясни, что такое ...".
+        [/^(?:можешь|ты\s+можешь|не\s+мог\s+бы\s+ты)\s+(?:мне\s+)?объяснить(,?)\s*([^?]+?)\s*\?$/iu, 'Объясни$1 $2.',
+            ['можешь', 'ты', 'не', 'мог', 'бы', 'мне', 'объяснить'], ['объясни']],
+        [/^(?:можете|вы\s+можете|не\s+могли\s+бы\s+вы)\s+(?:мне\s+)?объяснить(,?)\s*([^?]+?)\s*\?$/iu, 'Объясните$1 $2.',
+            ['можете', 'вы', 'не', 'могли', 'бы', 'мне', 'объяснить'], ['объясните']],
+        [/^(?:можешь|ты\s+можешь)\s+(?:мне\s+)?рассказать(,?)\s*([^?]+?)\s*\?$/iu, 'Расскажи$1 $2.',
+            ['можешь', 'ты', 'мне', 'рассказать'], ['расскажи']],
+        // Hindi: "क्या आप मुझे X समझा सकते हैं?" -> "मुझे X समझाइए।"
+        [/^क्या\s+आप\s+([^?？।]+?)\s+(समझा|बता|लिख|दे|सिखा|दिखा)\s+(?:सकते|सकती)\s+हैं\s*[?？]$/u,
+            (m, body, verb) => body + ' ' + ({ 'समझा': 'समझाइए', 'बता': 'बताइए', 'लिख': 'लिखिए', 'दे': 'दीजिए', 'सिखा': 'सिखाइए', 'दिखा': 'दिखाइए' })[verb] + '।',
+            ['क्या', 'आप', 'सकते', 'सकती', 'हैं', 'समझा', 'बता', 'लिख', 'दे', 'सिखा', 'दिखा'],
+            ['समझाइए', 'बताइए', 'लिखिए', 'दीजिए', 'सिखाइए', 'दिखाइए']],
+        // Hinglish: "kya aap mujhe X samjha sakte ho?" -> "mujhe X samjhao"
+        [/^kya\s+(?:aap|tum|tu)\s+([^?]+?)\s+(samjha|bata|likh|de|sikha|dikha)\s+(?:sakte|sakti|sakta)\s+(?:ho|hain|hai)\s*\?$/iu,
+            (m, body, verb) => body + ' ' + ({ samjha: 'samjhao', bata: 'batao', likh: 'likho', de: 'do', sikha: 'sikhao', dikha: 'dikhao' })[verb.toLowerCase()],
+            ['kya', 'aap', 'tum', 'tu', 'sakte', 'sakti', 'sakta', 'ho', 'hain', 'hai', 'samjha', 'bata', 'likh', 'de', 'sikha', 'dikha'],
+            ['samjhao', 'batao', 'likho', 'do', 'sikhao', 'dikhao']],
+        // Chinese: "你能帮我X吗？" / "你可以解释一下X吗？" -> "帮我X。" / "解释一下X。"
+        [/^(?:你|您)(?:能不能|可不可以|能否|能|可以)(?:请)?([^？?]+?)(?:吗)?[？?]$/u, '$1。',
+            ['你', '您', '能', '不', '可', '以', '否', '请', '吗'], []],
+        // Japanese: "…を教えていただけますか？" -> "…を教えてください。"
+        [/^([^？?]+?)て(?:いただけ|もらえ|くれ)(?:ます|ません)か[？?]$/u, '$1てください。',
+            ['い', 'た', 'だ', 'け', 'ま', 'す', 'か', 'も', 'ら', 'え', 'く', 'れ', 'せ', 'ん'], ['く', 'だ', 'さ', 'い']],
+        // Korean: "…해 주실 수 있나요?" -> "…해 주세요."
+        [/^([^?？]+?)\s*주실\s*수\s*있(?:나요|을까요|습니까|어요)\s*[?？]$/u, '$1 주세요.',
+            ['주', '실', '수', '있', '나', '요', '을', '까', '습', '니', '어'], ['주', '세', '요']],
+        // Arabic: "هل يمكنك أن تشرح X؟" / "هل يمكنك شرح X؟" -> "اشرح X."
+        [/^هل\s+يمكنك\s+(?:أن\s+تشرح|شرح)\s+([^؟?]+?)\s*[؟?]$/u, 'اشرح $1.', ['هل', 'يمكنك', 'أن', 'تشرح', 'شرح'], ['اشرح']],
+        [/^هل\s+يمكنك\s+(?:أن\s+تكتب|كتابة)\s+([^؟?]+?)\s*[؟?]$/u, 'اكتب $1.', ['هل', 'يمكنك', 'أن', 'تكتب', 'كتابة'], ['اكتب']],
+        // Indonesian: "Bisakah kamu menjelaskan X?" -> "Jelaskan X."
+        [/^(?:bisakah|bisa|dapatkah)\s+(?:kamu|anda|kau)\s+(?:tolong\s+)?menjelaskan\s+([^?]+?)\s*\?$/iu, 'Jelaskan $1.',
+            ['bisakah', 'bisa', 'dapatkah', 'kamu', 'anda', 'kau', 'tolong', 'menjelaskan'], ['jelaskan']],
+        // Turkish: "X açıklayabilir misin?" -> "X açıkla."
+        [/^([^?]+?)\s+açıklayabilir\s+mi(?:sin|siniz)\s*\?$/iu, '$1 açıkla.', ['açıklayabilir', 'misin', 'misiniz'], ['açıkla']],
+        [/^([^?]+?)\s+anlatabilir\s+mi(?:sin|siniz)\s*\?$/iu, '$1 anlat.', ['anlatabilir', 'misin', 'misiniz'], ['anlat']]
+    ],
+    // A second request joined on, in those languages: the rewrite is skipped.
+    // Not "o"/"ou"/"oder" ("or"): Portuguese "o que é" is "what is", and "or" joins
+    // nouns, not a second request.
+    FOREIGN_SECOND_ASK: /(?<![\p{L}\p{M}])(?:y|e|et|und|и|pero|mais|aber|ma|mas|но|también|aussi|auch|anche|também|тоже|также|aur|और|dan|ve|लेकिन|lekin)(?![\p{L}\p{M}])/iu,
+
+    /**
+     * Applies the first FOREIGN_REWRITES rule that fits a one-sentence prompt.
+     * @returns {Object} { text, removed: [], added: [] }
+     */
+    foreignRewrite: function (text) {
+        const t = text.trim();
+        // One plain sentence only: never a prompt carrying code, quotes or a payload.
+        if (/[\n:"“”«»`]/.test(t)) return { text: text, removed: [], added: [] };
+        for (const [rx, to, removed, added] of this.FOREIGN_REWRITES) {
+            const m = rx.exec(t);
+            // Every captured part, not the last: in the Hindi rule the last group is the
+            // verb, and "X समझा सकते हैं और Y दे सकते हैं" had only its second verb rewritten.
+            const body = m && m.slice(1).filter(Boolean).join(' ');
+            if (!m || this.FOREIGN_SECOND_ASK.test(body) || /[.!?]/.test(body)) continue;
+            return { text: t.replace(rx, to), removed: removed, added: added };
+        }
+        return { text: text, removed: [], added: [] };
+    },
+
+    // Asking about a word, its meaning or its translation, in the languages above.
+    // Whole words outside Han/kana/Hangul: Tamil "சொல்" ("word") matched inside
+    // "சொல்லவும்" ("say") and every Tamil prompt with "say" in it was skipped.
+    FOREIGN_META: /\b(?:mean|means|meaning|translate|translation|word|bedeutet|bedeutung|heißt|übersetz\w*|wort|significa\w*|signifie|sens|palabra|mot|traduc\w*|tradu\w*|parola|palavra|artinya|arti|kata|anlam\w*|kelime|betekent|woord|matlab|arth|shabd)\b|(?<![\p{L}\p{M}])(?:अर्थ|मतलब|शब्द|अनुवाद|അർത്ഥം|വാക്ക്|பொருள்|சொல்|значит|значение|слово|слова|перевод\p{L}*|(?:ال)?معنى|(?:ال)?كلمة|ترجم\p{L}*)(?![\p{L}\p{M}])|意思|含义|意味|翻译|翻訳|単語|单词|단어|의미|뜻/iu,
+
+    /** Letters of any script, with the combining marks Indic scripts are built from. */
+    FOREIGN_EDGE: '[\\p{L}\\p{M}\\p{N}]',
+
+    /**
+     * Removes greetings, "please" and thank-you sentences from a prompt in any language.
+     * Protected spans (code, quotes, URLs) are masked first.
+     * @param {string} text
+     * @returns {string}
+     */
+    foreignTrim: function (text) {
+        const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+        const alt = (list) => list.slice().sort((a, b) => b.length - a.length).map(esc).join('|');
+        const E = this.FOREIGN_EDGE;
+        const cut = '[\\s,，、،؛!！¡.。।॥:;：；\\-–—🙏😊🙂]*';
+        const stop = '[.!?。！？؟।\\n]';
+        // A prompt about words is the one place these words are content: "Was bedeutet
+        // bitte?", "कृपया का अर्थ क्या है?", "Dime el significado de la palabra por favor"
+        // lost the very word they asked about.
+        if (this.FOREIGN_META.test(text)) return text;
+        if (!this.foreignRx) {
+            // An address term only where it addresses someone: "bhai, ..." or "bhai
+            // please ..." -- not "bhai ki shaadi" (brother's wedding) or "bro code".
+            const addressed = `(?:${alt(this.FOREIGN_ADDRESS)})(?=\\s*[,!:！，]|\\s+(?:${alt(this.FOREIGN_PLEASE)}|mujhe|mera|meri|main|hum|enikku|ente|njan|naan|enaku|i|can|could|tell|explain|help)(?!${E}))`;
+            this.foreignRx = {
+                greet: new RegExp(`^\\s*(?:${alt(this.FOREIGN_GREETINGS)})(?!${E})(?:${cut}${addressed})?${cut}`, 'iu'),
+                address: new RegExp(`^\\s*${addressed}${cut}`, 'iu'),
+                // 请 opens "please explain", but 请客 is "to treat", 请假 "to ask for
+                // leave", 请教 "to consult", 请求 "a request": never cut out of a word.
+                // Also right after a removed greeting's mark: "你好，请写 ..." kept its 请.
+                opener: new RegExp(`(^|${stop}\\s*|\\u0007\\s*)(?:请问|请(?![客假求教帖柬示愿安辞])|(?:tolong|mohon)(?!\\s*menolong))(?=\\S)\\s*`, 'iu'),
+                please: new RegExp(`(?<!${E})(?:${alt(this.FOREIGN_PLEASE)})(?!${E})[,，、]?`, 'giu'),
+                // Only a thanks that is its own sentence or follows a comma: "a letter that
+                // ends with gracias" ended with "con". "¡Muchas gracias!": the ¡ goes too.
+                // After a code span too: "arregla este código: `...` ¡Gracias!".
+                // Han and kana run on without a break: "举个例子谢谢！", "…くださいよろしく
+                // お願いします。" -- a CJK thanks may follow a CJK character directly.
+                thanks: new RegExp(`(^|${stop}\\s*|[,，、،]\\s*|\\uE001\\s*|(?<=[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}])(?=[谢多あよ감]))[¡]?(?:${alt(this.FOREIGN_THANKS)})(?!${E})${cut}$`, 'iu'),
+                // A thanks that is the whole first sentence: "Gracias por todo. Ahora ...".
+                thanksOpen: new RegExp(`^\\s*[¡]?(?:${alt(this.FOREIGN_THANKS)})(?:\\s+(?:${alt(this.FOREIGN_THANKS_FOR)}))?(?!${E})\\s*[.!！。]+\\s+(?=\\S)`, 'iu')
+            };
+        }
+        const rx = this.foreignRx;
+        const masked = PM_C_PROTECT ? PM_C_PROTECT.mask(text) : { masked: text, spans: [] };
+        // Every removal leaves a mark (\u0007), and only the text around a mark is tidied.
+        // Tidying the whole prompt reflowed tab-separated tables, indented results, JSON
+        // and CSV payloads, took the "----" off a separator line and the dash off a line
+        // of dialogue, and closed up French "français ?" with nothing removed at all.
+        const M = '\u0007';
+        // Only the request is the user's own courtesy. A message to answer, a text to
+        // classify or a conversation to summarise lost its "por favor", "bitte" and
+        // "gracias" -- they were the payload. So the edit stops at the first line break or
+        // colon, and a closing thanks goes only from a one-line prompt.
+        const full = masked.masked;
+        // "dieser folgender Text [Hallo, Bitte ...]" marks its payload in words.
+        const cutAt = full.search(/\n|:(?=\s*\S)|\[|(?<![\p{L}\p{M}])(?:folgenden?|folgender|folgendes|following|siguientes?|suivante?s?|seguintes?|seguente|следующ[\p{L}]*|下面|以下)(?![\p{L}\p{M}])/iu);
+        const head = cutAt === -1 ? full : full.slice(0, cutAt);
+        let rest = cutAt === -1 ? '' : full.slice(cutAt);
+        let out = head.replace(rx.greet, M).replace(rx.address, M).replace(rx.thanksOpen, M);
+        if (!rest) out = out.replace(rx.thanks, '$1' + M);
+        // After a colon only code or quoted spans (masked): "arregla este código: `...`
+        // ¡Gracias!" -- the thanks is still the user's.
+        else if (/^:\s*(?:\d+\s*)+[^\n]*$/.test(rest)) rest = rest.replace(rx.thanks, '$1' + M);
+        out = out.replace(rx.opener, '$1' + M);
+        out = out.replace(rx.please, M) + rest;
+        if (out.indexOf(M) === -1) return text;
+        out = out
+            .replace(new RegExp(`^\\s*(?:${M}[\\s,，、،؛:;]*)+`), '')
+            // A "please" removed before the question mark leaves its comma: "máquina,?".
+            .replace(new RegExp(`[ \\t]*[,，、،]?[ \\t]*${M}[ \\t]*(?=[?？؟!！.。]|$)`, 'g'), '')
+            .replace(new RegExp(`[,，、،]\\s*${M}\\s*[,，、،]`, 'g'), ',')
+            .replace(new RegExp(`[ \\t]*${M}[ \\t]*`, 'g'), (m) => (/^[ \t]/.test(m) && /[ \t]$/.test(m) ? ' ' : ''))
+            .replace(/[ \t]+$/, '');
+        // Keep a capital the prompt opened with: "Por favor, explica" -> "Explica", and
+        // "Hola, ¿puedes" -> "¿Puedes".
+        if (/^\s*\p{Lu}/u.test(text)) {
+            out = out.replace(/^([¿¡"'“(]*)(\p{Ll})/u, (m, lead, c) => lead + c.toUpperCase());
+        }
+        // A greeting with one word left is not a shorter prompt: "Hallo Vicuna" -> "Vicuna".
+        // Han, kana and Hangul characters count one each: unspaced, "你能帮我写一首诗吗"
+        // was one "word" and the greeting before it could never be removed.
+        const words = (s) => (s.match(/[\p{L}\p{M}]+/gu) || []).length
+            + (s.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) || []).length;
+        if (!out.trim() || (words(out) < 2 && words(masked.masked) >= 2)) return text;
+        return PM_C_PROTECT ? PM_C_PROTECT.unmask(out, masked.spans) : out;
+    },
+
+    /**
+     * True when every word removed from `original` is a listed greeting, "please" or
+     * thanks, and every number and protected span survived. Han, kana and Hangul have no
+     * spaces, so they are compared character by character.
+     */
+    foreignValid: function (original, candidate, rewrite) {
+        if (!candidate || !candidate.trim()) return false;
+        const extraRemoved = new Set((rewrite && rewrite.removed) || []);
+        const extraAdded = new Set((rewrite && rewrite.added) || []);
+        const units = (s) => {
+            const out = [];
+            (s.toLowerCase().match(/[\p{L}\p{M}\p{N}']+/gu) || []).forEach((run) => {
+                if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(run)) {
+                    out.push(...Array.from(run));
+                } else out.push(run);
+            });
+            return out;
+        };
+        if (!this.foreignAllowed) {
+            this.foreignAllowed = new Set(units([].concat(this.FOREIGN_GREETINGS, this.FOREIGN_ADDRESS,
+                this.FOREIGN_PLEASE, this.FOREIGN_PLEASE_OPENERS, this.FOREIGN_THANKS,
+                this.FOREIGN_THANKS_FOR).join(' ')));
+        }
+        const left = new Map();
+        units(candidate).forEach((u) => left.set(u, (left.get(u) || 0) + 1));
+        for (const u of units(original)) {
+            if (left.get(u)) { left.set(u, left.get(u) - 1); continue; }
+            if (!this.foreignAllowed.has(u) && !extraRemoved.has(u)) return false;
+        }
+        // Nothing may appear that was not there -- except a rewrite's own verb form.
+        if ([...left.entries()].some(([u, n]) => n > 0 && !extraAdded.has(u))) return false;
+        const nums = (s) => (s.match(/\d+(?:[.,]\d+)*/g) || []).join(' ');
+        if (nums(original) !== nums(candidate)) return false;
+        return this.verbatimIn(original).every((span) => candidate.indexOf(span) !== -1);
     },
 
     STATUS: {
@@ -154,8 +527,11 @@ const PromptMeterCompress = {
         /\b\d+\s*(?:words?|characters?|lines?|pages?|paragraphs?|sentences?|bullets?|slides?|items?|steps?|examples?)\b/gi,
         /\bmust\s+(?:not\s+)?\w+/gi,
         /\bonly\s+(?:use\s+)?\w+/gi,
-        /\bno\s+(?:external|third[\s-]party|new|extra)?\s*\w+/gi,
-        /\b(?:do not|don't|never|avoid)\s+\w+/gi,
+        // Not "no idea", "no clue", "no worries": the user's state, not a rule.
+        /\bno\s+(?:external|third[\s-]party|new|extra)?\s*(?!(?:idea|clue|worries|problem|matter|time|way|doubt|one|longer)\b)\w+/gi,
+        // Not a statement of the user's own state: "I don't understand recursion" is
+        // the question, and "Explain recursion" says it without being a lost rule.
+        /\b(?:do not|don't|never|avoid)\s+(?!(?:really\s+)?(?:understand|know|get|think|mind|care|remember|have\s+(?:any|much))\b)\w+/gi,
         // Requirements asked politely. "I would like it to not mention water" read as
         // no constraint at all, so a haiku prompt lost it and still validated; so did
         // "I'd appreciate it if the story had a twist ending". The whole clause is the
@@ -163,7 +539,9 @@ const PromptMeterCompress = {
         /\b(?:to not|not to|without)\s+\w+/gi,
         /\b(?:would|'d)\s+(?:really\s+)?(?:like|love|prefer)\s+(?:it\s+)?(?:to|if|that)\b[^.!?\n]*/gi,
         /\bappreciate\s+it\s+if\b[^.!?\n]*/gi,
-        /\bin\s+(?:python|javascript|typescript|java|c\+\+|c#|go|rust|ruby|php|sql)\s*\d*\.?\d*/gi,
+        // (?!\w): without it "in javascirpt" read as the constraint "in java", which the
+        // corrected "in JavaScript" then failed, so the typo fix was thrown away.
+        /\bin\s+(?:python|javascript|typescript|java|c\+\+|c#|go|rust|ruby|php|sql)(?!\w)\s*\d*\.?\d*/gi,
         // Depth and style of the answer. "In detail" after a question was dropped as a
         // fragment; "Use O(n) time" and "step by step" are the shape of the answer.
         /\b(?:in (?:great |full |more )?detail|in depth|in-depth|briefly|step[- ]by[- ]step|with (?:an? |some )?examples?|in O\([^)]+\)|O\([^)]+\) (?:time|space))\b/gi,
@@ -186,7 +564,15 @@ const PromptMeterCompress = {
     // Capitalised shorthand people type that names nothing, and the assistant itself,
     // which "Hey ChatGPT," addresses rather than asks about.
     NOT_NAMES: new Set(['ok', 'okay', 'lol', 'omg', 'pls', 'plz', 'asap', 'btw', 'tbh', 'imo',
-        'thx', 'ty', 'hi', 'hey', 'chatgpt', 'gpt', 'ai']),
+        'thx', 'ty', 'hi', 'hey', 'chatgpt', 'gpt', 'ai',
+        // Capitalised after a greeting, a request word read as a name: "Hi, Please
+        // suggest ..." blocked every shorter version as having lost the name "Please".
+        'hello', 'please', 'kindly', 'can', 'could', 'would', 'will', 'shall', 'should', 'may',
+        'explain', 'write', 'give', 'tell', 'list', 'show', 'make', 'create', 'describe', 'summarize',
+        'summarise', 'compare', 'suggest', 'recommend', 'help', 'draft', 'plan', 'outline', 'review',
+        'analyze', 'analyse', 'translate', 'fix', 'solve', 'calculate', 'add', 'mention', 'include',
+        'keep', 'provide', 'highlight', 'also', 'then', 'and', 'but', 'so', 'thanks', 'thank', 'i',
+        'what', 'how', 'why', 'when', 'where', 'which', 'who', 'is', 'are', 'do', 'does', 'the', 'my']),
 
     /**
      * Terms that name something: an inner capital (MongoDB, iPhone), all caps (BASE,
@@ -200,7 +586,10 @@ const PromptMeterCompress = {
             && (masked.match(/[A-Z]/g) || []).length / letters.length > 0.6;
         const names = new Set();
         // Whole tokens only: starting mid-token made "1NF" yield a name "NF".
-        const word = /(?<![A-Za-z0-9+#])[A-Za-z0-9][A-Za-z0-9+#]*(?:[-.][A-Za-z0-9+#]+)*/g;
+        // Underscores are part of the token: "NAME_1" and "API_KEY" yielded "NAME" and
+        // "API", which the check below (a word boundary after the name) never found
+        // again -- so every prompt with a snake_case identifier was rejected outright.
+        const word = /(?<![A-Za-z0-9_+#])[A-Za-z0-9][A-Za-z0-9_+#]*(?:[-.][A-Za-z0-9_+#]+)*/g;
         let hit;
         while ((hit = word.exec(masked)) !== null) {
             const token = hit[0].replace(/\.$/, '');
@@ -333,8 +722,15 @@ const PromptMeterCompress = {
     // Words the optimizer's and tighten()'s own rewrites put in place of longer
     // phrases ("in simple terms" -> "simply", "due to the fact that" -> "because").
     // Seeing one in a candidate is not the compressor inventing content.
-    REWRITE_WORDS: new Set(['simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
+    REWRITE_WORDS: new Set(['quickly', 'many', "i'm", 'im', 'summarize', 'summarise', 'teach', 'define', 'plan', 'one', 'them',
+        'simply', 'briefly', 'because', 'list', 'about', 'now', 'can',
         'beginner', 'should', 'how', 'explain', 'concisely', 'shortly',
+        // Plain words for wordy phrases: "in spite of the fact that" -> "although", "in a
+        // timely manner" -> "promptly", "take into consideration" -> "consider", "make a
+        // decision" -> "decide", "in close proximity to" -> "near", "in the near future"
+        // -> "soon". The invention rule rejected every one as a word the user never wrote.
+        'although', 'promptly', 'consider', 'decide', 'near', 'soon', 'most', 'before', 'after',
+        'daily', 'every', 'first', 'clearly', 'needs', 'need', 'often', 'usually', 'despite',
         // Corrections the grammar rules make from a different word in the original.
         "they're", "it's", "you're", "who's", 'than', 'whether', 'which', 'their', 'there',
         'losing', 'advise', 'known', 'saw', 'bought', 'fewer', 'are', 'write', 'between', 'and',
@@ -419,9 +815,14 @@ const PromptMeterCompress = {
         // names something, and has to survive (case-insensitively: "python" may become
         // "Python").
         const lowerCandidate = candidate.toLowerCase();
+        const has = (word) => new RegExp('(?:^|[^\\w])' + word.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            + '(?![\\w])').test(lowerCandidate);
         this.namesIn(original).forEach((name) => {
-            if (!new RegExp('(?:^|[^\\w])' + name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                + '(?![\\w])').test(lowerCandidate)) {
+            // A capitalised typo ("Machine Learing") looks like a name; its correction
+            // standing in its place is the word surviving, not a name lost.
+            const fixed = PM_C_SPELL && /^[A-Za-z]+$/.test(name) && PM_C_SPELL.correctWord(name.toLowerCase());
+            if (fixed && has(fixed)) return;
+            if (!has(name)) {
                 violations.push({ rule: 'name', detail: name });
             }
         });
@@ -453,7 +854,14 @@ const PromptMeterCompress = {
         // courtesy bribe ("I will tip $200") are not requirements.
         const asWords = (text) => (PM_C_OPTIMIZER && PM_C_OPTIMIZER.expandDigitWords
             ? PM_C_OPTIMIZER.expandDigitWords(text) : text).replace(/\bi\s+will\s+tip\s+\$?\d[\d,.]*/gi, ' ');
-        const beforeNumbers = this.numbersIn(unshorthand(asWords(original)));
+        // A digit typed inside a word ("pr5oblems") is a typo, not a number: the
+        // optimizer removes it, and requiring it to survive threw the fix away.
+        const strayDigits = (text) => text.replace(/\b([A-Za-z]+)\d([A-Za-z]+)\b/g,
+            (m, a, b) => (a.length + b.length >= 3 ? a + b : m));
+        // Each distinct number once: a value repeated in the original ("the best phone
+        // under 20000 ... buy the best phone under 20000") is one requirement, kept when
+        // the repeated phrase is said once.
+        const beforeNumbers = [...new Set(this.numbersIn(strayDigits(unshorthand(asWords(original)))))];
         const afterNumbers = this.numbersIn(candidate).slice();
         beforeNumbers.forEach((number) => {
             const at = afterNumbers.indexOf(number);
@@ -502,7 +910,13 @@ const PromptMeterCompress = {
             // bar is that most of them are still there.
             const carriers = [...this.contentWords(constraint)]
                 .filter((word) => !this.COMPARATORS.has(word));
-            const kept = carriers.filter((word) => present.has(word)).length;
+            // A misspelled carrier survives as its correction: "no experiance" is kept
+            // by "no experience", and reading it as lost threw away every fix.
+            const fixedForm = (word) => {
+                const fix = PM_C_SPELL && PM_C_SPELL.correctWord && PM_C_SPELL.correctWord(word);
+                return fix && present.has(fix.toLowerCase());
+            };
+            const kept = carriers.filter((word) => present.has(word) || fixedForm(word)).length;
             const lostMeaning = carriers.length > 0 && kept * 2 < carriers.length;
 
             if (lostNumber || lostMeaning) {
@@ -513,6 +927,8 @@ const PromptMeterCompress = {
         // A named output format must still be named.
         const candidateFormats = new Set((candidate.match(this.OUTPUT_FORMATS) || [])
             .map((f) => f.toLowerCase()));
+        // "Summarize" asks for the summary format by itself.
+        if (/\bsummari[sz]e\b/i.test(candidate)) candidateFormats.add('summary');
         parts.format.forEach((format) => {
             if (!candidateFormats.has(format)) {
                 violations.push({ rule: 'format', detail: format });
@@ -532,10 +948,33 @@ const PromptMeterCompress = {
         // A verb that was never there is still caught by the invention rule below.
         // "give me a list of" -> "list", "tell me" -> "explain": the same request.
         const SAME_TASK = { give: ['list', 'show', 'suggest'], tell: ['explain', 'list'], show: ['list'] };
-        if (before && after !== before && !(SAME_TASK[before] || []).includes(after)
+        // "give", "make" and "show" carry no task of their own -- the noun does: "give me
+        // a detailed explanation" IS "explain in detail", and was rejected as give ->
+        // explain, leaving the prompt untouched.
+        const GENERIC = ['give', 'make', 'show', 'tell'];
+        // "write a summary of X" is "summarize X".
+        const summaryAsked = /^summari[sz]e$/.test(after || '') && /\bsummary\b/i.test(original);
+        if (before && after !== before && !GENERIC.includes(before) && !summaryAsked
+            && !(SAME_TASK[before] || []).includes(after)
             && !new RegExp('\\b' + before + '\\b', 'i').test(candidate)) {
             violations.push({ rule: 'task',
                 detail: after ? before + ' -> ' + after : 'the request verb is gone' });
+        }
+
+        // Every request, not just the first. "Translate this and also explain the
+        // grammar" -> "Translate this and the grammar" kept its first verb and lost the
+        // second request entirely. A verb swapped for another (tell -> explain) is a
+        // rewording, so only a net loss counts.
+        // As verbs only: after an article or possessive they are nouns -- "for the reason
+        // that" -> "because" was rejected as dropping the request "reason".
+        const VERBS = /(?<!\b(?:the|a|an|my|your|our|their|this|that|no|any)\s)\b(explain|write|create|build|list|describe|compare|summari[sz]e|translate|fix|debug|generate|design|draft|suggest|recommend|calculate|solve|analy[sz]e|review|rewrite|convert|implement|outline|plan|check|find|refactor|proofread|add|remove|include|mention|highlight|plot|test|provide|discuss|elaborate|propose|predict|estimate|evaluate|identify|define|derive|prove|imagine|reason)\b/gi;
+        const verbsOf = (text) => new Set((text.match(VERBS) || []).map((v) => v.toLowerCase()));
+        const hadVerbs = verbsOf(original);
+        const hasVerbs = verbsOf(candidate);
+        const lostVerbs = [...hadVerbs].filter((v) => !hasVerbs.has(v));
+        const gainedVerbs = [...hasVerbs].filter((v) => !hadVerbs.has(v));
+        if (lostVerbs.length > gainedVerbs.length) {
+            violations.push({ rule: 'task', detail: 'request dropped: ' + lostVerbs.join(', ') });
         }
 
         // Invention. Compression removes; anything in the output that was never in
@@ -763,7 +1202,10 @@ const PromptMeterCompress = {
     compress: function (prompt, options) {
         const first = this.compressOnce(prompt, options);
         if ((options && options.settled) || first.text === prompt) return first;
-        const again = this.compressOnce(first.text, Object.assign({}, options, { settled: true }));
+        // A prompt read as non-English stays non-English: with "bonjour" gone, "comment tu
+        // va ?" looked English and the second pass closed up its French spacing.
+        const again = this.compressOnce(first.text, Object.assign({}, options, { settled: true,
+            foreignOnly: /^not English/.test(first.reason || '') }));
         if (again.text === first.text) return first;
         const corrected = (first.candidates || []).find((c) => c.mode === 'conservative');
         if (!this.validate(prompt, again.text, { alsoAllow: corrected && corrected.text }).valid) return first;
@@ -805,7 +1247,38 @@ const PromptMeterCompress = {
         // The validator and every rewrite rule read English through [a-z]. On other
         // scripts every check passes vacuously, which is how a Malayalam prompt lost
         // two of its three sentences and still "validated". Decline instead.
-        if (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(prompt)) {
+        // Only the instruction is judged when the prompt carries a payload: "correct my
+        // German: ich habe gestern ..." is an English request, and the payload is never
+        // rewritten anyway.
+        const payloadAt = this.PAYLOAD_MARKER.exec(prompt);
+        const instruction = payloadAt
+            ? prompt.slice(0, payloadAt.index + payloadAt[0].length).replace(/:\s*$/, '')
+            : prompt;
+        if (settings.foreignOnly || (PM_C_OPTIMIZER && !PM_C_OPTIMIZER.looksEnglish(instruction))) {
+            // The English rules cannot read it, but greetings, "please" and thanks are
+            // the same few words in every language and cost the most tokens in the
+            // scripts BPE splits finely. Only those go, and foreignValid() proves that
+            // nothing else did.
+            const trimmedOnly = this.foreignTrim(prompt);
+            const rw = this.FOREIGN_META.test(prompt) ? null : this.foreignRewrite(trimmedOnly);
+            const rewritten = rw && rw.text !== trimmedOnly && this.foreignValid(prompt, rw.text, rw);
+            const trimmed = rewritten ? rw.text : trimmedOnly;
+            const trimmedTokens = PM_C_TOKENIZER ? PM_C_TOKENIZER.countTokens(trimmed) : 0;
+            if (trimmed !== prompt && trimmedTokens < originalTokens
+                && this.foreignValid(prompt, trimmed, rewritten ? rw : null)) {
+                const done = unchanged(this.STATUS.SUCCESSFUL,
+                    'not English: only greetings, "please" and thanks were removed');
+                done.text = trimmed;
+                done.mode = 'conservative';
+                done.tokens = Object.assign({}, done.tokens, {
+                    optimized: trimmedTokens, saved: originalTokens - trimmedTokens,
+                    percent: Math.round(((originalTokens - trimmedTokens) / originalTokens) * 100),
+                    netSaved: (originalTokens - trimmedTokens) * Math.max(1, settings.repeats || 1)
+                });
+                done.candidates = [{ mode: 'conservative', text: trimmed, tokens: trimmedTokens,
+                    valid: true, violations: [], ms: 0 }];
+                return done;
+            }
             return unchanged(this.STATUS.UNSUPPORTED_LANGUAGE,
                 'not English: the rewrite rules and the validator cannot read it');
         }
@@ -869,13 +1342,22 @@ const PromptMeterCompress = {
         // Case alone does not count -- except where it fixes something: "i" -> "I",
         // "kerala" -> "Kerala", "nasa" -> "NASA", a prompt typed in capitals. Only the
         // capital at the start of a sentence is cosmetic, so only that is folded away.
+        // Not a lone "i": "i am" -> "I am" is a grammar fix, not a cosmetic capital.
         const loose = (s) => s.replace(/\s+/g, ' ').trim()
-            .replace(/(^|[.!?]\s+)([a-z])/g, (m, lead, c) => lead + c.toUpperCase());
+            .replace(/(^|[.!?]\s+)([a-z])(?=[a-z])/g, (m, lead, c) => lead + c.toUpperCase())
+            // Spacing alone is not a correction either: "P.O." -> "P. O." was shipped as
+            // one, a token longer than the original.
+            .replace(/\s+/g, '');
         // Among the corrected candidates the level allows, the shortest: fixing typos can
         // cost as many tokens as Trim saves ("btwn ram n rom plz" -> "between RAM and
         // ROM"), and falling back to the Fix text then put "please" back in.
         if (!chosen) {
+            // A correction keeps the prompt's lines and costs a token or two at most: a
+            // 497-token prompt came back 507 with its lines run together, and "spelling
+            // corrections applied" was the reason given.
+            const lines = (s) => s.split('\n').length;
             scored.filter((c) => c.valid && allowed(c.mode) && loose(c.text) !== loose(prompt)
+                && lines(c.text) === lines(prompt) && c.tokens <= originalTokens + 2
                 && (!settings.mode || c.mode === settings.mode))
                 .forEach((c) => { if (!chosen || c.tokens < chosen.tokens) chosen = c; });
             if (chosen) correctedOnly = true;
