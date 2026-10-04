@@ -451,5 +451,11 @@ keeps('a hyphenated name is not a slip', 'Why should I avoid N-gons in 3D modell
 keeps('a library name stays', 'What is peft in llm', 'peft');
 keeps('thru is through', 'I sawed thru a see-saw', 'through');
 
+// Live report: adding "o exam" made the whole card read "already concise" -- the English
+// check counted "tjid" and "o" as foreign. A two-key slip is English; "o exam" is "for exam".
+keeps('a slip and a stray letter do not cancel detection', 'teach me tjid code o exam', 'Teach me this code for exam');
+check('still English with a slip and a stray letter', PromptMeterOptimizer.looksEnglish('teach me tjid code o exam'));
+check('Dutch stays Dutch', !PromptMeterOptimizer.looksEnglish('ik wil de tijd weten'));
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

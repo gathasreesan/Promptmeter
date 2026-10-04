@@ -234,6 +234,9 @@ const PromptMeterGrammar = {
             'from', "'form' should be 'from'"],
         [/\b(the|my|your|our|their|his|her|its|what\s+is\s+the|which\s+is\s+the)\s+bets\b(?!\s+(?:on|are|were|was|is|and|of|for|in|to|placed|that|which|you|i|we|they|off)\b|\s*[.,]|\s*$)(?=\s+[a-z])/gi,
             '$1 best', "'bets' should be 'best'"],
+        // Before something you prepare for, a stray "o" is "for": "this code o exam".
+        [/(?<=\b[a-z]{2,}\s)o\s+(?=(?:my\s+|the\s+|an?\s+|tomorrow'?s\s+)?(?:exams?|tests?|interviews?|assignments?|homework|quiz|quizzes|viva|presentations?|finals?|midterms?)\b)/g,
+            'for ', "'o' looks like 'for'"],
         [/(?<=\b[a-z]{2,}\s)o\s+(?=(?:needs?|needa|wants?|requires?|kindly|you|u|i|please|pls|can|could|give|tell|make|suggest|plan|help|we|my|what|how)\b)/g,
             'so ', "'o' looks like 'so'"],
         [/(?<!\band\s)\bfro\s+(?=(?:the|a|an|my|your|this|that|me|you|it|all|example|instance|free|now|beginners?|help|sharing|reading|everything)\b)/gi,
