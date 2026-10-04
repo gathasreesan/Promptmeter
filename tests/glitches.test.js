@@ -436,5 +436,11 @@ saves('"in a very simple way" becomes "simply"',
 saves('"and then ... and then" loses its "and"s',
     'Please write a Python program that takes a list of numbers as input and then calculates the sum and then prints it.', 3);
 
+// Live report: "i m planning" became "me plan" (the and-me rule fired on "India and I plan"),
+// and a stray "o" before "needs" was left in.
+keeps('"and I plan" keeps I, "o needs" is "so needs"', 'i am form india and i m planning to go to america o needs tour  plan with proper itnary', 'and I plan', 'America so needs');
+lacks('no "me plan"', 'i am form india and i m planning to go to america o needs tour plan', /\bme plan\b/);
+keeps('"and I." after a preposition is still "and me."', 'Please send the file to John and I.', 'John and me');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

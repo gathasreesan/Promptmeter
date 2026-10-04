@@ -234,7 +234,7 @@ const PromptMeterGrammar = {
             'from', "'form' should be 'from'"],
         [/\b(the|my|your|our|their|his|her|its|what\s+is\s+the|which\s+is\s+the)\s+bets\b(?!\s+(?:on|are|were|was|is|and|of|for|in|to|placed|that|which|you|i|we|they|off)\b|\s*[.,]|\s*$)(?=\s+[a-z])/gi,
             '$1 best', "'bets' should be 'best'"],
-        [/(?<=\b[a-z]{2,}\s)o\s+(?=(?:need|want|i|please|pls|can|could|give|tell|make|suggest|plan|help|we|my|what|how)\b)/g,
+        [/(?<=\b[a-z]{2,}\s)o\s+(?=(?:needs?|needa|wants?|requires?|kindly|you|u|i|please|pls|can|could|give|tell|make|suggest|plan|help|we|my|what|how)\b)/g,
             'so ', "'o' looks like 'so'"],
         [/(?<!\band\s)\bfro\s+(?=(?:the|a|an|my|your|this|that|me|you|it|all|example|instance|free|now|beginners?|help|sharing|reading|everything)\b)/gi,
             'for ', "'fro' should be 'for'"],
@@ -370,8 +370,10 @@ const PromptMeterGrammar = {
         // Anchored to the preposition, so an ordinary compound subject ("you and I should
         // meet") is untouched.
         // Not when "I" opens the next clause: "moving to California and I've been
-        // looking" became "and me've been looking".
-        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b(?!['’]|\s+(?:am|was|have|had|will|would|can|could|should|shall|do|did|don't|didn't|went|need|want|think|feel|got|get|know|like|love|hate|tried|saw|see|said|told|found|made|make|use|used|\w+ed)\b)/g,
+        // looking" became "and me've been looking", and "from India and I plan" became
+        // "and me plan" -- so "I" must close the phrase: punctuation, the end, or a
+        // preposition/adverb, never a verb.
+        [/\b(between|among|amongst|with|for|to|from|like|besides|without)\s+(\w+\s+and)\s+I\b(?=\s*(?:[.,;:!?)]|$)|\s+(?:to|for|in|on|at|about|too|both|alone|together|today|tomorrow|yesterday|later|now|please)\b)/g,
             '$1 $2 me', "after a preposition the pronoun is 'me', not 'I'"],
 
         [/\bcould\s+care\s+less\b/gi, "couldn't care less",
