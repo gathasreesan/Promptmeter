@@ -327,6 +327,29 @@ check('rewritten: Japanese ていただけますか', C.foreignRewrite('再帰�
 check('two Hindi requests are not half-rewritten',
     run('क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?').text === 'क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?');
 
+// Real words typed for the word meant (live reports), and the uses that must stay.
+[
+    ['i am form india and i am planning to go to america o needa tour plan with proper itnary', /I am from India.*America so need a tour plan with proper itinerary/],
+    ['gibe me the bets tour paln for', /Give me the best tour plan/],
+    ['which is the bets way to learn python', /the best way/],
+    ['i am fro kerala, suggest places to visit', /from Kerala/],
+    ['i dont now how to code, teach me', /know how to code/],
+    ['explain this in tow days', /two days/],
+    ['won of the best movies, describe it', /^One of the best/],
+    ['were is the eiffel tower', /^Where is/],
+    ['start a free trail of netflix, explain', /free trial/],
+    ['write a dairy entry about my day', /diary entry/],
+    ['suggest a desert recipe', /dessert recipe/],
+    ['everyone accept me went to the party, write a story', /everyone except me went/i],
+    ['i cant breath properly, what should i do', /breathe properly/],
+    ['how to sale my products online', /sell my products/],
+    ['what should i where to a wedding', /wear to a wedding/]
+].forEach(([p, want]) => check('meant word: ' + p.slice(0, 30), want.test(run(p).text), run(p).text));
+[
+    'place your bets on the winner', 'fill the form and submit it', 'Is form validation working in React?',
+    'the form of the poem is a sonnet', 'Big O notation explained', 'the pendulum swings to and fro, explain why'
+].forEach((p) => check('real use kept: ' + p.slice(0, 30), !/best|from |\bso\b|to and for/i.test(run(p).text.replace(/^\w/, '')), run(p).text));
+
 // Keep: found in live testing -- the fixed typo table ignored kept words.
 {
     const p = 'Could you please explian recusrion to me and give some exmples in python?';

@@ -62,6 +62,9 @@ const PromptMeterOptimizer = {
         // Two candidates one edit away, decided by what people mean: "reverse a strng"
         // is a string, "learning calculas" is calculus.
         "strng": "string", "stirng": "string", "strin": "string", "calculas": "calculus",
+        // "proper itnary": too far from "itinerary" for the edit search.
+        "itnary": "itinerary", "itenary": "itinerary", "itinary": "itinerary", "iternary": "itinerary",
+        "itenerary": "itinerary", "itinery": "itinerary", "itinerery": "itinerary", "itineray": "itinerary",
         "calculous": "calculus", "algoritm": "algorithm", "algoritms": "algorithms",
         // Uncountable nouns pluralised ("some advices"): the plural is not a word.
         "advices": "advice", "informations": "information", "equipments": "equipment",
@@ -103,7 +106,9 @@ const PromptMeterOptimizer = {
         "clases": "classes", "classs": "class", "cna": "can", "coudl": "could",
         "craete": "create", "creat": "create", "delet": "delete", "exaple": "example",
         "exmaple": "example", "expalin": "explain", "explian": "explain", "exprot": "export",
-        "fo": "of", "fro": "from", "fucntion": "function",
+        // Not "fro": it is "from" in "I am fro India" and "for" in "thanks fro the help",
+        // so contextualSlangRules decides it.
+        "fo": "of", "fucntion": "function",
         "funtcion": "function", "heigth": "height", "hel": "help", "hlep": "help",
         "htis": "this", "hvae": "have", "hwat": "what", "improt": "import", "jsut": "just",
         "juts": "just", "liek": "like", "liste": "list", "maek": "make", "mkae": "make",
@@ -370,6 +375,9 @@ const PromptMeterOptimizer = {
     // same shape, and the first is far more likely in the prompts this extension sees.
     // It stays penalised by the chatSlang score rule, just never rewritten.
     contextualSlangRules: [
+        // "fro" after a verb of origin is "from"; elsewhere the corrector makes it "for".
+        { word: "(?<=\\b(?:am|are|is|was|were|i'm|im|come|comes|came|coming|far|away|hello|hi|greetings|letter|email|message|flight|travel|moved)\\s)fro(?=\\s)", replacement: 'from' },
+        { word: "(?<!\\band\\s)fro(?=\\s+(?:the|a|an|my|your|this|that|me|you|it|all|example|instance|free|now|beginners?|help|sharing|reading|everything)\\b)", replacement: 'for' },
         // "btw" is "between" after a comparison -- "difference btw ram and rom" became
         // "difference by the way RAM and ROM" -- and "by the way" everywhere else.
         { word: "(?<=\\b(?:difference|differences|differentiate|compare|comparison|relation|relationship|distance|gap|connection|choose|link)\\s+)btw(?=\\s)", replacement: 'between' },
