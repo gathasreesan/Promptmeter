@@ -327,6 +327,13 @@ check('rewritten: Japanese ていただけますか', C.foreignRewrite('再帰�
 check('two Hindi requests are not half-rewritten',
     run('क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?').text === 'क्या आप मुझे रिकर्शन समझा सकते हैं और एक उदाहरण दे सकते हैं?');
 
+// Keep: found in live testing -- the fixed typo table ignored kept words.
+{
+    const p = 'Could you please explian recusrion to me and give some exmples in python?';
+    const kept = C.compress(p, { budgetMs: 1e5, preserve: new Set(['explian']) }).text;
+    check('Keep leaves a typo-table word as typed', /explian/i.test(kept) && /recursion/.test(kept), kept);
+}
+
 // The card can always be reported, and the context estimate is not 2023's.
 const contentSrc = require('fs').readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
 check('the card has a Report button', /id="promptmeter-btn-report"/.test(contentSrc) && /addFixReport\(\{\s*category: 'suggestion'/.test(contentSrc));
