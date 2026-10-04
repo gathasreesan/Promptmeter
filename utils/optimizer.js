@@ -2061,7 +2061,7 @@ const PromptMeterOptimizer = {
         if (thin) return false;
         if (words.length >= 4 && strongHits === 0) {
             const dict = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
-            const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && PM_SPELL.correctWord(w);
+            const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && (PM_SPELL.correctWord(w) || (PM_SPELL.slipped && PM_SPELL.slipped(w)));
             const strict = words.filter(dict).length;
             const near = words.filter((w) => dict(w) || fixable(w)).length;
             if (!(strict >= 2 && near / words.length >= 0.75)) return false;
