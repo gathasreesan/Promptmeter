@@ -290,6 +290,16 @@ let lastOriginalPrompt = "";
 // the figure is a floor, never a measurement -- see utils/headroom.js for what it cannot
 // observe at all.
 let conversationTokens = 0;
+// The conversation those tokens belong to. ChatGPT changes chats without reloading the
+// page, and the count used to carry over from every chat opened in the tab.
+let conversationPath = location.pathname;
+function currentConversationTokens() {
+    if (location.pathname !== conversationPath) {
+        conversationPath = location.pathname;
+        conversationTokens = 0;
+    }
+    return conversationTokens;
+}
 
 let activeAttachments = { images: [], documents: [] };
 let lastNonEmptyAttachments = { images: [], documents: [] };
@@ -864,6 +874,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
         </div>
         <div class="promptmeter-opt-actions">
             <button id="promptmeter-btn-revert" class="promptmeter-opt-btn promptmeter-btn-ignore" hidden>Revert</button>
+            <button id="promptmeter-btn-report" class="promptmeter-opt-btn promptmeter-btn-ignore" title="This suggestion is wrong or changes what I meant">Report</button>
             <button id="promptmeter-btn-copy" class="promptmeter-opt-btn promptmeter-btn-ignore" title="Copy the suggestion without changing your message">Copy</button>
             <button id="promptmeter-btn-ignore" class="promptmeter-opt-btn promptmeter-btn-ignore">Ignore<span class="promptmeter-btn-key" aria-hidden="true">esc</span></button>
             <button id="promptmeter-btn-accept" class="promptmeter-opt-btn promptmeter-btn-accept">Apply</button>
@@ -887,7 +898,9 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     // Headroom. Only rendered when a report exists, and always worded as an estimate:
     // the extension cannot see the system prompt, attachments or server-side truncation,
     // so the true usage is always higher by an unknown margin.
-    if (headroom) {
+    // Only when there is something to warn about: a red "100% used" on every card was
+    // noise, and wrong more often than not.
+    if (headroom && headroom.level !== 'ok') {
         const row = card.querySelector('.promptmeter-opt-headroom');
         row.textContent = `Context: about ${headroom.percentUsed}% used, `
             + `~${headroom.remaining.toLocaleString()} tokens left of ${headroom.contextLimit.toLocaleString()}`
@@ -1037,6 +1050,24 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     card.querySelector("#promptmeter-btn-accept").onclick = () => applyOptimization(optimizedText);
 
     // Copy for use elsewhere (another chat, a doc) without touching the composer.
+    // Report the whole suggestion. "Report this as wrong" lived only under a correction
+    // row's "Why?", so a card with no rows -- a trim, a condense, a rewrite in another
+    // language -- had no way to be reported, and Reported fixes stayed at 0.
+    const report = card.querySelector("#promptmeter-btn-report");
+    if (typeof PromptMeterStorage === 'undefined') report.hidden = true;
+    report.onclick = (event) => {
+        event.stopPropagation();
+        report.disabled = true;
+        pmLog('report', 'suggestion reported as wrong', { prompt: originalText, suggestion: optimizedText });
+        PromptMeterStorage.addFixReport({
+            category: 'suggestion',
+            finding: 'Whole suggestion reported as wrong',
+            word: '',
+            prompt: originalText,
+            suggestion: optimizedText
+        }, () => { report.textContent = 'Reported'; });
+    };
+
     const copy = card.querySelector("#promptmeter-btn-copy");
     copy.onclick = () => {
         const done = (label) => {
@@ -1209,8 +1240,9 @@ function analyzeAndOfferOptimization(text, keepOpen) {
 
     // Headroom only once there is something to base it on. With no turns captured yet
     // the only honest report is none at all.
-    const headroom = (typeof PromptMeterHeadroom !== 'undefined' && conversationTokens > 0)
-        ? PromptMeterHeadroom.report(conversationTokens, tokenStats.optimizedTokens)
+    const usedSoFar = currentConversationTokens();
+    const headroom = (typeof PromptMeterHeadroom !== 'undefined' && usedSoFar > 0)
+        ? PromptMeterHeadroom.report(usedSoFar, tokenStats.optimizedTokens)
         : null;
 
     // Only interrupt for a change that pays for itself in tokens -- but any saving counts.
@@ -1461,6 +1493,7 @@ function handleResponseCaptured(prompt, response) {
     const responseTokens = PromptMeterTokenizer.countTokens(cleanResponse);
     const totalTokens = promptTokens + responseTokens;
 
+    currentConversationTokens();
     conversationTokens += totalTokens;
 
     const footprint = PromptMeterCalculator.calculate(totalTokens);

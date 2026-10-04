@@ -28,12 +28,14 @@ const PromptMeterHeadroom = {
 
     config: {
         // Tokens the window holds in total. Generic on purpose -- see the note above.
-        // The UI should let the user set this for whatever model they are actually using.
-        contextLimit: 8192,
+        // 8,192 was a 2023 figure: against current ChatGPT models it reported "~0 tokens
+        // left" on an ordinary long chat. 128,000 is the common window today; still an
+        // assumption, still worded as an estimate.
+        contextLimit: 128000,
 
         // Held back so the model has room to answer. A prompt that fills the window
         // leaves nothing for a reply.
-        reservedOutputTokens: 1024,
+        reservedOutputTokens: 4096,
 
         // Fraction of usable space below which the report starts warning.
         warnBelow: 0.20,
