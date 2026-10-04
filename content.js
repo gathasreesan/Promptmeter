@@ -1087,21 +1087,7 @@ function showOptimizationCard(originalText, optimizedText, tokensSaved, carbonSa
     revert.hidden = undoStack.length === 0;
     revert.textContent = undoStack.length > 1 ? `Revert (${undoStack.length})` : 'Revert';
     revert.title = 'Put back what you had before the last Apply';
-    revert.onclick = () => {
-        const promptBox = getPromptBox();
-        if (!promptBox || undoStack.length === 0) return;
-        // Popped before writing: the write triggers the input handler, and a stale
-        // entry would offer to revert the text that was just restored.
-        const restore = undoStack.pop().before;
-        pmLog('revert', 'restored text from before an apply', { left: undoStack.length });
-        wasOptimized = false;
-        lastSavedTokens = 0;
-        lastSavedCarbon = 0;
-        lastOriginalPrompt = "";
-        ignoredPromptText = restore;
-        replacePromptText(promptBox, restore);
-        hideOptimizationCard();
-    };
+    revert.onclick = revertLastApply;
     // Ignoring the prompt and dismissing with Esc have to mean the same thing, or the
     // card reappears on the next keystroke after one of them.
     const dismiss = () => {
@@ -1326,6 +1312,61 @@ function applyOptimization(optimizedText) {
     replacePromptText(promptBox, optimizedText);
     pmLog('apply', 'suggestion applied', { saved: tokensSaved, chars: optimizedText.length });
     hideOptimizationCard();
+    showUndoBar(tokensSaved);
+}
+
+// Puts back the text from before the last Apply. Shared by the card's Revert button and
+// the undo bar.
+function revertLastApply() {
+    const promptBox = getPromptBox();
+    if (!promptBox || undoStack.length === 0) return;
+    // Popped before writing: the write triggers the input handler, and a stale entry
+    // would offer to revert the text that was just restored.
+    const restore = undoStack.pop().before;
+    pmLog('revert', 'restored text from before an apply', { left: undoStack.length });
+    wasOptimized = false;
+    lastSavedTokens = 0;
+    lastSavedCarbon = 0;
+    lastOriginalPrompt = "";
+    ignoredPromptText = restore;
+    replacePromptText(promptBox, restore);
+    hideOptimizationCard();
+    hideUndoBar();
+}
+
+// After Apply the card hides -- the applied text has nothing left to change -- and the
+// Revert button went with it, so an Apply could not be undone. A small bar offers Undo
+// for a few seconds instead.
+let undoBarTimer = null;
+function showUndoBar(tokensSaved) {
+    let bar = document.getElementById('promptmeter-undo-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'promptmeter-undo-bar';
+        bar.className = 'pm-tokens promptmeter-undo-bar';
+        bar.setAttribute('role', 'status');
+        const label = document.createElement('span');
+        label.className = 'promptmeter-undo-label';
+        const undo = document.createElement('button');
+        undo.type = 'button';
+        undo.className = 'promptmeter-undo-btn';
+        undo.textContent = 'Undo';
+        undo.onclick = (event) => { event.stopPropagation(); revertLastApply(); };
+        bar.append(label, undo);
+        document.body.appendChild(bar);
+    }
+    bar.querySelector('.promptmeter-undo-label').textContent = tokensSaved > 0
+        ? `Applied · −${tokensSaved} ${tokensSaved === 1 ? 'token' : 'tokens'}`
+        : 'Applied';
+    bar.classList.add('visible');
+    clearTimeout(undoBarTimer);
+    undoBarTimer = setTimeout(hideUndoBar, 8000);
+}
+
+function hideUndoBar() {
+    clearTimeout(undoBarTimer);
+    const bar = document.getElementById('promptmeter-undo-bar');
+    if (bar) bar.classList.remove('visible');
 }
 
 // Writes text into the composer AND tells the editor it changed. Shared by Apply and

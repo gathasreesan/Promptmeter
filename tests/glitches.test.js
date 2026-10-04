@@ -337,6 +337,7 @@ check('two Hindi requests are not half-rewritten',
 // The card can always be reported, and the context estimate is not 2023's.
 const contentSrc = require('fs').readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
 check('the card has a Report button', /id="promptmeter-btn-report"/.test(contentSrc) && /addFixReport\(\{\s*category: 'suggestion'/.test(contentSrc));
+check('an Apply can be undone after the card hides', /showUndoBar\(tokensSaved\)/.test(contentSrc) && /function revertLastApply/.test(contentSrc));
 check('the context count resets per chat', /function currentConversationTokens/.test(contentSrc));
 check('the context window default is 128k', PromptMeterHeadroom.config.contextLimit === 128000);
 check('an ordinary chat is not "full"', PromptMeterHeadroom.report(9000, 10).level === 'ok');

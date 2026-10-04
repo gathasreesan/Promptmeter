@@ -874,3 +874,44 @@
     border-top: none;
     padding-top: 0;
 }
+
+/* After Apply: the card hides with nothing left to change, so Undo lives here for a few
+   seconds. Same tokens as the card, so it follows light and dark themes. */
+.promptmeter-undo-bar {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font: 500 13px/1.2 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    z-index: 2147483646;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.promptmeter-undo-bar.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+.promptmeter-undo-btn {
+    border: 1px solid var(--border-color);
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: var(--space-1) var(--space-3);
+    font: inherit;
+    cursor: pointer;
+}
+.promptmeter-undo-btn:hover { background: var(--border-color); }
+@media (prefers-reduced-motion: reduce) {
+    .promptmeter-undo-bar { transition: none; }
+}
