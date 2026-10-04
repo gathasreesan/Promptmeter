@@ -91,7 +91,7 @@
 // this list is never altered, so the technical vocabulary at the end is load-bearing.
 const PM_WORDS = [
     // --- Function words and the most common verbs ---------------------------------
-    'the a an and or but if then than that this these those there here it its is are was',
+    'the a an and or but if then that than this these those there here it its is are was',
     'were be been being am do does did done doing have has had having will would can could',
     'shall should may might must not no yes of to in on at by for with from as into over',
     'under about after before between during through above below up down out off again',
@@ -302,7 +302,7 @@ const PM_WORDS = [
     'ecommerce crypto blockchain fintech saas ux ui llm tokenizer inference',
     'finetune pipeline pipelines graphql cronjob latency throughput scalable',
     'dashboard dashboards analytics metadata namespace middleware microservice',
-    'microservices chatbot embedding embeddings prompt prompts dataset datasets'
+    'microservices chatbot embedding embeddings prompt prompts peft lora qlora dataset datasets'
 ,
 
     // --- General English ------------------------------------------------------------
@@ -1086,6 +1086,9 @@ const PromptMeterSpelling = {
     // in a ten-letter word and a different word entirely in a five-letter one. A flat
     // cap of 3 let "access" reach "css" -- same collapsed skeleton, and "css" is a
     // subsequence of "access", so only the size of the edit gives it away.
+    // Two-key slips (slipped()) only reach the commonest words.
+    SLIP_MAX_RANK: 500,
+
     MAX_DISTANCE: 3,
 
     /**
@@ -1580,9 +1583,11 @@ const PromptMeterSpelling = {
         const malformed = !this.known(word) && /(?:[^aeiou]ys|[^e]eing)$/.test(word);
         const real = !listed && !malformed
             && (this.known(word) || this.attested.has(word) || this.formOfKnown(word));
+        this.lastRivals = [];
         const result = real ? null : (this.resolve(word) || this.safeEdit(word) || this.inflected(word)
             || this.droppedLetter(word) || this.split(word));
         this.cache.set(word, result);
+        this.rivalCache.set(word, this.lastRivals.slice());
         return result;
     },
 
@@ -1789,6 +1794,67 @@ const PromptMeterSpelling = {
             (this.rank.get(a) || 1e9) - (this.rank.get(b) || 1e9));
     },
 
+    /**
+     * A common word reached only by keyboard-neighbour slips: same length, at most two
+     * letters changed, every one of them touching the key it replaced ("tjid" -> this,
+     * "teacg" -> teach). The first letter may slip only when it is the sole change
+     * ("jelp" -> help). Common words only (rank < SLIP_MAX_RANK): a rarer target is as
+     * likely to be a different word as a typo. Fewest changes wins, then frequency.
+     * ponytail: scans the ranked list per unknown word; results are cached by correctWord.
+     * @param {string} word - Lowercased word, already unknown to every other rule.
+     * @returns {string|null}
+     */
+    slipped: function (word) {
+        if (this.slipCache.has(word)) return this.slipCache.get(word);
+        let best = null;
+        let bestChanges = 3;
+        this.rank.forEach((rank, candidate) => {
+            if (rank >= this.SLIP_MAX_RANK || candidate.length !== word.length) return;
+            let changes = 0;
+            for (let i = 0; i < word.length; i++) {
+                if (word[i] === candidate[i]) continue;
+                if (!this.isNeighbourKey(word[i], candidate[i])) return;
+                changes++;
+            }
+            if (!changes || changes > 2) return;
+            if (word[0] !== candidate[0] && changes > 1) return;
+            if (changes < bestChanges || (changes === bestChanges && rank < this.rank.get(best))) {
+                best = candidate;
+                bestChanges = changes;
+            }
+        });
+        this.slipCache.set(word, best);
+        return best;
+    },
+
+    /**
+     * Picks between equally close corrections using what the prompt is: requests to a
+     * chat model are about code far more often than cords or coves, so a tied rival from
+     * the prompt and technical vocabulary wins -- unless "of" follows ("the core of the
+     * earth"), which marks the plain-English reading.
+     * @param {string} fixed - The frequency-ranked choice.
+     * @param {Array} rivals - Equally close alternatives.
+     * @param {string} after - Text following the word.
+     * @returns {string}
+     */
+    preferInContext: function (fixed, rivals, after) {
+        if (!rivals.length || this.isPromptWord(fixed) || /^\s+of\b/i.test(after)) return fixed;
+        return rivals.find((w) => this.isPromptWord(w)) || fixed;
+    },
+
+    /** True when the word before or after this one is a common English word. */
+    besideEnglish: function (text, offset, length) {
+        const before = (text.slice(Math.max(0, offset - 30), offset).match(/([a-z]+)[\s,]+$/i) || [])[1];
+        const after = (text.slice(offset + length, offset + length + 30).match(/^[\s,]+([a-z]+)/i) || [])[1];
+        const common = (w) => w && this.rank.has(w.toLowerCase()) && this.rank.get(w.toLowerCase()) < 300;
+        return common(before) || common(after);
+    },
+
+    isPromptWord: function (word) {
+        const rank = this.rank.get(word);
+        return rank !== undefined && rank >= this.rank.get('code') && rank <= this.rank.get('datasets');
+    },
+
     rivals: function (word) {
         return (this.lastRivals || []).slice();
     },
@@ -1847,6 +1913,12 @@ const PromptMeterSpelling = {
         const settings = options || {};
         const extraKnown = settings.extraKnown || null;
         const corrections = [];
+        const words = text.match(/[a-z]+/gi) || [];
+        const counts = new Map();
+        words.forEach((w) => counts.set(w.toLowerCase(), (counts.get(w.toLowerCase()) || 0) + 1));
+        const english = words.length >= 3
+            && words.filter((w) => this.known(w.toLowerCase()) || this.correctWord(w.toLowerCase())).length
+                / words.length >= 0.6;
 
         const out = text.replace(/[A-Za-z][A-Za-z']*/g, (match, offset) => {
             // Identifiers, acronyms and names: anything but plain lowercase prose.
@@ -1883,8 +1955,20 @@ const PromptMeterSpelling = {
                 return titled.charAt(0).toUpperCase() + titled.slice(1);
             }
 
-            const fixed = this.correctWord(lower);
+            let fixed = this.correctWord(lower);
+            // Last resort, a finger on neighbouring keys ("tjid" -> this). Only inside
+            // English: across 31k real prompts the same test, unguarded, read "tijd",
+            // "lesen" and "systemd" as time, learn and systems.
+            // Not part of a hyphenated or scoped name ("N-gons", "@lottie"), and not a term
+            // the prompt repeats: a typo is rarely made the same way twice, a name always is.
+            if (!fixed && lower.length >= 4 && english && !this.attested.has(lower)
+                && !this.known(lower) && !this.formOfKnown(lower)
+                && !/[-@/.]$/.test(text.slice(0, offset))
+                && counts.get(lower) === 1
+                && this.besideEnglish(text, offset, match.length)) fixed = this.slipped(lower);
             if (!fixed || fixed === lower) return match;
+            fixed = this.preferInContext(fixed, this.rivalCache.get(lower) || [],
+                text.slice(offset + match.length));
 
             corrections.push({ from: match, to: fixed });
             return capitalised ? fixed.charAt(0).toUpperCase() + fixed.slice(1) : fixed;
@@ -2024,13 +2108,15 @@ Object.assign(PromptMeterSpelling.misspellings = Object.assign({}, PromptMeterSp
     // "avoid thos dangers" became "avoid this dangers".
     thos: 'those', tho: 'though', thier: 'their', theirr: 'their', wich: 'which',
     becuase: 'because', becasue: 'because', untill: 'until', occured: 'occurred',
-    becoz: 'because', bcoz: 'because'
+    becoz: 'because', bcoz: 'because', thru: 'through'
 });
 
 PromptMeterSpelling.rank = new Map();
 PromptMeterSpelling.skeletonIndex = new Map();
 PromptMeterSpelling.deleteIndex = new Map();
 PromptMeterSpelling.cache = new Map();
+PromptMeterSpelling.rivalCache = new Map();
+PromptMeterSpelling.slipCache = new Map();
 
 PM_WORDS.forEach((word, index) => {
     // A word listed twice keeps its first, commoner rank.

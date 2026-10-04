@@ -442,5 +442,14 @@ keeps('"and I plan" keeps I, "o needs" is "so needs"', 'i am form india and i m 
 lacks('no "me plan"', 'i am form india and i m planning to go to america o needs tour plan', /\bme plan\b/);
 keeps('"and I." after a preposition is still "and me."', 'Please send the file to John and I.', 'John and me');
 
+// Live report: "teach me tjid cofe" meant "teach me this code" -- two neighbouring-key
+// slips in one word, and a tie (core/code) that a chat prompt settles as code.
+keeps('two-key slip and prompt-context tie', 'teach me tjid cofe', 'Teach me this code');
+keeps('first-key slip', 'jelp me fix my cofe', 'Help me fix my code');
+keeps('"of" keeps the plain reading', 'explain the cofe of the earth', 'core of the earth');
+keeps('a hyphenated name is not a slip', 'Why should I avoid N-gons in 3D modelling?', 'N-gons');
+keeps('a library name stays', 'What is peft in llm', 'peft');
+keeps('thru is through', 'I sawed thru a see-saw', 'through');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
