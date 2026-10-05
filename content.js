@@ -494,7 +494,7 @@ function headingFor(applied, advice) {
 // Why a finding exists, by what kind of finding it is. The row says WHAT changed;
 // this says why PromptMeter thinks it should.
 const WHY_BY_CATEGORY = {
-    spelling: 'This word is not in PromptMeter\'s dictionary, and it is one typing slip away from the correction. If it is a name or a term you use, keep it.',
+    spelling: 'This word is not in PromptMeter\'s dictionary, and a typing slip or two turns it into the correction. If it is a name or a term you use, keep it.',
     grammar: 'A grammar rule that holds whatever the topic. Models read garbled grammar fine, but a wrong tense or subject can change which question they answer.',
     punctuation: 'Punctuation and capitals. It rarely changes the answer; it is fixed because it costs nothing.',
     ambiguity: 'Vague words and references with nothing to point at make the model guess, and a guess can answer a different question from yours.',

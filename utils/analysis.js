@@ -276,12 +276,15 @@ const PromptMeterAnalysis = {
         });
 
         // A chain of "and"s in a single request is several requests wearing one coat.
-        const conjunctions = (masked.match(/\band\b/gi) || []).length;
+        // "first ..., second ..., third ..." enumerates requests as surely as "and" does:
+        // five tasks numbered that way and joined by two "and"s went unflagged.
+        const conjunctions = (masked.match(/\band\b/gi) || []).length
+            + (masked.match(/\b(?:second(?:ly)?|third(?:ly)?|fourth(?:ly)?|lastly)\b(?=\s*[,:]?\s*[a-z])/gi) || []).length;
         if (conjunctions >= 3 && masked.split(/\s+/).length < 60) {
             findings.push(this.finding({
                 category: 'scope',
                 severity: 'improvement',
-                explanation: 'This joins ' + (conjunctions + 1) + ' requests with "and". '
+                explanation: 'This asks for ' + (conjunctions + 1) + ' things at once. '
                     + 'Asking them one at a time usually gets a better answer to each.',
                 confidence: 0.55
             }));

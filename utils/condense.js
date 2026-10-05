@@ -496,7 +496,7 @@ const PromptMeterCondense = {
                     // "make it short", where "it" is the answer.
                     // "My brother says you shouldn't put butter on a burn. Is this true?"
                     // came back as "Is this true?".
-                    if (/\b(?:explain|fix|solve|unlock|reset|use|do|understand|get|open|repair|recover|find|describe|teach|clarify|simplify|check|debug|run|install)\s+(?:it|them|this|that|these|those)\b|\b(?:is|was|are)\s+(?:this|that|it)\s+(?:true|right|correct|normal|safe|real|possible|good|bad|a\s+myth)\b/i.test(whole.slice(offset + match.length))
+                    if (/\b(?:explain|fix|solve|unlock|reset|use|do|understand|get|open|repair|recover|find|describe|teach|clarify|simplify|check|debug|run|install)\s+(?:it|them|this|that|these|those)\b|\babout\s+(?:it|them|this|that|her|him)\b|\b(?:is|was|are)\s+(?:this|that|it)\s+(?:true|right|correct|normal|safe|real|possible|good|bad|a\s+myth)\b/i.test(whole.slice(offset + match.length))
                         && this.topicWords(match).some((w) => !/^(?:exams?|tests?|tomorrow|today|tonight|week|month|year|time|days?|hours?)$/.test(w)
                             && remainder.toLowerCase().indexOf(w) === -1)) return match;
                     // Nor may it be the main clause of a sentence that opened with a
@@ -562,7 +562,7 @@ const PromptMeterCondense = {
         // Guard 3: the request points back at what was removed. "I am really confused
         // about pointers in C, can you explain them with a simple example" kept a topic
         // word ("example") and lost the topic: "Explain them with a simple example".
-        if (/\b(?:explain|describe|teach|show|clarify|simplify|break\s+down|go\s+over|help\s+me\s+with|tell\s+me\s+about)\s+(?:them|it|this|that|these|those)\b/i.test(out)) {
+        if (/\b(?:explain|describe|teach|show|clarify|simplify|break\s+down|go\s+over|help\s+me\s+with|tell\s+me\s+about)\s+(?:them|it|this|that|these|those)\b|\babout\s+(?:it|them|this|that|her|him)\b/i.test(out)) {
             const kept = new Set(this.topicWords(out));
             if (this.topicWords(text).some((word) => !kept.has(word))) return text;
         }

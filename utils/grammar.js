@@ -1004,8 +1004,15 @@ const PromptMeterGrammar = {
         let out = text;
         let changed = false;
 
-        // Standalone "i" is always capitalised.
-        const withI = out.replace(/(^|[^\w'])i(?=[^\w']|$)/g, '$1I');
+        // Standalone "i" is capitalised -- unless it is a loop variable: "for i in
+        // range(n)" became "for I in range(n)", which is not the same code.
+        const withI = out.replace(/(^|[^\w'])i(?=[^\w']|$)/g, (match, lead, at, all) => {
+            const before = all.slice(Math.max(0, at - 12), at + lead.length);
+            const after = all.slice(at + match.length);
+            if (/\b(?:for|let|var|int|const)\s+$/.test(before) || /[[(]$/.test(before)) return match;
+            if (/^\s*(?:[=<>!+\-*/%\]]|\+\+|--|in\s+(?:range|\w+\s*[:(\[)]))/.test(after)) return match;
+            return lead + 'I';
+        });
         if (withI !== out) { changed = true; out = withI; }
 
         // Known proper nouns. The compiled regex is case-sensitive over lowercase keys,
@@ -1017,7 +1024,8 @@ const PromptMeterGrammar = {
         if (changed) issues.push({ type: 'capitalization', label: 'capitalization corrected' });
 
         // Sentence openings, last, so it also catches openings the rules above exposed.
-        const withSentences = out.replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)/g,
+        // Not a one-letter variable opening an expression: "i = 0, explain ...".
+        const withSentences = out.replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)(?!\s*(?:==?|<=?|>=?|!=|\+\+|--|[+\-*/%]=)\s*[\w(])/g,
             (match, lead, letter) => lead + letter.toUpperCase());
         if (withSentences !== out) {
             out = withSentences;
