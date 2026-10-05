@@ -588,7 +588,7 @@ const PromptMeterOptimizer = {
         if ((letters.match(/[A-Z]/g) || []).length / letters.length < 0.9) return text;
         const known = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
         let out = text.replace(/[A-Za-z]+/g, (w) => (known(w.toLowerCase()) ? w.toLowerCase() : w));
-        out = out.replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)/g, (m, lead, c) => lead + c.toUpperCase())
+        out = out.replace(this.SENTENCE_OPENING, (m, lead, c) => lead + c.toUpperCase())
             .replace(/\bi\b/g, 'I');
         return out;
     },
@@ -866,7 +866,9 @@ const PromptMeterOptimizer = {
         [/\bsome\s+of\s+the\s+(best|top|most|greatest|finest)\b/gi, 'the $1'],
         [/\b(?:what|which)\s+are\s+some\s+(best|top|good)\b/gi, 'what are the $1'],
         // "places that I can visit" -> "places to visit"
-        [/\bthat\s+(?:i|we|one|you)\s+(?:can|could|should|must)\s+(visit|use|read|watch|try|learn|do|make|buy|eat|see|follow|study|practi[cs]e|build|cook|wear|take)\b/gi, 'to $1'],
+        // Only after a noun: "Is it true that you can see the Great Wall" became "Is it
+        // true to see" -- a "that" clause after an adjective or a verb of saying is the claim.
+        [/(?<!\b(?:true|false|possible|impossible|likely|unlikely|clear|sure|certain|obvious|said|say|says|think|thinks|know|knows|believe|believes|claim|claims|mean|means|fact|true\s+or\s+false|is|was|so|such|now)\s+)\bthat\s+(?:i|we|one|you)\s+(?:can|could|should|must)\s+(visit|use|read|watch|try|learn|do|make|buy|eat|see|follow|study|practi[cs]e|build|cook|wear|take)\b/gi, 'to $1'],
         // "whether X or not": "or not" is implied by "whether"
         [/\b(whether\s+[^.?!,;:]{1,80}?)\s+or\s+not\b/gi, '$1'],
         // "and also" is "and"
@@ -997,6 +999,30 @@ const PromptMeterOptimizer = {
     // Conversational noise that carries no instruction. These are deliberately narrow:
     // a wrong strip silently destroys the user's meaning, which is far worse than
     // leaving a few filler tokens in place.
+    /**
+     * True when a "thanks" the strippers matched is what the user wants written, not a
+     * pleasantry: "a thank you note", "saying thanks a lot guys", "Thank you all for
+     * coming" (opening a speech). All three lost it.
+     * @param {string} match
+     * @param {string} before - Text before the match.
+     * @param {string} after - Text after the match.
+     * @returns {boolean}
+     */
+    thanksIsContent: function (match, before, after) {
+        if (!/\bthank/i.test(match)) return false;
+        if (/\b(?:a|an|the|say|saying|said|says|write|writing|send|sending|my|your|our|their|his|her|heartfelt|sincere|quick|short|simple|warm|big|express|expressing|print|prints|printing|output|outputs|return|returns|display|displays|reply|replies|respond|responds|answer|word|words|with)\s*$/i.test(before)
+            || /["'\u201c]\s*$/.test(before)) return true;
+        if (/^\s*(?:note|notes|card|cards|letter|message|email|e-mail|speech|text|gift|post|video)\b/i.test(after)) return true;
+        // "for" + something other than the help or time being thanked for is a reason
+        // being stated: "thank you all for coming".
+        if (/\bfor\s+(?:your|the)\b/i.test(match)) return false;
+        return /^\W*\w+(?:\s+\w+){0,4}?\s+for\s+(?!(?:your|the|all\s+your|all\s+the|this|that|it|explaining|helping|answering)\b)\w/i.test(match + after);
+    },
+
+    // A letter opening a sentence, except a one-letter variable opening an expression:
+    // "i = 0, explain ..." is code, and capitalising it changes the variable.
+    SENTENCE_OPENING: /(^|[.!?]\s+)([a-z])(?![a-z]*:)(?!\s*(?:==?|<=?|>=?|!=|\+\+|--|[+\-*/%]=)\s*[\w(])/g,
+
     junkStrippers: [
         // Keyboard mashing and typing noise
         /\b[a-z]*(?:asdf|sdfg|dfgh|qwer|werty|zxcv|xcvb|hjkl|uiop)[a-z]*\b/gi,
@@ -1028,7 +1054,10 @@ const PromptMeterOptimizer = {
         // instruction, and the looser form deleted its verb and left "The user in the
         // reply". Gratitude is either plural or followed by the pronoun.
         // "thanks to" is a preposition ("Thanks to the new API, latency dropped").
-        /\b(?:(?:thanks(?!\s+to\b)|thank\s+you)(?:\s+(?:a\s+(?:lot|ton|bunch)|so\s+much))?(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble)(?:\s+(?:earlier|before|again|so\s+far))?)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
+        // "very much" too: "thank you very much" lost its thanks and kept "very much".
+        // And every intensifier and address after it, or "much", "a million", "again",
+        // "sir", "bro" were left standing on their own: "Explain DNS bro".
+        /\b(?:(?:many\s+)?(?:thanks(?!\s+to\b)|thank\s+you)(?:\s+(?:a\s+(?:lot|ton|bunch|million|heap)|heaps|loads|again|(?:(?:so+|very)\s+)+much|sir|ma'?am|madam|bro|bruh|man|dude|guys|mate|buddy|everyone|all|chatgpt|gpt))*(?:\s+in\s+advance)?(?:\s+for\s+(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|consideration|trouble)(?:\s+(?:earlier|before|again|so\s+far))?)?|much\s+appreciated|(?:i'?d\s+|i\s+would\s+)?(?:really\s+)?appreciate\s+(?:it|any\s+help)(?:\s+if\s+you\s+(?:could|can|would))?|any\s+help\s+(?:would\s+be|is)\s+(?:appreciated|great)|cheers|(?:best|kind|warm)\s+regards|looking\s+forward\s+to\s+(?:your|the)\s+(?:response|reply|answer)|let\s+me\s+know\s+(?:if\s+you\s+need\s+(?:anything\s+else|more\s+(?:info|information|details))|what\s+you\s+think))\b[,!.\s]*/gi,
         // Urgency padding: an LLM cannot act on it, so it is pure token cost. Not inside
         // the user's own goal: "what should I do to pay it as soon as possible" is about
         // the debt, not the reply, and lost its point.
@@ -1042,7 +1071,9 @@ const PromptMeterOptimizer = {
         // together, because removing only the opener leaves "maybe you could possibly".
         // "if"/"whether" too: "I was wondering if perhaps you could possibly help me"
         // slipped past both this and the fixed "wondering if you could" wrapper.
-        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|wondering|hoping|hoped|hope|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+|if\s+|whether\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)(?:\s+be\s+able\s+to)?\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*/gi,
+        // Not before a tag question: "I think that you can use a dictionary here, right?"
+        // checks the user's own idea; stripped, it became the order "Use a dictionary".
+        /\b(?:i\s+(?:was\s+)?(?:thinking|think|thought|figured|wondered|wondering|hoping|hoped|hope|reckon(?:ed)?)|i\s+had\s+an?\s+idea)\s+(?:that\s+|if\s+|whether\s+)?(?:maybe\s+|perhaps\s+|possibly\s+)?(?:you\s+)?(?:could|can|would|will|might|may)(?:\s+be\s+able\s+to)?\s+(?:possibly\s+|maybe\s+|perhaps\s+|please\s+|kindly\s+)*(?![^.?!\n]*,\s*(?:right|correct|yes|no|isn'?t\s+it|am\s+i\s+right|true)\s*\?)/gi,
         // Discourse markers. In a prompt these mark hesitation rather than meaning, and
         // none of them changes what is being asked. "just", "really" and "so" are
         // deliberately absent: each carries meaning often enough to matter ("just the
@@ -1118,6 +1149,9 @@ const PromptMeterOptimizer = {
     },
 
     connectiveRepairs: [
+        // "how r u? also what's the capital of australia?" lost the greeting and opened
+        // on "Also": with nothing before it, it adds to nothing.
+        [/^\s*(?:and\s+)?also[,\s]+(?=[a-z])/i, ''],
         // A conjunction left immediately before a preposition lost its clause -- but
         // only where a removal can have left it: at a clause start. Mid-sentence,
         // "because of", "which of", "when in" are ordinary English, and this rule
@@ -1804,6 +1838,10 @@ const PromptMeterOptimizer = {
                     if (FUNCTION.test(phrase[phrase.length - 1])) continue;
                     const content = phrase.filter((w) => !FUNCTION.test(w));
                     if (content.length < (DET.test(phrase[0]) ? 1 : 2)) continue;
+                    // A phrase with a verb in it is a statement, not a noun phrase: "Carol is
+                    // not the youngest if Dave is present, and Dave is present" became "and
+                    // it." -- the puzzle's deciding premise gone.
+                    if (phrase.some((w) => /^(?:is|are|was|were|am|be|been|being|has|have|had|do|does|did|isn't|aren't|wasn't|weren't|doesn't|don't|didn't)$/.test(w))) continue;
                     // The same phrase again, later, behind an "and".
                     for (let b = a + len; b + len <= words.length; b++) {
                         const again = words.slice(b, b + len).map((w) => bare(w.t).toLowerCase());
@@ -1817,6 +1855,11 @@ const PromptMeterOptimizer = {
                         if (/^(?:i|we|you|they|he|she|should|can|could|would|will|must|to|shall|might|may|cannot|can't|don't|dont)$/.test(before)) break;
                         const between = words.slice(a + len, b).map((w) => bare(w.t).toLowerCase());
                         if (!between.includes('and')) break;
+                        // As the subject of its own clause the repeat names who or what a
+                        // premise is about: "the light is red if the door is open, and the
+                        // door is open" -> "and it is open" leaves "it" free to be the light.
+                        const next = words[b + len] ? bare(words[b + len].t).toLowerCase() : '';
+                        if (/^(?:is|are|was|were|has|have|had|will|can|does|did|isn't|aren't|wasn't|weren't|must|should)$/.test(next)) break;
                         // Another noun phrase in between could be what "it" points at.
                         // Not when the repeat is the object of "of": in "draw a diagram of
                         // the water cycle" -> "a diagram of it", "it" cannot be the diagram.
@@ -2756,10 +2799,26 @@ const PromptMeterOptimizer = {
             .filter((rx) => englishFillers || rx !== interjection)
             .concat(this.wrapperStrippers)
             .concat(this.conversationalStrippers);
+        // A closing "pls help" once the request has been made goes with its "please";
+        // alone, the "please" went and "..., help" was left hanging off the end. Kept when
+        // it IS the request: "my code crashes on startup please help me".
+        optimized = optimized.replace(/[,;]?\s*\b(?:please|pls|plz)\s+help(?:\s+me)?(?:\s+out)?\s*[.!]*\s*$/i, (match, at, all) =>
+            (/\?|\b(?:explain|tell|write|show|give|list|suggest|how|what|why|whether|which|when|where|who)\b/i.test(all.slice(0, at)) ? '' : match));
+        // Thanks with its reason attached goes whole, before the generic rules take the
+        // "thank you" and leave "For explaining that, now explain HTTP" behind.
+        optimized = optimized.replace(
+            /\b(?:many\s+)?(?:thanks|thank\s+you)(?:\s+(?:(?:so|very)\s+)+much|\s+a\s+lot)?\s+for\s+(?:\w+ing(?:\s+(?:that|this|it|me|all\s+that))?|(?:your|the)\s+(?:\w+\s+){0,2}?(?:time|help|assistance|effort|support|patience|reply|response|answer|answers|explanation|info|information))\b[,!.\s]*/gi,
+            (match, at, all) => (this.thanksIsContent(match, all.slice(0, at), all.slice(at + match.length)) ? match : ' '));
         for (let pass = 0; pass < 2; pass++) {
             for (const rx of strippers) {
                 rx.lastIndex = 0;
-                optimized = optimized.replace(rx, ' ');
+                optimized = optimized.replace(rx, (match, ...rest) => {
+                    // A rule with named groups passes one more trailing argument.
+                    if (typeof rest[rest.length - 1] === 'object') rest.pop();
+                    const at = rest[rest.length - 2];
+                    const all = rest[rest.length - 1];
+                    return this.thanksIsContent(match, all.slice(0, at), all.slice(at + match.length)) ? match : ' ';
+                });
             }
 
             // Between the two passes: drop the user's circumstances -- exams,
@@ -2866,7 +2925,7 @@ const PromptMeterOptimizer = {
             // "I really appreciate it!" -> "I", "Many thanks!" -> "Many". A one-word
             // fragment after a finished sentence is debris, not content.
             .replace(/([.!?])\s+(?:i|many|so|and|but|also|it|this|that|very|really|much|in\s+advance)[\s.!?]*$/i, '$1')
-            .replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)/g, (m, lead, c) => lead + c.toUpperCase())
+            .replace(this.SENTENCE_OPENING, (m, lead, c) => lead + c.toUpperCase())
             // "Because I am new to this, Explain X": a task verb after a comma is
             // mid-sentence, whatever opener was cut away in front of it.
             .replace(/,\s+(Explain|Write|Give|List|Tell|Show|Describe|Create|Make|Help)\b/g,
@@ -2906,13 +2965,14 @@ const PromptMeterOptimizer = {
         // Stripping a leading "Can you " or "Please " leaves the next word lowercase, so
         // re-capitalise after every sentence break. A placeholder is not [a-z], so a
         // protected span at a sentence start is skipped.
-        optimized = optimized.replace(/(^|[.!?]\s+)([a-z])(?![a-z]*:)/g,
+        // Not a one-letter variable opening an expression: "i = 0, explain ..." is code.
+        optimized = optimized.replace(this.SENTENCE_OPENING,
             (match, lead, letter) => lead + letter.toUpperCase());
 
         // Capitalise the opening letter, but never reach into a protected span: a path
         // or identifier at the start of a prompt must keep its own casing.
         const opensProtected = PM_PROTECT && optimized.charAt(0) === PM_PROTECT.MASK_OPEN;
-        if (optimized.length > 0 && !opensProtected) {
+        if (optimized.length > 0 && !opensProtected && !/^[a-z]\s*(?:==?|<=?|>=?|!=|\+\+|--|[+\-*/%]=)\s*[\w(]/.test(optimized)) {
             optimized = optimized.charAt(0).toUpperCase() + optimized.slice(1);
         }
 

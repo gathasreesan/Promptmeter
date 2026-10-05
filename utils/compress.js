@@ -87,7 +87,10 @@ const PromptMeterCompress = {
         // Only "also" goes: the verb is the second request. Dropping it turned
         // "convert this and also explain what each line is doing" into "and what each
         // line is doing".
-        [/\b(and\s+)?also\s+(tell\s+me|explain|show\s+me)\s+/gi, (m, and, verb) => 'and ' + verb + ' '],
+        // Opening a sentence it is just the verb: "Also tell me a joke." became "And tell
+        // me a joke.", the same token count and worse English.
+        [/\b(and\s+)?also\s+(tell\s+me|explain|show\s+me)\s+/gi, (m, and, verb, at, all) =>
+            (/(?:^|[.!?]\s*)$/.test(all.slice(0, at)) ? verb.charAt(0).toUpperCase() + verb.slice(1) : 'and ' + verb) + ' '],
         [/,?\s+and\s+also\s+(?:i\s+want\s+you\s+to\s+)?/gi, ' and '],
         // A request behind a connective: "..., so can you give me a roadmap?" The
         // wrapper strippers only see "can you" at a clause start, so this one survived
@@ -268,10 +271,10 @@ const PromptMeterCompress = {
     // but 请 and tolong also appear inside ordinary words and phrases.
     FOREIGN_PLEASE_OPENERS: ['请问', '请', 'tolong', 'mohon'],
     FOREIGN_THANKS: [
-        'muchas gracias', 'gracias de antemano', 'gracias', 'merci beaucoup', "merci d'avance",
-        'merci par avance', 'merci', 'vielen dank im voraus', 'vielen dank', 'danke im voraus',
-        'danke schön', 'danke sehr', 'danke', 'desde já obrigado', 'desde já obrigada', 'obrigado',
-        'obrigada', 'grazie mille', 'grazie in anticipo', 'grazie', 'terima kasih banyak',
+        'muchas gracias de antemano', 'muchas gracias', 'gracias de antemano', 'gracias', 'merci beaucoup', "merci beaucoup d'avance", "merci d'avance",
+        'merci par avance', 'merci', 'vielen dank im voraus', 'vielen dank schon im voraus', 'vielen dank', 'danke im voraus',
+        'danke schön', 'danke sehr', 'danke', 'desde já obrigado', 'desde já obrigada', 'muito obrigado', 'muito obrigada', 'obrigado',
+        'obrigada', 'grazie mille in anticipo', 'grazie mille', 'grazie in anticipo', 'grazie', 'terima kasih banyak',
         'terima kasih', 'teşekkür ederim', 'teşekkürler', 'dank je wel', 'dank je', 'bedankt',
         'заранее спасибо', 'спасибо заранее', 'большое спасибо', 'спасибо', '谢谢你', '谢谢您', '谢谢',
         '多谢', 'ありがとうございます', 'ありがとう', 'よろしくお願いします', '감사합니다',

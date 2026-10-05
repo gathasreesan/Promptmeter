@@ -457,5 +457,38 @@ keeps('a slip and a stray letter do not cancel detection', 'teach me tjid code o
 check('still English with a slip and a stray letter', PromptMeterOptimizer.looksEnglish('teach me tjid code o exam'));
 check('Dutch stays Dutch', !PromptMeterOptimizer.looksEnglish('ik wil de tijd weten'));
 
+// Live: a repeated clause was swapped for "it", deleting the premise that decides the
+// puzzle ("..., and Dave is present" -> "and it.").
+keeps('a repeated premise is not a pronoun', 'Carol is not the youngest if Dave is present, and Dave is present. Who is the youngest?', 'and Dave is present');
+keeps('a repeated subject is not a pronoun', 'The light is red if the door is open, and the door is open. What colour is the light?', 'and the door is open');
+keeps('a repeated object still is', 'explain the virtual DOM and why react uses the virtual DOM', 'uses it');
+lacks('"muchas gracias de antemano" goes', 'Explícame la fotosíntesis. Muchas gracias de antemano.', /gracias|antemano/i);
+lacks('"muito obrigado" goes', 'Explique a fotossíntese. Muito obrigado.', /obrigado/i);
+
+// Live: "thank you very much" lost its thanks and kept "very much"; other tails stranded
+// "bro", "again", "a million"; and thanks that IS the content was deleted.
+['thank you very much', 'thank you very very much', 'many thanks', 'thanks a million', 'thanks again',
+ 'thanks bro', 'thank you guys', 'thank you so much chatgpt'].forEach((t) =>
+    check('"' + t + '" goes whole', run('explain DNS ' + t).text === 'Explain DNS', run('explain DNS ' + t).text));
+keeps('thanks with its reason goes whole', 'thank you so much for explaining that, now explain HTTP', 'Now explain HTTP');
+lacks('no stranded "for the reply"', 'thank you for the quick reply, explain DNS', /reply/i);
+keeps('a thank you note keeps "thank you"', 'write a thank you note to my team', 'thank you note');
+keeps('a speech opening keeps its thanks', 'Thank you all for coming, write a closing speech', 'Thank you all for coming');
+keeps('saying thanks keeps it', 'write a note to my team saying thanks a lot guys', 'saying thanks a lot guys');
+keeps('"Also" opening a sentence is dropped, not turned into "And"', 'Explain DNS. Also tell me how caching works.', 'Explain DNS. Tell me how caching works.');
+keeps('thanks that a function prints stays', 'Write a function named thank_you that prints thanks.', 'prints thanks');
+keeps('"Is it true that you can" stays a question', 'Is it true that you can see the Great Wall from space?', 'that you can see');
+keeps('"places that I can visit" still shortens', 'suggest places that I can visit in Kerala', 'places to visit');
+keeps('a tag question is not turned into an order', 'I think that you can use a dictionary here, right?', 'can use a dictionary');
+lacks('no dangling "help" after the request', 'i want to know whether i should learn java or python first as a beginner, pls help', /,\s*help\b/i);
+keeps('"please help me" as the only request stays', 'my code crashes on startup please help me', 'help me');
+keeps('a story premise "it" points back to stays', 'My mom said thank you to the doctor, write a story about it.', 'My mom said thank you to the doctor');
+keeps('a leftover opening "also" goes', "how r u? also what's the capital of australia?", "What's the capital of Australia?");
+keeps('a loop variable stays lowercase', 'what is the time complexity of this: for i in range(n): for j in range(i): print(i, j)', 'for i in range(n)');
+lacks('a variable opening an expression stays lowercase', 'i = 0, explain why the loop never ends', /^I = 0/);
+keeps('arr[i] stays', 'can i use arr[i] here?', 'arr[i]');
+keeps('the pronoun i is still I', 'i think i am in love with coding, explain recursion', 'I think I am');
+check('five numbered tasks are worth splitting', PromptMeterAnalysis.analyze('first explain how neural networks learn, second write a python scraper, third plan a trip to Japan, and also review my resume, and suggest some books', new Set()).findings.some((f) => f.category === 'scope'));
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
