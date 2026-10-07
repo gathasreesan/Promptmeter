@@ -80,22 +80,42 @@ The analytics dashboard is built with **React** and **Chart.js**, bundled using 
 
 ### Step 1b: Run the Test Suites (Optional)
 
-Four dependency-free suites, 735 checks in total. From the project root:
+Seventeen dependency-free JavaScript suites in `tests/*.test.js`, plus two Python suites
+for the data pipeline. Every suite prints `N passed, 0 failed` (or a one-line pass
+message) and exits non-zero on any failure. From the project root:
 
 ```bash
-node tests/optimizer.test.js    # 306 - protected spans, meaning preservation, filler removal
-node tests/grammar.test.js      # 109 - grammar corrections, and what must NOT be corrected
-node tests/spelling.test.js     # 192 - typo correction, and what must NOT be corrected
-node tests/ml-parity.test.js    # 128 - JavaScript reproduces scikit-learn exactly
+# bash / Git Bash
+for f in tests/*.test.js; do node "$f"; done
+python ml/test_ingest.py && python ml/test_generate_synthetic.py
 ```
 
-Run the first after any edit to `utils/optimizer.js`, `utils/protect.js`, or
-`utils/condense.js`; the second after editing `utils/grammar.js`; the third after
-editing `utils/spelling.js`; the fourth after retraining (`cd ml && python train.py`).
+```powershell
+# PowerShell
+Get-ChildItem tests\*.test.js | ForEach-Object { node $_.FullName }
+```
 
-`ml-parity.test.js` matters most after a retrain: `ml-classifier.js` reimplements the
-fitted transform by hand, and a mistake there does not throw — it silently changes which
-sentences the extension keeps.
+`tests/release.test.js` is the release gate: every defect found before v1.0.0, each
+pinned by the prompt that exposed it, at the card's normal time budget and at a
+slow-machine one. `ml-parity.test.js` matters most after a retrain
+(`cd ml && python train.py`): `ml-classifier.js` reimplements the fitted transform by
+hand, and a mistake there does not throw — it silently changes what the extension keeps.
+
+Two heavier checks run before a release rather than on every edit:
+
+```bash
+node tests/fuzz.js                    # invariants over the whole corpus (needs ml/corpus/sample.jsonl)
+npm install --no-save jsdom@24        # once
+node tests/e2e.js                     # the real extension in a simulated ChatGPT page
+node tests/e2e.js path/to/promptmeter # ...or an unzipped release, to test what ships
+```
+
+`fuzz.js` runs the card's exact code path over every corpus prompt and checks what must
+hold for any input: no number, URL or code span lost, nothing emptied, no broken
+emoticon or stray punctuation, no output much longer than its input. `e2e.js` loads every
+content script in manifest order into a page shaped like ChatGPT's composer, types
+prompts, clicks Apply, Ignore and Revert, presses Esc, and then loads the popup and the
+dashboard the same way.
 
 ---
 
