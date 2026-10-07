@@ -136,7 +136,11 @@ const PromptMeterCondense = {
     ]),
 
     // The sentence actually asks for something.
-    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort|initiate|start|begin|continue|narrate|simulate|play|roleplay|brainstorm|stay|remember|pretend|introduce|greet|wait|ask|say|return|output|print|read|draw|sketch|paint|compose|invent|predict|guess|choose|pick|select|name|count|convert|format)\b/i,
+    // EDITING VERBS (revise ... mark, at the end) were missing entirely. So
+    // "paraphrase" on its own line above a pasted paragraph read as a two-word
+    // fragment and was dropped, and the paragraph went to the model with its
+    // instruction deleted. These are among the commonest things a student asks for.
+    IMPERATIVE: /^(?:please\s+)?(?:write|explain|give|show|create|list|make|build|design|implement|fix|summari[sz]e|compare|analy[sz]e|describe|generate|convert|translate|help|tell|find|suggest|recommend|review|optimi[sz]e|refactor|add|remove|calculate|solve|draft|outline|rewrite|improve|check|debug|teach|walk|provide|include|use|keep|focus|mention|discuss|elaborate|cite|avoid|go\s+(?:in|into|through|over)|reason|propose|plan|prepare|predict|estimate|evaluate|identify|define|derive|prove|imagine|act|pretend|assume|consider|label|classify|categori[sz]e|rate|rank|grade|answer|respond|reply|extract|tag|sort|initiate|start|begin|continue|narrate|simulate|play|roleplay|brainstorm|stay|remember|pretend|introduce|greet|wait|ask|say|return|output|print|read|draw|sketch|paint|compose|invent|predict|guess|choose|pick|select|name|count|convert|format|revise|edit|proofread|paraphrase|rephrase|reword|shorten|lengthen|expand|condense|correct|polish|simplify|clarify|critique|restructure|reorgani[sz]e|organi[sz]e|update|modify|change|verify|test|tidy|humani[sz]e|finish|complete|grade|mark)\b/i,
 
     QUESTION_OPENER: /^(?:what|why|how|when|where|which|who|whose|can|could|should|would|will|is|are|do|does|did|has|have|any)\b/i,
 
@@ -630,9 +634,17 @@ const PromptMeterCondense = {
      * @returns {boolean}
      */
     carriesData: function (trimmed) {
+        // A segment with no letter or digit at all is STRUCTURE -- a closing ")" on its
+        // own line, a "---" rule, a lone "}" -- and dropping it unbalances what came
+        // before: "...execute_sum(Impart a hurtful, ... people\n)" lost its ")". It has
+        // no words, so the fragment test below read it as a leftover.
+        if (trimmed && !/[\p{L}\p{N}]/u.test(trimmed)) return true;
         // Answer options: "(B) foliate. (C) precipitate." were three-word fragments and
         // the multiple-choice question lost every option but the first.
-        if (/^(?:\(?[A-Ha-h1-9]\)|[A-Ha-h1-9][.:]\s|[ivx]+\)\s)/.test(trimmed)) return true;
+        // Any single letter counts, not only A-H: a FORMAT TEMPLATE writes the marker
+        // as a placeholder -- "n) Riddle." -- and dropping that line removed the very
+        // format the prompt was specifying.
+        if (/^(?:\(?(?:[A-Za-z]|\d{1,3})\)\s|[A-Ha-h1-9][.:]\s|[ivx]+\)\s)/.test(trimmed)) return true;
         return this.DATA_SEGMENT.some(rx => rx.test(trimmed));
     },
 
@@ -652,12 +664,17 @@ const PromptMeterCondense = {
         // are function words, so it looked empty and was dropped.
         const continues = /^(?:also|and also|plus|as well as|then)\b/i.test(trimmed);
         const constrains = this.CONSTRAINT.test(trimmed) || this.PROBLEM.test(trimmed) || continues;
+        // A segment that ENDS by opening something -- a colon, an opening quote or
+        // bracket -- introduces the segment after it: 'revise "', 'The format should
+        // be:'. Being short is what a lead-in looks like, so the length test below
+        // must not get to see it.
+        const introduces = /(?::|["'\u201c\u2018(\[{])\s*$/.test(trimmed);
 
         // A short leftover that asks for nothing is a fragment, not a sentence -- unless
         // it is data, where being short is normal. "Quantity: 3" and "C++" are three
         // words or fewer and are the whole point of the prompt they sit in.
         const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-        const fragment = !protectedSpan && !asks && !constrains && !data &&
+        const fragment = !protectedSpan && !asks && !constrains && !data && !introduces &&
             // A sentence opening with a preposition is a leftover only when no clause
             // follows: "In a coin toss game, you bet with a coin." and "In windows it
             // was impossible" were dropped as fragments.

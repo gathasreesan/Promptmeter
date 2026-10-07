@@ -1907,6 +1907,32 @@ const PromptMeterSpelling = {
      * @param {Object} options - { extraKnown: Set } of words to treat as correct.
      * @returns {Object} { text, corrections } where corrections is [{ from, to }].
      */
+    /**
+     * True when the sentence around `offset` is mostly words of another language.
+     * "Foreign" means attested -- people really type it -- but not an English word.
+     * Needs at least three such words and more of them than English ones, so one
+     * borrowed word ("a la carte", "bhai") never switches an English sentence off.
+     * @param {string} text
+     * @param {number} offset
+     * @returns {boolean}
+     */
+    inForeignSentence: function (text, offset) {
+        const before = text.slice(0, offset);
+        const start = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'),
+            before.lastIndexOf('?'), before.lastIndexOf('\n')) + 1;
+        const rest = text.slice(offset);
+        const stop = rest.search(/[.!?\n]/);
+        const sentence = text.slice(start, stop === -1 ? text.length : offset + stop);
+        const words = (sentence.toLowerCase().match(/[a-zà-ÿ]+/g) || []).filter((w) => w.length >= 2);
+        let foreign = 0;
+        let english = 0;
+        words.forEach((w) => {
+            if (this.known(w)) english++;
+            else if (this.attested && this.attested.has(w)) foreign++;
+        });
+        return foreign >= 3 && foreign > english;
+    },
+
     correct: function (text, options) {
         if (!text || typeof text !== 'string') return { text: text || '', corrections: [] };
 
@@ -1956,6 +1982,12 @@ const PromptMeterSpelling = {
             }
 
             let fixed = this.correctWord(lower);
+            // A word in a FOREIGN SENTENCE is not an English typo. A prompt can be English
+            // overall and still carry a paragraph in another language -- a Spanish
+            // roleplay setup above English instructions had "reino" corrected to "reno".
+            // The test is the word's own sentence: when most of its words are ones people
+            // really use (attested) but English does not know, the word is left alone.
+            if (fixed && this.inForeignSentence(text, offset)) return match;
             // Last resort, a finger on neighbouring keys ("tjid" -> this). Only inside
             // English: across 31k real prompts the same test, unguarded, read "tijd",
             // "lesen" and "systemd" as time, learn and systems.
@@ -2051,7 +2083,8 @@ PromptMeterSpelling.firstNames = new Set(((typeof PM_FIRST_NAMES !== 'undefined'
     + 'dynamodb cassandra neo4j elasticsearch kibana prometheus docker k8s openshift aws gcp '
     + 'azure lambda ec2 s3 rds iam cloudfront bigquery snowflake databricks airflow dbt tableau powerbi '
     + 'matplotlib seaborn plotly opencv tensorflow huggingface langchain llamaindex ollama openai chatgpt '
-    + 'gemini claude copilot midjourney dalle stable diffusion arduino raspberry esp32 esp8266 nodemcu '
+    + 'gemini claude mistral grok deepseek qwen perplexity copilot midjourney dalle sora '
+    + 'stable diffusion arduino raspberry esp32 esp8266 nodemcu monet '
     + 'stm32 verilog vhdl matlab simulink labview autocad solidworks ansys blender unity unreal godot '
     + 'golang rustlang typescript javascript nodejs reactjs vuejs angularjs jquery bootstrap sass scss '
     + 'npm yarn pip conda venv virtualenv poetry pytest jest mocha cypress selenium playwright postman '

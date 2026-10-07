@@ -5,13 +5,12 @@ Produces new labeled phrases for the four-class classifier (IMPORTANT / FILLER /
 REDUNDANT / REPETITIVE) and puts every row through the same validation regardless of
 where it came from.
 
-    python generate_synthetic.py --provider anthropic --target 10000
+    python generate_synthetic.py --provider openai --target 10000
     python generate_synthetic.py --provider manual          # author batches by hand
     python generate_synthetic.py --validate-only            # re-run QC on the checkpoint
 
-Three providers:
+Two providers:
 
-    anthropic   Claude, via the `anthropic` package and ANTHROPIC_API_KEY.
     openai      Any OpenAI-compatible endpoint, via OPENAI_API_KEY.
     manual      Reads dataset/manual_batches/*.jsonl. Used when no API key is
                 configured, and for rows written by a human or by an assistant in
@@ -189,17 +188,6 @@ def build_prompt(label, count, domain, register, difficulty, avoid):
 # ---------------------------------------------------------------------------
 # Providers
 # ---------------------------------------------------------------------------
-
-def call_anthropic(prompt, model):
-    import anthropic  # imported lazily: only this provider needs the package
-    client = anthropic.Anthropic()
-    message = client.messages.create(
-        model=model,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return "".join(block.text for block in message.content if block.type == "text")
-
 
 def call_openai(prompt, model):
     from openai import OpenAI
@@ -592,9 +580,9 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--provider", choices=("anthropic", "openai", "manual"),
+    parser.add_argument("--provider", choices=("openai", "manual"),
                         default="manual")
-    parser.add_argument("--model", default="claude-opus-5")
+    parser.add_argument("--model", default="gpt-4o")
     parser.add_argument("--target", type=int, default=10000,
                         help="total accepted rows wanted")
     parser.add_argument("--batch-size", type=int, default=25)
@@ -608,7 +596,7 @@ def main():
     args = parser.parse_args()
 
     random.seed(args.seed)
-    call = {"anthropic": call_anthropic, "openai": call_openai}.get(args.provider)
+    call = {"openai": call_openai}.get(args.provider)
 
     rows = load_checkpoint()
     print("Checkpoint holds {0} raw rows".format(len(rows)))
@@ -619,7 +607,7 @@ def main():
         print("Read {0} rows from manual_batches".format(len(manual)))
 
     elif not args.validate_only:
-        if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")):
+        if not os.environ.get("OPENAI_API_KEY"):
             print("No API key in the environment. "
                   "See 'Configuring a generation provider' in ml/README.md.")
             return 1

@@ -38,6 +38,17 @@ const PromptMeterProtect = {
         { name: 'triple-single', rx: /'''[\s\S]*?(?:'''|$)/g },
         { name: 'triple-double', rx: /"""[\s\S]*?(?:"""|$)/g },
         { name: 'inline-code', rx: /`[^`\n]+`/g },
+
+        // --- Emoticons ---------------------------------------------------------------
+        // Three different stages tore these in half, each its own way: the space tidier
+        // read the ":" of ":)" as a colon ("explain ml :)" -> "Explain ML: )"), the
+        // leading-punctuation trim took the ":" and left the ")" (":) explain" -> ")
+        // explain"), and the foreign path split the prompt at it as if it introduced a
+        // payload. One mask stops all three. Only a standalone token counts -- preceded
+        // by a space or the start and followed by a space or the end -- so ":)" inside
+        // "f(a[1:])" or the "8)" of "(x, 8)" is never touched. The eyes are ":" and ";"
+        // only: "=" and "8" are far more often an operator and a number.
+        { name: 'emoticon', rx: /(?<=^|[ \t])[:;]['-^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$)/gm },
         // Indented block: a run of consecutive lines each starting with 4 spaces or a tab
         { name: 'indented-code', rx: /^(?:[ ]{4,}|\t)[^\n]*(?:\n(?:[ ]{4,}|\t)[^\n]*)*/gm },
 
@@ -129,13 +140,38 @@ const PromptMeterProtect = {
             }
         },
         { name: 'snake-case', rx: /\b[A-Za-z]+(?:_[A-Za-z0-9]+)+\b/g },
-        { name: 'camel-case', rx: /\b[a-z]+[A-Z][\w]*\b/g }
+        { name: 'camel-case', rx: /\b[a-z]+[A-Z][\w]*\b/g },
+
+        // --- Code inside a line that reads as prose ---------------------------------
+        // LAST on purpose: every pattern above takes precedence. code-line starts its
+        // SQL run at the SELECT line, and taking that line first lost the statement's ";".
+        // The line-based block detector lets a sentence-like line break a run, which is
+        // right for prose and wrong for these two:
+        //   'findstr /C:" " >nul && echo This script relies on Miniconda which ...'
+        //     -- ">nul" was corrected to ">null", which writes a file called null;
+        //   'what this ORACLE SQL query does? SELECT P.CUENTA, S.IMEI ... FROM ...'
+        //     -- "SELECT" was recased to "Select".
+        // SQL needs an UPPERCASE keyword and a second clause keyword later on the same
+        // line, so "select the best answer" is prose and "SELECT THE BEST ANSWER FROM
+        // THE LIST" is merely left as typed -- the safe direction.
+        { name: 'null-device', rx: /[12]?>>?\s*nul\b/gi },
+        // The WHOLE statement, across lines, through its ";" or to a blank line or the
+        // end: masking only the first line exposed the closing ";" to the tidy that
+        // strips trailing punctuation.
+        { name: 'sql-inline', rx: /\b(?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)\b(?=[^;]*?\b(?:FROM|INTO|SET|WHERE|VALUES|TABLE)\b)[\s\S]*?(?:;|(?=\n[ \t]*\n)|$)/g },
     ],
 
     // A line that looks like program text rather than prose. Deliberately broad: the
     // block rule below only fires when most lines in a run qualify, so a single false
     // positive cannot protect a paragraph of English.
-    CODE_LINE: /(?:[{}();]\s*$|^\s*[}\])]|=>|:=|==|!=|\+\+|--|^\s*(?:function|const|let|var|class|def|return|if|else|elif|for|while|switch|case|try|catch|except|import|from|public|private|static|void|int|string|bool|async|await|package|use|fn|impl|struct|enum)\b|^\s*[\w$.]+\s*=[^=]|^\s*[-*]\s|^\s{2,}[\w$"'#.@<-])/,
+    // The last four alternatives were missing, and each left a familiar language out:
+    //   #include / #define / #!     a C file's first line, or a script's shebang
+    //   <tag ...> and </tag>        HTML -- "<div>" lines broke the run, and the
+    //                               indentation between them was collapsed
+    //   @echo, %~dp0, >nul, rem ... Windows batch: "cd" was capitalised and ">nul"
+    //                               corrected to ">null", which creates a file
+    //   cd /d, goto, pause, ...
+    CODE_LINE: /(?:[{}();]\s*$|^\s*[}\])]|=>|:=|==|!=|\+\+|--|^\s*(?:function|const|let|var|class|def|return|if|else|elif|for|while|switch|case|try|catch|except|import|from|public|private|static|void|int|string|bool|async|await|package|use|fn|impl|struct|enum)\b|^\s*[\w$.]+\s*=[^=]|^\s*[-*]\s|^\s{2,}[\w$"'#.@<-]|^\s*#(?:include|define|undef|ifn?def|if|elif|endif|pragma|!)|^\s*<\/?[A-Za-z][\w-]*(?:\s[^<>]*)?\/?>|^\s*@\w|%~[a-z]*\d|%\w+%|>\s*nul\b|^\s*(?:rem|setlocal|endlocal|pause|goto|cls)\b|^\s*cd\s+\/d\b)/i,
 
     // A line that is plainly prose, whatever else it contains. A run is not code when
     // it is made of sentences.
@@ -203,12 +239,74 @@ const PromptMeterProtect = {
      * @param {string} text - The raw prompt.
      * @returns {Object} { masked, spans } where spans[i] is the original text of placeholder i.
      */
+    /**
+     * Masks the answer options of a multiple-choice question, verbatim.
+     *
+     * Options are DATA, not the user's prose, and correcting them changes the question.
+     * "Which word is spelled correctly? A) recieve B) receive C) receeve" came back with
+     * all three options spelled "receive" -- the quiz destroyed, every answer now right.
+     * "Select the sentence with the correct capitalization. A) i love reading books ..."
+     * had its "i" capitalised, which made option A correct. And an option line opening
+     * with a quote ('"A) i love ...') was pruned outright as a fragment.
+     *
+     * LETTER markers only -- A) (a) A. A: -- and only when there are at least two of
+     * them, either one per line or several on a single line. A digit-numbered list is
+     * steps or items the user wrote and wants tidied; a lettered list is answer choices
+     * far more often than not. Over-masking is the safe direction here: a masked line is
+     * merely left as typed.
+     *
+     * @param {string} text
+     * @param {Array} spans - The span table; masked lines are appended to it.
+     * @returns {string}
+     */
+    maskAnswerOptions: function (text, spans) {
+        const NL = String.fromCharCode(10);
+        const LINE = /^[ \t]*["'“‘]?(?:\(([A-Za-z])\)|([A-Za-z])[).:])[ \t]+\S/;
+        const lines = text.split(NL);
+        const marked = lines.map((line) => {
+            const hit = LINE.exec(line);
+            return hit ? (hit[1] || hit[2]).toLowerCase() : null;
+        });
+        const letters = new Set(marked.filter(Boolean));
+        const wrap = (span) => {
+            spans.push(span);
+            return this.MASK_OPEN + (spans.length - 1) + this.MASK_CLOSE;
+        };
+        // Several options on one line: "Which is correct: A) recieve B) receive".
+        const INLINE = /(?:^|[\s"'“(])\(?[A-Ea-e]\)[ \t]+\S/g;
+        return lines.map((line, i) => {
+            if (this.isOnlyPlaceholder(line.trim())) return line;
+            if (letters.size >= 2 && marked[i]) {
+                const lead = (/^[ \t]*/.exec(line) || [''])[0];
+                return lead + wrap(line.slice(lead.length));
+            }
+            // The first option can share a line with the question: 'Select the correct
+            // one. "A) i love reading books' -- with B) and C) on the lines below. Once a
+            // block of options exists, an option opening mid-line is masked from its
+            // marker (and any quote in front of it) to the end of the line.
+            if (letters.size >= 2) {
+                const mid = /\s(["'“‘]?\(?[A-Za-z]\)[ \t]+\S)/.exec(line);
+                if (mid) {
+                    const at = mid.index + 1;
+                    return line.slice(0, at) + wrap(line.slice(at));
+                }
+            }
+            const inline = line.match(INLINE);
+            if (inline && inline.length >= 2) {
+                const at = line.search(/\(?[A-Ea-e]\)[ \t]+\S/);
+                return line.slice(0, at) + wrap(line.slice(at));
+            }
+            return line;
+        }).join(NL);
+    },
+
     mask: function (text) {
         const spans = [];
         // Before the pattern table: a code block is the largest construct here, and
         // letting camel-case or call patterns nibble at its insides first would leave
         // the block unrecognisable as a run.
         let masked = this.maskCodeBlocks(text, spans);
+        masked = this.maskAnswerOptions(masked, spans);
 
         for (const pattern of this.patterns) {
             pattern.rx.lastIndex = 0;

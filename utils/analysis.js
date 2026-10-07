@@ -440,7 +440,7 @@ const PromptMeterAnalysis = {
      * opt-in provider the user configures -- can supply one, exactly as
      * PromptMeterTokenizer.setEncoder() accepts a real BPE encoder.
      *
-     * ml/generate_synthetic.py already speaks to Anthropic and OpenAI and is the natural
+     * ml/generate_synthetic.py already speaks to an OpenAI-compatible API and is the natural
      * place to wire one for offline analysis of a corpus.
      *
      * @param {Function} analyze - async (prompt) => Array of raw findings. Each may

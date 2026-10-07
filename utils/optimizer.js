@@ -393,7 +393,17 @@ const PromptMeterOptimizer = {
         // Digits for words. Only where no number can be meant: "how 2 make",
         // "what 2 do", "4 beginners", "thx 4 the help". The validator applies the
         // same patterns (expandDigitWords) so the 2 and 4 are not "lost numbers".
-        { word: "(?<![\\d.,$])\\b2(?=\\s+(?:do|make|be|go|get|know|see|eat|buy|learn|write|find|use|fix|start|cook|say|ask|study|prepare|help|understand|solve|create|build|install|run|play|watch|read|talk|meet|pay|send|call|choose|pick|improve|reduce|lose|gain|apply|become)\\b)", replacement: 'to' },
+        //
+        // "2" is only "to" AFTER A WORD THAT TAKES "to". Without that, a 2 that was the
+        // subject of its clause was read as txt-speak: "At the second stop, 2 get off,
+        // and 3 get on" came back as "to get off" -- a number silently deleted from a
+        // maths word problem, and the validator could not object because it expands
+        // digits with this same rule. What precedes is the whole difference: "want 2
+        // go", "how 2 make", "help me 2 learn" take an infinitive; a clause start, a
+        // comma or "and" ("4 got on and 2 get off") does not.
+        // Txt-speak spellings are listed too: this rule runs before "wat" becomes
+        // "what", so "tell me wat 2 do" needs "wat" here, not just "what".
+        { word: "(?<=\\b(?:how|hw|what|wat|wht|wut|where|whr|when|wen|who|which|want|wnt|wants|wanted|wanna|need|nd|ned|needs|needed|have|has|had|going|able|like|love|hate|try|tries|trying|tried|used|ought|plan|planning|start|started|begin|decide|decided|learn|learning|ready|time|way|ways|easy|hard|best|place|supposed|hope|hoping|expect|wish|prefer|forgot|remember|asked|told|allowed|back|due|aim|aiming|struggle|struggling|chance|reason|nice|good|important|necessary|me|you|u|him|her|us|them|it)\\s)(?<![\\d.,$])\\b2(?=\\s+(?:do|make|be|go|get|know|see|eat|buy|learn|write|find|use|fix|start|cook|say|ask|study|prepare|help|understand|solve|create|build|install|run|play|watch|read|talk|meet|pay|send|call|choose|pick|improve|reduce|lose|gain|apply|become)\\b)", replacement: 'to' },
         { word: "(?<!\\b(?:class|grade|std|standard|chapter|unit|section|level|year|top|page|day|week|step|part|no|number|version|v|room|floor|gate|plan|phase|round|season|episode|book|volume|ch)\\s)(?<![\\d.,$])\\b4(?=\\s+(?:the|me|you|u|him|her|us|them|my|your|our|their|now|ever|real|sure|this|that|it|free|sale)\\b)", replacement: 'for' },
         { word: "(?<=\\b(?:between|both)\\s+[A-Za-z]{2,}\\s)n(?=\\s+[A-Za-z]{2,})", replacement: 'and' },
         {
@@ -928,7 +938,15 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
         // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
         // "my dear friend" its "dear".
-        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        //
+        // THE TAIL TAKES THE GREETING'S OWN PUNCTUATION AND FACES WITH IT. It used to stop
+        // at [,!.] only, so "hi :) explain recursion" came back as ") explain recursion",
+        // "hey :D teach me" as "D teach me" and "hello? anybody there?" as "? Anybody
+        // there?" -- debris at the very start of the prompt, which is the first thing
+        // anyone sees on the card. A question mark, an emoticon or an emoji after a
+        // greeting belongs to the greeting. An emoticon only counts when it is whole and
+        // followed by a space or the end, so ":D" can never eat the start of "Describe".
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.?\s\-\u2013\u2014]|[:;=8][-o'^]?[)(\]\[DPpO3|*]+(?=\s|$)|<3+(?=\s|$)|\p{Extended_Pictographic}|\ufe0f|\u200d)*/giu,
         // Forms of address, only where they address someone: "bro i have viva tmrw" and
         // "machi please ..." lose them, "Bro code is ..." and "bhai ki shaadi" keep them.
         /(?<=^|[.!?]|\n)\s*(?:bro+|bruh|dude|buddy|sir|ma'?am|mam|machi|machan|chetta|chechi|bhai|bhaiya|yaar)\b(?=\s*[,!:]|\s+(?:please|pls|plz|kindly|can|could|would|will|tell|explain|help|give|write|i|i'm|im|how|what|why|what's|whats|is|are|do|does|naan|enikku|mujhe|naalaiku|kal)\b)[,!:.\s\-\u2013\u2014]*/gi,
@@ -1958,11 +1976,22 @@ const PromptMeterOptimizer = {
         const LOOKALIKE = { 0: ['o'], 1: ['l', 'i'], 3: ['e'], 4: ['a'], 5: ['s'], 7: ['t'], 8: ['b'] };
         const real = (w) => PM_SPELL.known(w) || (PM_SPELL.attested && PM_SPELL.attested.has(w))
             || (PM_SPELL.formOfKnown && PM_SPELL.formOfKnown(w));
-        return text.replace(/\b([A-Za-z]+)(\d)([A-Za-z]+)\b/g, (match, left, digit, right) => {
+        return text.replace(/\b([A-Za-z]+)(\d)([A-Za-z]+)\b/g, (match, left, digit, right, offset, whole) => {
             // Four letters at least: "k8s", "h2o", "b2b", "py3k" are names, not typos.
             // Three are enough only for a lookalike digit that spells a dictionary word:
             // "c0de" is "code".
             if (left.length + right.length < 3) return match;
+            // A digit and ONE trailing letter is a suffix, not a slip: "3d", "2d", "4k",
+            // "5g". "unity3d" became "unityed" (a lax form-of-a-word check accepted it)
+            // and "autocad2d" became "autocad". Real typos put the digit inside the word.
+            if (right.length === 1) return match;
+            // A capitalised token in mid-sentence is a name: "the movie M3gan" became
+            // "Megan". At the start of a sentence a capital says nothing, so "Foll0wing
+            // the guide ..." is still read as a typo.
+            if (/^[A-Z]/.test(left)) {
+                const before = whole.slice(0, offset).replace(/\s+$/, '');
+                if (before && !/[.!?\n:]$/.test(before)) return match;
+            }
             if (left.length + right.length === 3) {
                 const look = (LOOKALIKE[digit] || []).map((c) => left + c + right)
                     .find((w) => PM_SPELL.known(w.toLowerCase()));
@@ -2052,6 +2081,12 @@ const PromptMeterOptimizer = {
     looksEnglish: function (text) {
         if (typeof text !== 'string' || !text.trim()) return false;
 
+        // 0. Emoticons are not words. ":D" and ":P" left a "d" and a "p" behind for the
+        //    vocabulary test below, so "hey :D teach me ml" -- four English words and a
+        //    grin -- read as not English and went down the foreign path, which then
+        //    returned "D teach me ml".
+        text = text.replace(/(^|\s)[:;=8][-o'^]?[)(\]\[DPpO3|*]+(?=\s|$)/g, '$1');
+
         // 1. Script. A prompt substantially in a non-Latin script is not English, and
         //    no amount of word matching will make it so.
         const letters = text.replace(/[^\p{L}]/gu, '');
@@ -2106,7 +2141,16 @@ const PromptMeterOptimizer = {
             const dict = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
             const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && (PM_SPELL.correctWord(w) || (PM_SPELL.slipped && PM_SPELL.slipped(w)));
             const strict = words.filter(dict).length;
-            const near = words.filter((w) => dict(w) || fixable(w)).length;
+            // Chat greetings, address terms and tech acronyms are English evidence too.
+            // Without them "hi teach me ml" scored 2/4 -- "hi" and "ml" are in neither the
+            // dictionary nor the typo tables -- and went down the foreign path, while "hey
+            // teach me ml" passed because "hey" is a dictionary word. They are only counted
+            // here, never in `strict`, so the two-real-English-words requirement still
+            // keeps "yo quiero aprender ml" out.
+            const chatty = (w) => /^(?:hi+|he+y+|yo+|hai|hlo|helo|hlw|sup|hiya|bro|bruh|bhai|sir|maam|mam|madam|dude|guys|pls|plz|plzz|thx|ty)$/.test(w)
+                || Object.prototype.hasOwnProperty.call(this.techAcronymMap || {}, w)
+                || Object.prototype.hasOwnProperty.call(this.chatSlangMap || {}, w);
+            const near = words.filter((w) => dict(w) || fixable(w) || chatty(w)).length;
             if (!(strict >= 2 && near / words.length >= 0.75)) return false;
         }
 
@@ -2743,6 +2787,16 @@ const PromptMeterOptimizer = {
             : { masked: prompt, spans: [] };
         let optimized = protectedText.masked;
 
+        // Stage 0a: an emoticon is courtesy, like "thanks" -- the model does nothing with
+        // ":)". It is masked so no stage can tear it in half, and dropped here by looking
+        // at what each masked span IS, so only a span that is wholly an emoticon can go
+        // and never code. Not when the prompt is ABOUT one: "what does :P mean" keeps it.
+        if (PM_PROTECT && protectedText.spans.length
+            && !/\b(?:mean|means|meaning|emoticons?|emojis?|smiley|symbol|stand\s+for|face)\b/i.test(prompt)) {
+            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index) =>
+                (/^[:;]['-^o]?[)(\]\[DPpO3|*]+$/.test(protectedText.spans[Number(index)]) ? '' : placeholder));
+        }
+
         const prose = PM_PROTECT ? PM_PROTECT.strip(optimized) : optimized.trim();
 
         // Nothing editable left, or the remaining prose is itself code: hand back the
@@ -2986,9 +3040,19 @@ const PromptMeterOptimizer = {
         // prose changes the program. Only spans that are already multi-line are affected,
         // so an inline path or identifier keeps sitting mid-sentence.
         if (PM_PROTECT) {
-            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index) => {
+            // A newline is added only where one is MISSING. Adding it unconditionally put a
+            // blank line between two adjacent spans -- a C file masks as "#include ..."
+            // and "int main() {...}" on consecutive lines, and came back with an empty
+            // line between them; a Java method body did the same. The code was restored
+            // byte for byte and still changed.
+            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index, offset, whole) => {
                 const span = protectedText.spans[Number(index)];
-                return (span && span.indexOf('\n') !== -1) ? `\n${placeholder}\n` : placeholder;
+                if (!span || span.indexOf('\n') === -1) return placeholder;
+                const before = whole.slice(0, offset).replace(/[ \t]+$/, '');
+                const after = whole.slice(offset + placeholder.length).replace(/^[ \t]+/, '');
+                const lead = before === '' || before.endsWith('\n') ? '' : '\n';
+                const tail = after === '' || after.startsWith('\n') ? '' : '\n';
+                return lead + placeholder + tail;
             });
             optimized = optimized
                 .replace(/[ \t]+\n/g, '\n')

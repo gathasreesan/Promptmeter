@@ -111,7 +111,7 @@ has('"Which of" kept', opt('Question: Which of the following is a way to help?')
 has('"when will" kept', opt('when will the next solar eclipse happen'), 'When will');
 has('"Do you know" kept', opt('Do you know flutter, a framework?'), 'Do you know');
 has('ChatGPT as a topic kept', opt('Explain how to ask the right question to ChatGPT to get results.'), 'ChatGPT');
-has('GPT-4o kept', opt('How does Claude compare to GPT-4o on coding?'), 'GPT-4o');
+has('GPT-4o kept', opt('How does Gemini compare to GPT-4o on coding?'), 'GPT-4o');
 has('addressing ChatGPT stripped', opt('Hey ChatGPT, explain recursion'), 'Explain recursion');
 has('help with a noun keeps the ask', opt('I need help with my assignment'), 'help with my assignment');
 
@@ -240,8 +240,12 @@ const fix = (t) => Opt.optimizeWithReport(t, []).text;
     ['Give plant uml code for this diagram, this diagram', 'Give PlantUML code for this diagram'],
     ['write a function function that sorts a list in python', 'Write a function that sorts a list in Python'],
     ['Explain recursion in python\n\nExplain recursion in python', 'Explain recursion in Python'],
+    // "Steps:" is KEPT. It used to be dropped as a one-word fragment, but a segment
+    // ending in a colon introduces the one after it -- the same rule that stops
+    // "paraphrase:" being deleted from above a pasted paragraph -- and here it tells the
+    // model the list is a sequence. The duplicate step is what this case is about.
     ['Steps:\n- install node\n- run npm install\n- run npm install\n- start the server',
-        '- install node\n- run npm install\n- start the server'],
+        'Steps:\n- install node\n- run npm install\n- start the server'],
 ].forEach(([input, want]) => {
     const got = C.compress(input, { budgetMs: 1e5 }).text;
     check('repeat: ' + input.slice(0, 40), got === want, got);

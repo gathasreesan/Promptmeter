@@ -182,7 +182,7 @@ const PromptMeterGrammar = {
         'newtons third law': "Newton's third law", 'newtons laws': "Newton's laws",
         'macbeth': 'Macbeth', 'hamlet': 'Hamlet', 'shakespeare': 'Shakespeare', 'kubernetes pod': 'Kubernetes pod',
         'saas': 'SaaS', 'swot': 'SWOT', 'kpis': 'KPIs', 'kpi': 'KPI', 'llp': 'LLP', 'mcq': 'MCQ', 'mcqs': 'MCQs',
-        'openai': 'OpenAI', 'anthropic': 'Anthropic', 'microsoft': 'Microsoft',
+        'openai': 'OpenAI', 'microsoft': 'Microsoft',
         'english': 'English', 'spanish': 'Spanish', 'french': 'French',
         'german': 'German', 'hindi': 'Hindi', 'chinese': 'Chinese',
         'japanese': 'Japanese', 'arabic': 'Arabic',

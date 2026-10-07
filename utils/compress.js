@@ -398,7 +398,13 @@ const PromptMeterCompress = {
         const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
         const alt = (list) => list.slice().sort((a, b) => b.length - a.length).map(esc).join('|');
         const E = this.FOREIGN_EDGE;
-        const cut = '[\\s,，、،؛!！¡.。।॥:;：；\\-–—🙏😊🙂]*';
+        // A WHOLE EMOTICON FIRST, then single marks. The class used to hold ":" and ";",
+        // so the colon of ":)" was eaten as punctuation and the ")" left behind -- "hey :)
+        // teach me ml" came back as ") teach me ml". With the emoticon tried first it goes
+        // as a unit; it only counts when followed by a space or the end, so ":D" cannot
+        // take the start of "Describe". "?" is here because "hola? ..." is a greeting too.
+        const cut = "(?:[:;=8][-o'^]?[)(\\]\\[DPpO3|*]+(?=\\s|$)|<3+(?=\\s|$)"
+            + '|\\p{Extended_Pictographic}|\\uFE0F|\\u200D|[\\s,，、،؛!！¡.。।॥:;：；?？\\-–—])*';
         const stop = '[.!?。！？؟।\\n]';
         // A prompt about words is the one place these words are content: "Was bedeutet
         // bitte?", "कृपया का अर्थ क्या है?", "Dime el significado de la palabra por favor"
@@ -562,7 +568,9 @@ const PromptMeterCompress = {
     // Also a colon after an instruction verb: "Translate to Hindi:", "Proofread my
     // email:", "rewrite this paragraph in formal tone: ..." -- live testing caught the
     // text to translate deleted as a greeting and the email to proofread trimmed.
-    PAYLOAD_MARKER: /\bfollowing\b[^:\n]{0,300}:|\b(?:below|here)\s*:|\b(?:text|paragraph|article|passage|email|message|essay|story|code|sentences?|list|document|poem)\s+below\b[^\n]*\n|\b(?:translate|proofread|fix|correct|check|rewrite|rephrase|paraphrase|summari[sz]e|improve|edit|polish|shorten|simplify|explain|analy[sz]e|review|grade|rate|make\s+it\s+(?:better|shorter|formal|professional))\b[^:\n]{0,60}:(?!\/\/)|\bfollowing\b[^:\n]{0,80}[.:]?[ \t]*(?=\n)|(?=\n[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:)|^[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:[ \t]*/i,
+    // Every colon here is followed by an emoticon guard: "explain ml :)" was split into
+    // the instruction "explain ml :" and the payload ")", and came back as "Explain ML: )".
+    PAYLOAD_MARKER: /\bfollowing\b[^:\n]{0,300}:(?![-'^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$))|\b(?:below|here)\s*:(?![-'^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$))|\b(?:text|paragraph|article|passage|email|message|essay|story|code|sentences?|list|document|poem)\s+below\b[^\n]*\n|\b(?:translate|proofread|fix|correct|check|rewrite|rephrase|paraphrase|summari[sz]e|improve|edit|polish|shorten|simplify|explain|analy[sz]e|review|grade|rate|make\s+it\s+(?:better|shorter|formal|professional))\b[^:\n]{0,60}:(?!\/\/)(?![-'^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$))|\bfollowing\b[^:\n]{0,80}[.:]?[ \t]*(?=\n)|(?=\n[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:)|^[ \t]*(?:message|text|input|sentence|passage|email|tweet|review|paragraph|content|data|word|quote|letters?|options?|statement|story|essay|poem|lyrics|transcript)[ \t]*:(?![-'^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$))[ \t]*/i,
 
     // Capitalised shorthand people type that names nothing, and the assistant itself,
     // which "Hey ChatGPT," addresses rather than asks about.
@@ -834,13 +842,24 @@ const PromptMeterCompress = {
         // "3. Mobile first" was emptied to "3." and nothing noticed.
         const kept = this.contentWords(candidate);
         const lineWords = candidate.split('\n').map((line) => this.contentWords(line));
+        // A word survives if it, or its spelling correction, is there -- the same
+        // allowance the name check above makes. Without it a typo inside a list item
+        // ("1. instal node") read as the item losing a word, every candidate was
+        // rejected, and "pls explan these steps:" above the list came back untouched:
+        // not even the instruction's own typo was fixed.
+        const fixedForm = (word) => {
+            if (!PM_C_SPELL || !/^[a-z]+$/.test(word)) return null;
+            const fixed = PM_C_SPELL.correctWord(word);
+            return fixed ? String(fixed).toLowerCase() : null;
+        };
+        const inSet = (set, word) => set.has(word) || (fixedForm(word) !== null && set.has(fixedForm(word)));
         (original.match(/^[ \t]*(?:\d+\s*[.)\-]|[-*•])[ \t]+.+$/gm) || []).forEach((item) => {
             const words = [...this.contentWords(item)];
             // Every word of the item in one line of the candidate: "Never received
             // item... never received refund." lost its second half and passed, because
             // "refund" survived in the item below it.
-            const whole = lineWords.some((set) => words.every((word) => set.has(word)));
-            const lost = whole ? [] : words.filter((word) => !kept.has(word)).concat(['(split)']);
+            const whole = lineWords.some((set) => words.every((word) => inSet(set, word)));
+            const lost = whole ? [] : words.filter((word) => !inSet(kept, word)).concat(['(split)']);
             if (lost.length) violations.push({ rule: 'list-item', detail: item.trim().slice(0, 40) });
         });
 
@@ -864,7 +883,11 @@ const PromptMeterCompress = {
         // Each distinct number once: a value repeated in the original ("the best phone
         // under 20000 ... buy the best phone under 20000") is one requirement, kept when
         // the repeated phrase is said once.
-        const beforeNumbers = [...new Set(this.numbersIn(strayDigits(unshorthand(asWords(original)))))];
+        // The "3" of ":3" is a mouth, not a quantity: counting it refused the rewrite that
+        // dropped the emoticon, and the card kept "hi :3" when it dropped every other face.
+        // Same standalone-token rule as the mask in protect.js.
+        const noFaces = (text) => text.replace(/(^|[ \t])[:;]['-^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$)/gm, '$1');
+        const beforeNumbers = [...new Set(this.numbersIn(strayDigits(unshorthand(asWords(noFaces(original))))))];
         const afterNumbers = this.numbersIn(candidate).slice();
         beforeNumbers.forEach((number) => {
             const at = afterNumbers.indexOf(number);
