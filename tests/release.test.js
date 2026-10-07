@@ -245,6 +245,24 @@ check('the typical demo prompt is optimized as English',
 });
 
 // ---------------------------------------------------------------------------
+// 8. A name with a digit in it is not a typo.
+//    "unity3d" became "unityed", "the movie M3gan" became "Megan", "autocad2d" became
+//    "autocad". A digit with one trailing letter is a suffix; a capital mid-sentence
+//    is a name.
+// ---------------------------------------------------------------------------
+['unity3d', 'M3gan', 'autocad2d', 'blender3d', 'w3schools', 'html5', 'css3', 'web3js',
+ 'covid19', 'iphone15', 'k8s', 'mp3', 'e2e', 's3', 'ps5', 'x86', 'gpt4'].forEach((name) => {
+    const got = card('tell me about ' + name + ' please');
+    check('digit-bearing name survives: ' + name, got.toLowerCase().indexOf(name.toLowerCase()) !== -1, got);
+});
+[['explain h3llo world', /hello world/], ['explain the foll0wing', /following/],
+ ['fix my pr5oblems', /problems/], ['write c0de', /code/], ['say w0rld', /world/],
+ ['Foll0wing the guide, explain it', /^Following/]].forEach(([input, want]) => {
+    const got = card(input);
+    check('a digit typed inside a word is still fixed: ' + input, want.test(got), got);
+});
+
+// ---------------------------------------------------------------------------
 // 4. The load-time warm-up must warm the PROSE path.
 //    It was one prompt containing inline code, and a protected span takes a different
 //    path through the compressor, so the user's first ordinary prompt still paid

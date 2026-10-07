@@ -1976,11 +1976,22 @@ const PromptMeterOptimizer = {
         const LOOKALIKE = { 0: ['o'], 1: ['l', 'i'], 3: ['e'], 4: ['a'], 5: ['s'], 7: ['t'], 8: ['b'] };
         const real = (w) => PM_SPELL.known(w) || (PM_SPELL.attested && PM_SPELL.attested.has(w))
             || (PM_SPELL.formOfKnown && PM_SPELL.formOfKnown(w));
-        return text.replace(/\b([A-Za-z]+)(\d)([A-Za-z]+)\b/g, (match, left, digit, right) => {
+        return text.replace(/\b([A-Za-z]+)(\d)([A-Za-z]+)\b/g, (match, left, digit, right, offset, whole) => {
             // Four letters at least: "k8s", "h2o", "b2b", "py3k" are names, not typos.
             // Three are enough only for a lookalike digit that spells a dictionary word:
             // "c0de" is "code".
             if (left.length + right.length < 3) return match;
+            // A digit and ONE trailing letter is a suffix, not a slip: "3d", "2d", "4k",
+            // "5g". "unity3d" became "unityed" (a lax form-of-a-word check accepted it)
+            // and "autocad2d" became "autocad". Real typos put the digit inside the word.
+            if (right.length === 1) return match;
+            // A capitalised token in mid-sentence is a name: "the movie M3gan" became
+            // "Megan". At the start of a sentence a capital says nothing, so "Foll0wing
+            // the guide ..." is still read as a typo.
+            if (/^[A-Z]/.test(left)) {
+                const before = whole.slice(0, offset).replace(/\s+$/, '');
+                if (before && !/[.!?\n:]$/.test(before)) return match;
+            }
             if (left.length + right.length === 3) {
                 const look = (LOOKALIKE[digit] || []).map((c) => left + c + right)
                     .find((w) => PM_SPELL.known(w.toLowerCase()));
