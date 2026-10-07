@@ -229,12 +229,24 @@ loadExactTokenizer();
 // paid on the user's first keystroke. Paying it while the page is idle instead.
 (function warmUp() {
     if (typeof PromptMeterCompress === 'undefined') return;
-    const run = () => {
-        try { PromptMeterCompress.compress('Please explain how `x` works, thanks', { budgetMs: 100 }); }
+    // TWO PROMPTS, and the prose one first. The warm-up used to be a single prompt with
+    // inline code in it, and a protected span sends the compressor down a different
+    // path -- so the prose path stayed cold and the user's first ordinary prompt still
+    // paid ~255ms (measured: 253ms after the old warm-up, 5ms after this one). That is
+    // the one keystroke someone watching a demo is guaranteed to see. The typo makes the
+    // spelling corrector build its indexes; the second prompt warms the masking path.
+    // One idle callback each: together they are ~650ms of main-thread work, and the host
+    // page is still loading at this point, so one long block would be felt as jank.
+    const prompts = ['hey can u pls explan recursion to me thanks',
+        'Please explain how `x` works, thanks'];
+    const schedule = (fn) => (typeof requestIdleCallback === 'function'
+        ? requestIdleCallback(fn, { timeout: 800 }) : setTimeout(fn, 300));
+    const run = (index) => () => {
+        try { PromptMeterCompress.compress(prompts[index], { budgetMs: 100 }); }
         catch (e) { /* the real call reports its own errors */ }
+        if (index + 1 < prompts.length) schedule(run(index + 1));
     };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 800 });
-    else setTimeout(run, 300);
+    schedule(run(0));
 })();
 
 // Global enabled state (controlled by the popup on/off switch)

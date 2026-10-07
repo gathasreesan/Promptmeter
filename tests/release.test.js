@@ -115,5 +115,43 @@ const PARAGRAPH = 'The industrial revolution changed everything about how people
     });
 });
 
+// ---------------------------------------------------------------------------
+// 4. The load-time warm-up must warm the PROSE path.
+//    It was one prompt containing inline code, and a protected span takes a different
+//    path through the compressor, so the user's first ordinary prompt still paid
+//    ~255ms -- the one keystroke a demo audience is guaranteed to watch. Checked in a
+//    fresh process, because vm contexts share one V8 isolate and an earlier compile
+//    in this file would make the cold call look warm.
+// ---------------------------------------------------------------------------
+const CONTENT = fs.readFileSync(path.join(ROOT, 'content.js'), 'utf8');
+const warmStart = CONTENT.indexOf('(function warmUp()');
+check('content.js has a warm-up', warmStart !== -1);
+const warmBlock = CONTENT.slice(warmStart, CONTENT.indexOf('})();', warmStart));
+const warmPrompts = [...warmBlock.matchAll(/'([^'\n]{12,})'/g)].map((m) => m[1]);
+check('the warm-up includes a prompt with no inline code',
+    warmPrompts.some((p) => p.indexOf('`') === -1), JSON.stringify(warmPrompts));
+check('the warm-up includes a misspelling, so the spelling indexes are built',
+    warmPrompts.some((p) => /\b(?:explan|recusion|teh|plz|pls)\b/.test(p)), JSON.stringify(warmPrompts));
+
+const probe = [
+    "const fs=require('fs'),path=require('path'),vm=require('vm');",
+    "const ROOT=" + JSON.stringify(ROOT) + ";",
+    "const m=JSON.parse(fs.readFileSync(path.join(ROOT,'manifest.json'),'utf8'));",
+    "const ctx=vm.createContext({console:{log(){},warn(){},error(){}},setTimeout,clearTimeout,performance,",
+    "  chrome:{storage:{local:{get(){},set(){}},onChanged:{addListener(){}}},runtime:{getURL:p=>p}}});",
+    "ctx.window=ctx;",
+    "m.content_scripts[0].js.filter(f=>f!=='content.js').forEach(f=>vm.runInContext(fs.readFileSync(path.join(ROOT,f),'utf8'),ctx,{filename:f}));",
+    "const C=vm.runInContext('PromptMeterCompress',ctx);",
+    "JSON.parse(process.argv[1]).forEach(p=>C.compress(p,{budgetMs:100}));",
+    "const t0=performance.now(); C.compress('teach me ml pls',{budgetMs:40});",
+    "process.stdout.write(String(performance.now()-t0));",
+].join('\n');
+const first = Number(require('child_process').execFileSync(process.execPath,
+    ['-e', probe, JSON.stringify(warmPrompts)], { encoding: 'utf8' }));
+// Generous on purpose: cold is ~255ms here, warm is ~5ms, and a test that flakes on a
+// busy machine the night before a demo is worse than no test.
+check('the first prompt after the warm-up is fast (' + first.toFixed(1) + 'ms)', first < 100,
+    first.toFixed(1) + 'ms');
+
 console.log(passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
