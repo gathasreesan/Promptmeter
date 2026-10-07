@@ -1,6 +1,16 @@
-# 🌿 PromptMeter — AI Sustainability Coach & Carbon Tracker
+# 🌿 PromptMeter
 
-> A browser extension and analytics dashboard that tracks the environmental footprint (Electricity and CO₂ emissions) of your Large Language Model interactions on ChatGPT in real-time, offering instant prompt optimization and gamified coaching.
+> A Chrome extension that trims wasted tokens from your ChatGPT prompts — it fixes typos and grammar, cuts filler and repetition, and keeps your code, numbers, quoted text and meaning intact — and tracks the energy and CO₂ your prompts use. Everything runs locally in your browser; no prompt ever leaves it.
+
+## ⬇️ Install
+
+1. Download **`promptmeter-v1.0.0.zip`** from the [latest release](https://github.com/gathasreesan/Promptmeter/releases/latest) and unzip it.
+2. Open `chrome://extensions` in Chrome (or Edge / Brave).
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and select the unzipped `promptmeter` folder.
+5. Open [chatgpt.com](https://chatgpt.com) and start typing — the PromptMeter card appears above the message box.
+
+No build step is needed: the release contains the finished extension. To work on the code instead, follow the Quick Start below.
 
 ---
 
@@ -98,10 +108,7 @@ sentences the extension keeps.
    ```
 3. Enable **Developer mode** toggle in the top-right corner.
 4. Click the **Load unpacked** button in the top-left corner.
-5. In the file picker, select the **root project folder**:
-   ```text
-   c:\Users\gatha\OneDrive\Documents\Promptmeter
-   ```
+5. In the file picker, select the **root project folder** — the folder you cloned or unzipped, the one containing `manifest.json`.
 6. Verify that **PromptMeter** (v1.0) appears in your extensions list.
 
 ---
@@ -581,5 +588,6 @@ chrome.storage.local.set({ history: [] });
 
 ## 👥 Authors & License
 
-- **Project:** PromptMeter — AI Sustainability Coach
-- **License:** MIT
+- **Project:** PromptMeter
+- **Team:** [Gatha Sreesan](https://github.com/gathasreesan), [Angelin-25](https://github.com/Angelin-25), [adwaith991](https://github.com/adwaith991), [kripa3856](https://github.com/kripa3856)
+- **License:** [MIT](LICENSE)
