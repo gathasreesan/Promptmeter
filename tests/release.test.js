@@ -263,6 +263,42 @@ check('the typical demo prompt is optimized as English',
 });
 
 // ---------------------------------------------------------------------------
+// 9. Code pasted WITHOUT a fence comes back byte for byte.
+//    "fix my code" is the most likely demo there is, and students rarely fence it.
+//    A C file and a Java method got a blank line inserted between two adjacent masked
+//    spans; HTML lost indentation; a batch script was not recognised as code at all,
+//    so "cd" was capitalised and ">nul" corrected to ">null" -- which creates a file.
+// ---------------------------------------------------------------------------
+const SNIPPETS = {
+    python: ['def add(a, b):', '    return a+b', '', 'print(add(2, 3))'],
+    c: ['#include <stdio.h>', 'int main() {', '    int i = 0;', '    printf("%d", i);', '    return 0;', '}'],
+    java: ['public class Main {', '  public static void main(String[] args) {',
+        '    System.out.println("hi");', '  }', '}'],
+    sql: ['SELECT name, age FROM users', 'WHERE age > 18', 'ORDER BY name;'],
+    batch: ['@echo off', 'cd /D "%~dp0"', 'echo hello >nul', 'pause'],
+    shell: ['#!/bin/bash', 'for f in *.txt; do', '  echo "$f"', 'done'],
+    js: ['const x = [1, 2, 3];', 'x.forEach(n => console.log(n));'],
+    html: ['<div class="box">', '  <p>hello world</p>', '</div>'],
+    cpp: ['#include <iostream>', 'using namespace std;', 'int main() {', '  cout << "hi";', '}'],
+};
+[40, 1].forEach((budget) => {
+    Object.keys(SNIPPETS).forEach((lang) => {
+        const code = SNIPPETS[lang].join(NL);
+        ['pls fix this code ' + NL, 'pls fix this code' + NL, 'whats wrong wth my code:' + NL,
+         'explain this ' + lang + ' code' + NL + NL, 'can u debug this pls' + NL].forEach((lead) => {
+            const got = card(lead + code, budget);
+            check('unfenced ' + lang + ' is byte-identical [' + budget + 'ms] after '
+                + JSON.stringify(lead.trim()), got.indexOf(code) !== -1, JSON.stringify(got).slice(0, 160));
+        });
+    });
+});
+// The prose above the code is still the user's and is still tidied.
+check('the instruction above pasted code is still fixed',
+    /^Fix this code/.test(card('pls fix this code' + NL + SNIPPETS.c.join(NL))));
+// And prose that only LOOKS like batch or HTML on one line is not frozen.
+check('"the cd player" is prose', /CD player/.test(card('the cd player is old, fix it')));
+
+// ---------------------------------------------------------------------------
 // 4. The load-time warm-up must warm the PROSE path.
 //    It was one prompt containing inline code, and a protected span takes a different
 //    path through the compressor, so the user's first ordinary prompt still paid

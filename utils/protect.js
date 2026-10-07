@@ -146,7 +146,14 @@ const PromptMeterProtect = {
     // A line that looks like program text rather than prose. Deliberately broad: the
     // block rule below only fires when most lines in a run qualify, so a single false
     // positive cannot protect a paragraph of English.
-    CODE_LINE: /(?:[{}();]\s*$|^\s*[}\])]|=>|:=|==|!=|\+\+|--|^\s*(?:function|const|let|var|class|def|return|if|else|elif|for|while|switch|case|try|catch|except|import|from|public|private|static|void|int|string|bool|async|await|package|use|fn|impl|struct|enum)\b|^\s*[\w$.]+\s*=[^=]|^\s*[-*]\s|^\s{2,}[\w$"'#.@<-])/,
+    // The last four alternatives were missing, and each left a familiar language out:
+    //   #include / #define / #!     a C file's first line, or a script's shebang
+    //   <tag ...> and </tag>        HTML -- "<div>" lines broke the run, and the
+    //                               indentation between them was collapsed
+    //   @echo, %~dp0, >nul, rem ... Windows batch: "cd" was capitalised and ">nul"
+    //                               corrected to ">null", which creates a file
+    //   cd /d, goto, pause, ...
+    CODE_LINE: /(?:[{}();]\s*$|^\s*[}\])]|=>|:=|==|!=|\+\+|--|^\s*(?:function|const|let|var|class|def|return|if|else|elif|for|while|switch|case|try|catch|except|import|from|public|private|static|void|int|string|bool|async|await|package|use|fn|impl|struct|enum)\b|^\s*[\w$.]+\s*=[^=]|^\s*[-*]\s|^\s{2,}[\w$"'#.@<-]|^\s*#(?:include|define|undef|ifn?def|if|elif|endif|pragma|!)|^\s*<\/?[A-Za-z][\w-]*(?:\s[^<>]*)?\/?>|^\s*@\w|%~[a-z]*\d|%\w+%|>\s*nul\b|^\s*(?:rem|setlocal|endlocal|pause|goto|cls)\b|^\s*cd\s+\/d\b)/i,
 
     // A line that is plainly prose, whatever else it contains. A run is not code when
     // it is made of sentences.

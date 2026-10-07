@@ -3040,9 +3040,19 @@ const PromptMeterOptimizer = {
         // prose changes the program. Only spans that are already multi-line are affected,
         // so an inline path or identifier keeps sitting mid-sentence.
         if (PM_PROTECT) {
-            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index) => {
+            // A newline is added only where one is MISSING. Adding it unconditionally put a
+            // blank line between two adjacent spans -- a C file masks as "#include ..."
+            // and "int main() {...}" on consecutive lines, and came back with an empty
+            // line between them; a Java method body did the same. The code was restored
+            // byte for byte and still changed.
+            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index, offset, whole) => {
                 const span = protectedText.spans[Number(index)];
-                return (span && span.indexOf('\n') !== -1) ? `\n${placeholder}\n` : placeholder;
+                if (!span || span.indexOf('\n') === -1) return placeholder;
+                const before = whole.slice(0, offset).replace(/[ \t]+$/, '');
+                const after = whole.slice(offset + placeholder.length).replace(/^[ \t]+/, '');
+                const lead = before === '' || before.endsWith('\n') ? '' : '\n';
+                const tail = after === '' || after.startsWith('\n') ? '' : '\n';
+                return lead + placeholder + tail;
             });
             optimized = optimized
                 .replace(/[ \t]+\n/g, '\n')
