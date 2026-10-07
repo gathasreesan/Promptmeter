@@ -214,12 +214,74 @@ const PromptMeterProtect = {
      * @param {string} text - The raw prompt.
      * @returns {Object} { masked, spans } where spans[i] is the original text of placeholder i.
      */
+    /**
+     * Masks the answer options of a multiple-choice question, verbatim.
+     *
+     * Options are DATA, not the user's prose, and correcting them changes the question.
+     * "Which word is spelled correctly? A) recieve B) receive C) receeve" came back with
+     * all three options spelled "receive" -- the quiz destroyed, every answer now right.
+     * "Select the sentence with the correct capitalization. A) i love reading books ..."
+     * had its "i" capitalised, which made option A correct. And an option line opening
+     * with a quote ('"A) i love ...') was pruned outright as a fragment.
+     *
+     * LETTER markers only -- A) (a) A. A: -- and only when there are at least two of
+     * them, either one per line or several on a single line. A digit-numbered list is
+     * steps or items the user wrote and wants tidied; a lettered list is answer choices
+     * far more often than not. Over-masking is the safe direction here: a masked line is
+     * merely left as typed.
+     *
+     * @param {string} text
+     * @param {Array} spans - The span table; masked lines are appended to it.
+     * @returns {string}
+     */
+    maskAnswerOptions: function (text, spans) {
+        const NL = String.fromCharCode(10);
+        const LINE = /^[ \t]*["'“‘]?(?:\(([A-Za-z])\)|([A-Za-z])[).:])[ \t]+\S/;
+        const lines = text.split(NL);
+        const marked = lines.map((line) => {
+            const hit = LINE.exec(line);
+            return hit ? (hit[1] || hit[2]).toLowerCase() : null;
+        });
+        const letters = new Set(marked.filter(Boolean));
+        const wrap = (span) => {
+            spans.push(span);
+            return this.MASK_OPEN + (spans.length - 1) + this.MASK_CLOSE;
+        };
+        // Several options on one line: "Which is correct: A) recieve B) receive".
+        const INLINE = /(?:^|[\s"'“(])\(?[A-Ea-e]\)[ \t]+\S/g;
+        return lines.map((line, i) => {
+            if (this.isOnlyPlaceholder(line.trim())) return line;
+            if (letters.size >= 2 && marked[i]) {
+                const lead = (/^[ \t]*/.exec(line) || [''])[0];
+                return lead + wrap(line.slice(lead.length));
+            }
+            // The first option can share a line with the question: 'Select the correct
+            // one. "A) i love reading books' -- with B) and C) on the lines below. Once a
+            // block of options exists, an option opening mid-line is masked from its
+            // marker (and any quote in front of it) to the end of the line.
+            if (letters.size >= 2) {
+                const mid = /\s(["'“‘]?\(?[A-Za-z]\)[ \t]+\S)/.exec(line);
+                if (mid) {
+                    const at = mid.index + 1;
+                    return line.slice(0, at) + wrap(line.slice(at));
+                }
+            }
+            const inline = line.match(INLINE);
+            if (inline && inline.length >= 2) {
+                const at = line.search(/\(?[A-Ea-e]\)[ \t]+\S/);
+                return line.slice(0, at) + wrap(line.slice(at));
+            }
+            return line;
+        }).join(NL);
+    },
+
     mask: function (text) {
         const spans = [];
         // Before the pattern table: a code block is the largest construct here, and
         // letting camel-case or call patterns nibble at its insides first would leave
         // the block unrecognisable as a run.
         let masked = this.maskCodeBlocks(text, spans);
+        masked = this.maskAnswerOptions(masked, spans);
 
         for (const pattern of this.patterns) {
             pattern.rx.lastIndex = 0;

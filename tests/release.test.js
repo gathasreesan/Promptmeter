@@ -203,6 +203,48 @@ check('the typical demo prompt is optimized as English',
     /^Teach me ML/.test(card('hi teach me ml')), card('hi teach me ml'));
 
 // ---------------------------------------------------------------------------
+// 7. Answer options are data: never corrected, never dropped.
+//    "Which word is spelled correctly? A) recieve B) receive C) receeve" came back with
+//    all three options spelled "receive" -- the quiz destroyed, every answer now right.
+//    A capitalisation question had option A's "i" capitalised, and a quoted option A
+//    was pruned outright.
+// ---------------------------------------------------------------------------
+[40, 1].forEach((budget) => {
+    const tag = ' [' + budget + 'ms]';
+    [
+        ['Which word is spelled correctly?' + NL + 'A) recieve' + NL + 'B) receive' + NL + 'C) receeve',
+            ['A) recieve', 'B) receive', 'C) receeve']],
+        ['Which word is spelled correctly? A) recieve B) receive C) receeve',
+            ['A) recieve', 'C) receeve']],
+        ['Select the sentence that has the correct capitalization. "A) i love reading books' + NL
+            + 'B) I Love Reading Books' + NL + 'C) I love Reading Books"',
+            ['"A) i love reading books', 'B) I Love Reading Books', 'C) I love Reading Books']],
+        ['pls tel me which is correct' + NL + 'A) their going home' + NL + 'B) they are going home',
+            ['A) their going home', 'B) they are going home']],
+        ['Which planet is largest?' + NL + '(a) Mars' + NL + '(b) Jupiter' + NL + '(c) Venus',
+            ['(a) Mars', '(b) Jupiter', '(c) Venus']],
+        ['Find the grammar mistake:' + NL + 'A. he go to school' + NL + 'B. she goes to school',
+            ['A. he go to school', 'B. she goes to school']],
+    ].forEach(([input, options]) => {
+        const got = card(input, budget);
+        options.forEach((option) => {
+            check('answer option kept verbatim' + tag + ': ' + JSON.stringify(option),
+                got.indexOf(option) !== -1, got);
+        });
+    });
+    // The instruction above the options is still the user's prose and still fixed.
+    check('the question above the options is still corrected' + tag,
+        /^Tell me which is correct/.test(card('pls tel me which is correct' + NL
+            + 'A) their going home' + NL + 'B) they are going home', budget)));
+
+    // A typo inside a NUMBERED list item is the user's own and is fixed -- the validator
+    // used to reject that as the item losing a word, and the prompt came back untouched.
+    const steps = card('pls explan these steps:' + NL + '1. instal node' + NL + '2. run npm instal', budget);
+    check('a numbered list gets its typos fixed' + tag, /1\. Install node/.test(steps) && /npm install/.test(steps), steps);
+    check('the instruction above it is fixed too' + tag, /^Explain these steps:/.test(steps), steps);
+});
+
+// ---------------------------------------------------------------------------
 // 4. The load-time warm-up must warm the PROSE path.
 //    It was one prompt containing inline code, and a protected span takes a different
 //    path through the compressor, so the user's first ordinary prompt still paid

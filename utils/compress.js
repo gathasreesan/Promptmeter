@@ -842,13 +842,24 @@ const PromptMeterCompress = {
         // "3. Mobile first" was emptied to "3." and nothing noticed.
         const kept = this.contentWords(candidate);
         const lineWords = candidate.split('\n').map((line) => this.contentWords(line));
+        // A word survives if it, or its spelling correction, is there -- the same
+        // allowance the name check above makes. Without it a typo inside a list item
+        // ("1. instal node") read as the item losing a word, every candidate was
+        // rejected, and "pls explan these steps:" above the list came back untouched:
+        // not even the instruction's own typo was fixed.
+        const fixedForm = (word) => {
+            if (!PM_C_SPELL || !/^[a-z]+$/.test(word)) return null;
+            const fixed = PM_C_SPELL.correctWord(word);
+            return fixed ? String(fixed).toLowerCase() : null;
+        };
+        const inSet = (set, word) => set.has(word) || (fixedForm(word) !== null && set.has(fixedForm(word)));
         (original.match(/^[ \t]*(?:\d+\s*[.)\-]|[-*•])[ \t]+.+$/gm) || []).forEach((item) => {
             const words = [...this.contentWords(item)];
             // Every word of the item in one line of the candidate: "Never received
             // item... never received refund." lost its second half and passed, because
             // "refund" survived in the item below it.
-            const whole = lineWords.some((set) => words.every((word) => set.has(word)));
-            const lost = whole ? [] : words.filter((word) => !kept.has(word)).concat(['(split)']);
+            const whole = lineWords.some((set) => words.every((word) => inSet(set, word)));
+            const lost = whole ? [] : words.filter((word) => !inSet(kept, word)).concat(['(split)']);
             if (lost.length) violations.push({ rule: 'list-item', detail: item.trim().slice(0, 40) });
         });
 
