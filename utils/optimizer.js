@@ -393,7 +393,17 @@ const PromptMeterOptimizer = {
         // Digits for words. Only where no number can be meant: "how 2 make",
         // "what 2 do", "4 beginners", "thx 4 the help". The validator applies the
         // same patterns (expandDigitWords) so the 2 and 4 are not "lost numbers".
-        { word: "(?<![\\d.,$])\\b2(?=\\s+(?:do|make|be|go|get|know|see|eat|buy|learn|write|find|use|fix|start|cook|say|ask|study|prepare|help|understand|solve|create|build|install|run|play|watch|read|talk|meet|pay|send|call|choose|pick|improve|reduce|lose|gain|apply|become)\\b)", replacement: 'to' },
+        //
+        // "2" is only "to" AFTER A WORD THAT TAKES "to". Without that, a 2 that was the
+        // subject of its clause was read as txt-speak: "At the second stop, 2 get off,
+        // and 3 get on" came back as "to get off" -- a number silently deleted from a
+        // maths word problem, and the validator could not object because it expands
+        // digits with this same rule. What precedes is the whole difference: "want 2
+        // go", "how 2 make", "help me 2 learn" take an infinitive; a clause start, a
+        // comma or "and" ("4 got on and 2 get off") does not.
+        // Txt-speak spellings are listed too: this rule runs before "wat" becomes
+        // "what", so "tell me wat 2 do" needs "wat" here, not just "what".
+        { word: "(?<=\\b(?:how|hw|what|wat|wht|wut|where|whr|when|wen|who|which|want|wnt|wants|wanted|wanna|need|nd|ned|needs|needed|have|has|had|going|able|like|love|hate|try|tries|trying|tried|used|ought|plan|planning|start|started|begin|decide|decided|learn|learning|ready|time|way|ways|easy|hard|best|place|supposed|hope|hoping|expect|wish|prefer|forgot|remember|asked|told|allowed|back|due|aim|aiming|struggle|struggling|chance|reason|nice|good|important|necessary|me|you|u|him|her|us|them|it)\\s)(?<![\\d.,$])\\b2(?=\\s+(?:do|make|be|go|get|know|see|eat|buy|learn|write|find|use|fix|start|cook|say|ask|study|prepare|help|understand|solve|create|build|install|run|play|watch|read|talk|meet|pay|send|call|choose|pick|improve|reduce|lose|gain|apply|become)\\b)", replacement: 'to' },
         { word: "(?<!\\b(?:class|grade|std|standard|chapter|unit|section|level|year|top|page|day|week|step|part|no|number|version|v|room|floor|gate|plan|phase|round|season|episode|book|volume|ch)\\s)(?<![\\d.,$])\\b4(?=\\s+(?:the|me|you|u|him|her|us|them|my|your|our|their|now|ever|real|sure|this|that|it|free|sale)\\b)", replacement: 'for' },
         { word: "(?<=\\b(?:between|both)\\s+[A-Za-z]{2,}\\s)n(?=\\s+[A-Za-z]{2,})", replacement: 'and' },
         {

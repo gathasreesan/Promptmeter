@@ -240,8 +240,12 @@ const fix = (t) => Opt.optimizeWithReport(t, []).text;
     ['Give plant uml code for this diagram, this diagram', 'Give PlantUML code for this diagram'],
     ['write a function function that sorts a list in python', 'Write a function that sorts a list in Python'],
     ['Explain recursion in python\n\nExplain recursion in python', 'Explain recursion in Python'],
+    // "Steps:" is KEPT. It used to be dropped as a one-word fragment, but a segment
+    // ending in a colon introduces the one after it -- the same rule that stops
+    // "paraphrase:" being deleted from above a pasted paragraph -- and here it tells the
+    // model the list is a sequence. The duplicate step is what this case is about.
     ['Steps:\n- install node\n- run npm install\n- run npm install\n- start the server',
-        '- install node\n- run npm install\n- start the server'],
+        'Steps:\n- install node\n- run npm install\n- start the server'],
 ].forEach(([input, want]) => {
     const got = C.compress(input, { budgetMs: 1e5 }).text;
     check('repeat: ' + input.slice(0, 40), got === want, got);
