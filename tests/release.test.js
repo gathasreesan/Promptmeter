@@ -116,6 +116,93 @@ const PARAGRAPH = 'The industrial revolution changed everything about how people
 });
 
 // ---------------------------------------------------------------------------
+// 5. Greetings and emoticons leave no debris.
+//    The opening of the prompt is the first thing anyone reads on the card, and four
+//    stages each tore an emoticon differently: "hi :) explain recursion" -> ") explain
+//    recursion", "hey :D teach me" -> "D teach me", "explain ml :)" -> "Explain ML: )",
+//    "hello? anybody there?" -> "? Anybody there?".
+// ---------------------------------------------------------------------------
+[40, 1].forEach((budget) => {
+    const tag = ' [' + budget + 'ms]';
+    [
+        ['hi :) explain recursion', 'Explain recursion'],
+        ['hey :D teach me ml', 'Teach me ML'],
+        ['hi :P explain ml', 'Explain ML'],
+        ['hi ;) explain ml', 'Explain ML'],
+        ['hey, :) can u explain ml', 'Explain ML'],
+        [':) explain ml', 'Explain ML'],
+        ['explain ml :)', 'Explain ML'],
+        ['hii?? explain ml', 'Explain ML'],
+        ['hello? anybody there?', 'Anybody there?'],
+        ['hi 😊 explain recursion', 'Explain recursion'],
+        ['hey 👋👋 teach me python', 'Teach me Python'],
+    ].forEach(([input, want]) => {
+        const got = card(input, budget);
+        check('greeting and emoticon go cleanly' + tag + ': ' + JSON.stringify(input),
+            got.replace(/[.]$/, '') === want, got);
+    });
+
+    // Whatever happens to the rest, no output may start with a torn emoticon or a
+    // greeting's stray punctuation.
+    ['hi :) explain', 'hey :D teach', 'hi :( help', 'hello :-) explain', 'hey :O explain',
+     'hi :] explain', 'yo ;P explain', 'hi?? explain', 'hello! explain', 'hey... explain',
+     'hola :) explica el aprendizaje', 'hi :3 teach me ml', 'hello <3 explain ml']
+        .forEach((input) => {
+            const got = card(input + ' recursion in python', budget);
+            check('no debris at the start' + tag + ': ' + JSON.stringify(input),
+                !/^\s*(?:[)(\]\[DPpO3|*]|[?!.,;:](?![)(DP]))/.test(got), got);
+        });
+
+    // ...and nowhere else either: an emoticon is whole or gone, never split.
+    ['explain ml :)', 'explain ml :(', 'explain ml :D', 'i am sad :( help me study',
+     'thanks for the help :) now explain ml', 'great :D what is recursion']
+        .forEach((input) => {
+            const got = card(input, budget);
+            check('no split emoticon' + tag + ': ' + JSON.stringify(input),
+                !/[:;] [)(DP]/.test(got) && !/(?:^|\s)[)(](?:\s|$)/.test(got), got);
+        });
+
+    // What must NOT go: an emoticon the prompt is about, and anything in code.
+    check('a prompt about an emoticon keeps it' + tag,
+        card('what does :P mean', budget).indexOf(':P') !== -1, card('what does :P mean', budget));
+    ['print(a[1:])', 'x = f(a, 8)', 'if (a :) b', 'map[":)"] = 1'].forEach((code) => {
+        const got = card('fix this code `' + code + '` please', budget);
+        check('code containing emoticon-like text is untouched' + tag + ': ' + code,
+            got.indexOf('`' + code + '`') !== -1, got);
+    });
+    check('a "hello world" program keeps its hello' + tag,
+        /hello world/i.test(card('write a hello world program in C', budget)));
+    check('"say hi" keeps its hi' + tag, /say hi/i.test(card('say hi to my mom in french', budget)));
+});
+
+// ---------------------------------------------------------------------------
+// 6. Short student English reads as English.
+//    "hi teach me ml" went down the FOREIGN path -- "hi" and "ml" are in neither the
+//    dictionary nor the typo tables, so it scored 2/4 -- while "hey teach me ml" passed
+//    because "hey" is a dictionary word. On the foreign path the English rules never
+//    run, so the card offered nothing for the most typical demo prompt there is.
+// ---------------------------------------------------------------------------
+const OPT = vm.runInContext('PromptMeterOptimizer', context);
+['hi', 'hii', 'hey', 'hello', 'yo', 'hai', 'hlo', 'helo', 'sup', 'hiya'].forEach((g) => {
+    ['teach me ml', 'define osi model', 'explain recursion', 'give me notes on dbms'].forEach((ask) => {
+        check('reads as English: ' + g + ' ' + ask, OPT.looksEnglish(g + ' ' + ask) === true);
+    });
+});
+['teach me ml bro', 'pls explain ml', 'plz teach me dbms', 'bro explain recursion',
+ 'hey :D teach me ml', 'hi :P explain ml', 'what is dbms', 'explain dsa'].forEach((t) => {
+    check('reads as English: ' + t, OPT.looksEnglish(t) === true);
+});
+// ...and the chat words that now count do not let another language through: the
+// two-real-English-words requirement still has to be met.
+['yo quiero aprender ml', 'hola bro explica ml', 'ciao bro spiegami il machine learning',
+ 'hi tolong jelaskan ml', 'bhai mujhe ml sikhao', 'hola, explica ml', 'olá tudo bem?',
+ 'Explique a recursividade', 'Erkläre mir bitte Rekursion'].forEach((t) => {
+    check('stays foreign: ' + t, OPT.looksEnglish(t) === false);
+});
+check('the typical demo prompt is optimized as English',
+    /^Teach me ML/.test(card('hi teach me ml')), card('hi teach me ml'));
+
+// ---------------------------------------------------------------------------
 // 4. The load-time warm-up must warm the PROSE path.
 //    It was one prompt containing inline code, and a protected span takes a different
 //    path through the compressor, so the user's first ordinary prompt still paid

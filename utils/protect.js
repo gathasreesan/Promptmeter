@@ -38,6 +38,17 @@ const PromptMeterProtect = {
         { name: 'triple-single', rx: /'''[\s\S]*?(?:'''|$)/g },
         { name: 'triple-double', rx: /"""[\s\S]*?(?:"""|$)/g },
         { name: 'inline-code', rx: /`[^`\n]+`/g },
+
+        // --- Emoticons ---------------------------------------------------------------
+        // Three different stages tore these in half, each its own way: the space tidier
+        // read the ":" of ":)" as a colon ("explain ml :)" -> "Explain ML: )"), the
+        // leading-punctuation trim took the ":" and left the ")" (":) explain" -> ")
+        // explain"), and the foreign path split the prompt at it as if it introduced a
+        // payload. One mask stops all three. Only a standalone token counts -- preceded
+        // by a space or the start and followed by a space or the end -- so ":)" inside
+        // "f(a[1:])" or the "8)" of "(x, 8)" is never touched. The eyes are ":" and ";"
+        // only: "=" and "8" are far more often an operator and a number.
+        { name: 'emoticon', rx: /(?<=^|[ \t])[:;]['-^o]?[)(\]\[DPpO3|*]+(?=[ \t]|$)/gm },
         // Indented block: a run of consecutive lines each starting with 4 spaces or a tab
         { name: 'indented-code', rx: /^(?:[ ]{4,}|\t)[^\n]*(?:\n(?:[ ]{4,}|\t)[^\n]*)*/gm },
 

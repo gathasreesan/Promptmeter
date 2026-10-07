@@ -938,7 +938,15 @@ const PromptMeterOptimizer = {
         /(?<=^|[.!?]|[,;]|\n)\s*i\s+(?:just\s+)?(?:want|wanted|need|needed|would\s+like)\s+to\s+(?:know|find\s+out|understand)\s+(?=(?:how|what|why|when|where|which|who|if|whether)\b)/gim,
         // Anchored to a sentence start: unanchored, "Say hi to my mom" lost its "hi" and
         // "my dear friend" its "dear".
-        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.\s\-\u2013\u2014]*)/gi,
+        //
+        // THE TAIL TAKES THE GREETING'S OWN PUNCTUATION AND FACES WITH IT. It used to stop
+        // at [,!.] only, so "hi :) explain recursion" came back as ") explain recursion",
+        // "hey :D teach me" as "D teach me" and "hello? anybody there?" as "? Anybody
+        // there?" -- debris at the very start of the prompt, which is the first thing
+        // anyone sees on the card. A question mark, an emoticon or an emoji after a
+        // greeting belongs to the greeting. An emoticon only counts when it is whole and
+        // followed by a space or the end, so ":D" can never eat the start of "Describe".
+        /(?<=^|[.!?]|[,;]|\n|(?:^|\s)(?:[+&|]|->|=>))\s*(?:hello(?!\s+world)|hallo|hi+|he+y+|greetings|dear|good\s+morning|good\s+afternoon|good\s+evening|yo+|howdy|what's\s+up|salutations|hiya)\b(?:\s+(?:chatgpt|chat\s*gpt|gpt|ai|assistant|there|bro|dude))?(?:[,!.?\s\-\u2013\u2014]|[:;=8][-o'^]?[)(\]\[DPpO3|*]+(?=\s|$)|<3+(?=\s|$)|\p{Extended_Pictographic}|\ufe0f|\u200d)*/giu,
         // Forms of address, only where they address someone: "bro i have viva tmrw" and
         // "machi please ..." lose them, "Bro code is ..." and "bhai ki shaadi" keep them.
         /(?<=^|[.!?]|\n)\s*(?:bro+|bruh|dude|buddy|sir|ma'?am|mam|machi|machan|chetta|chechi|bhai|bhaiya|yaar)\b(?=\s*[,!:]|\s+(?:please|pls|plz|kindly|can|could|would|will|tell|explain|help|give|write|i|i'm|im|how|what|why|what's|whats|is|are|do|does|naan|enikku|mujhe|naalaiku|kal)\b)[,!:.\s\-\u2013\u2014]*/gi,
@@ -2062,6 +2070,12 @@ const PromptMeterOptimizer = {
     looksEnglish: function (text) {
         if (typeof text !== 'string' || !text.trim()) return false;
 
+        // 0. Emoticons are not words. ":D" and ":P" left a "d" and a "p" behind for the
+        //    vocabulary test below, so "hey :D teach me ml" -- four English words and a
+        //    grin -- read as not English and went down the foreign path, which then
+        //    returned "D teach me ml".
+        text = text.replace(/(^|\s)[:;=8][-o'^]?[)(\]\[DPpO3|*]+(?=\s|$)/g, '$1');
+
         // 1. Script. A prompt substantially in a non-Latin script is not English, and
         //    no amount of word matching will make it so.
         const letters = text.replace(/[^\p{L}]/gu, '');
@@ -2116,7 +2130,16 @@ const PromptMeterOptimizer = {
             const dict = (w) => PM_SPELL && PM_SPELL.known && PM_SPELL.known(w);
             const fixable = (w) => w.length >= 4 && PM_SPELL && PM_SPELL.correctWord && (PM_SPELL.correctWord(w) || (PM_SPELL.slipped && PM_SPELL.slipped(w)));
             const strict = words.filter(dict).length;
-            const near = words.filter((w) => dict(w) || fixable(w)).length;
+            // Chat greetings, address terms and tech acronyms are English evidence too.
+            // Without them "hi teach me ml" scored 2/4 -- "hi" and "ml" are in neither the
+            // dictionary nor the typo tables -- and went down the foreign path, while "hey
+            // teach me ml" passed because "hey" is a dictionary word. They are only counted
+            // here, never in `strict`, so the two-real-English-words requirement still
+            // keeps "yo quiero aprender ml" out.
+            const chatty = (w) => /^(?:hi+|he+y+|yo+|hai|hlo|helo|hlw|sup|hiya|bro|bruh|bhai|sir|maam|mam|madam|dude|guys|pls|plz|plzz|thx|ty)$/.test(w)
+                || Object.prototype.hasOwnProperty.call(this.techAcronymMap || {}, w)
+                || Object.prototype.hasOwnProperty.call(this.chatSlangMap || {}, w);
+            const near = words.filter((w) => dict(w) || fixable(w) || chatty(w)).length;
             if (!(strict >= 2 && near / words.length >= 0.75)) return false;
         }
 
@@ -2752,6 +2775,16 @@ const PromptMeterOptimizer = {
             ? PM_PROTECT.mask(prompt)
             : { masked: prompt, spans: [] };
         let optimized = protectedText.masked;
+
+        // Stage 0a: an emoticon is courtesy, like "thanks" -- the model does nothing with
+        // ":)". It is masked so no stage can tear it in half, and dropped here by looking
+        // at what each masked span IS, so only a span that is wholly an emoticon can go
+        // and never code. Not when the prompt is ABOUT one: "what does :P mean" keeps it.
+        if (PM_PROTECT && protectedText.spans.length
+            && !/\b(?:mean|means|meaning|emoticons?|emojis?|smiley|symbol|stand\s+for|face)\b/i.test(prompt)) {
+            optimized = optimized.replace(PM_PROTECT.MASK_RX, (placeholder, index) =>
+                (/^[:;]['-^o]?[)(\]\[DPpO3|*]+$/.test(protectedText.spans[Number(index)]) ? '' : placeholder));
+        }
 
         const prose = PM_PROTECT ? PM_PROTECT.strip(optimized) : optimized.trim();
 
