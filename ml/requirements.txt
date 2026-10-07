@@ -9,4 +9,4 @@ pyarrow>=15
 datasets>=2.19
 
 # Optional: only needed to generate synthetic phrases through an API provider.
-#   pip install anthropic
+#   pip install openai

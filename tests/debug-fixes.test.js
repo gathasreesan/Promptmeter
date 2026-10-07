@@ -111,7 +111,7 @@ has('"Which of" kept', opt('Question: Which of the following is a way to help?')
 has('"when will" kept', opt('when will the next solar eclipse happen'), 'When will');
 has('"Do you know" kept', opt('Do you know flutter, a framework?'), 'Do you know');
 has('ChatGPT as a topic kept', opt('Explain how to ask the right question to ChatGPT to get results.'), 'ChatGPT');
-has('GPT-4o kept', opt('How does Claude compare to GPT-4o on coding?'), 'GPT-4o');
+has('GPT-4o kept', opt('How does Gemini compare to GPT-4o on coding?'), 'GPT-4o');
 has('addressing ChatGPT stripped', opt('Hey ChatGPT, explain recursion'), 'Explain recursion');
 has('help with a noun keeps the ask', opt('I need help with my assignment'), 'help with my assignment');
 

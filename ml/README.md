@@ -227,20 +227,13 @@ python evaluate_synthetic.py --repeats 25           # does it help?
 
 There is no API key in this environment, so the corpus that exists was authored by hand
 into `dataset/manual_batches/*.jsonl` and fed through the `manual` provider. To generate
-at scale, set one variable and pick the matching provider:
+at scale, set an API key for any OpenAI-compatible endpoint:
 
 ```bash
-pip install anthropic
-export ANTHROPIC_API_KEY=sk-ant-...
-python generate_synthetic.py --provider anthropic --model claude-opus-5 \
-    --target 10000 --batch-size 25 --verify
-```
-
-or, for any OpenAI-compatible endpoint:
-
-```bash
+pip install openai
 export OPENAI_API_KEY=...
-python generate_synthetic.py --provider openai --model gpt-4o --target 10000
+python generate_synthetic.py --provider openai --model gpt-4o \
+    --target 10000 --batch-size 25 --verify
 ```
 
 `--target` is a goal, not a promise. The run generates until each label reaches its
