@@ -140,7 +140,25 @@ const PromptMeterProtect = {
             }
         },
         { name: 'snake-case', rx: /\b[A-Za-z]+(?:_[A-Za-z0-9]+)+\b/g },
-        { name: 'camel-case', rx: /\b[a-z]+[A-Z][\w]*\b/g }
+        { name: 'camel-case', rx: /\b[a-z]+[A-Z][\w]*\b/g },
+
+        // --- Code inside a line that reads as prose ---------------------------------
+        // LAST on purpose: every pattern above takes precedence. code-line starts its
+        // SQL run at the SELECT line, and taking that line first lost the statement's ";".
+        // The line-based block detector lets a sentence-like line break a run, which is
+        // right for prose and wrong for these two:
+        //   'findstr /C:" " >nul && echo This script relies on Miniconda which ...'
+        //     -- ">nul" was corrected to ">null", which writes a file called null;
+        //   'what this ORACLE SQL query does? SELECT P.CUENTA, S.IMEI ... FROM ...'
+        //     -- "SELECT" was recased to "Select".
+        // SQL needs an UPPERCASE keyword and a second clause keyword later on the same
+        // line, so "select the best answer" is prose and "SELECT THE BEST ANSWER FROM
+        // THE LIST" is merely left as typed -- the safe direction.
+        { name: 'null-device', rx: /[12]?>>?\s*nul\b/gi },
+        // The WHOLE statement, across lines, through its ";" or to a blank line or the
+        // end: masking only the first line exposed the closing ";" to the tidy that
+        // strips trailing punctuation.
+        { name: 'sql-inline', rx: /\b(?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)\b(?=[^;]*?\b(?:FROM|INTO|SET|WHERE|VALUES|TABLE)\b)[\s\S]*?(?:;|(?=\n[ \t]*\n)|$)/g },
     ],
 
     // A line that looks like program text rather than prose. Deliberately broad: the

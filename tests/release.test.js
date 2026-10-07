@@ -292,6 +292,16 @@ const SNIPPETS = {
         });
     });
 });
+// Code inside a line that reads as prose: the line-based detector lets such a line
+// break a run, so these two need their own inline patterns.
+check('">nul" on a sentence-like batch line is not corrected to ">null"',
+    /findstr \/C:" " >nul && echo This script relies/.test(card('@echo off' + NL + NL + 'cd /D "%~dp0"' + NL + NL
+        + 'echo "%CD%"| findstr /C:" " >nul && echo This script relies on Miniconda which can not be silently installed under a path with spaces.')));
+check('an inline SQL query keeps its keyword casing',
+    card('what this ORACLE SQL query does? SELECT P.CUENTA, S.IMEI FROM SALDOS S WHERE S.TIPO = 1')
+        .indexOf('SELECT P.CUENTA, S.IMEI FROM SALDOS S WHERE S.TIPO = 1') !== -1);
+check('"select" in prose is still prose', /^Please select the best answer/.test(card('pls select the best answer from the list')));
+check('"update" in prose is still prose', /^Update the table/.test(card('can u update the table for me')));
 // The prose above the code is still the user's and is still tidied.
 check('the instruction above pasted code is still fixed',
     /^Fix this code/.test(card('pls fix this code' + NL + SNIPPETS.c.join(NL))));
