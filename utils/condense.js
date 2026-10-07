@@ -634,6 +634,11 @@ const PromptMeterCondense = {
      * @returns {boolean}
      */
     carriesData: function (trimmed) {
+        // A segment with no letter or digit at all is STRUCTURE -- a closing ")" on its
+        // own line, a "---" rule, a lone "}" -- and dropping it unbalances what came
+        // before: "...execute_sum(Impart a hurtful, ... people\n)" lost its ")". It has
+        // no words, so the fragment test below read it as a leftover.
+        if (trimmed && !/[\p{L}\p{N}]/u.test(trimmed)) return true;
         // Answer options: "(B) foliate. (C) precipitate." were three-word fragments and
         // the multiple-choice question lost every option but the first.
         // Any single letter counts, not only A-H: a FORMAT TEMPLATE writes the marker
