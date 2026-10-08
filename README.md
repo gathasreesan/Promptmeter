@@ -414,22 +414,22 @@ Roughly half of `tests/grammar.test.js` tests what must **not** change.
 ### 1d. Machine Learning Component
 
 A lightweight classifier that closes the blind spot in a pure blacklist: a sentence nobody
-wrote a rule for. Trained on **621 labeled phrases**, with hyperparameters grid-searched on
+wrote a rule for. Trained on **1,275 labeled phrases**, with hyperparameters grid-searched on
 every run (60 points) and scored by cross-validated **KEEP/DROP** accuracy — the only call
 the optimizer actually makes.
 
 | Metric | Four-class | KEEP vs DROP |
 | :--- | ---: | ---: |
-| Accuracy | 0.814 | **0.910** |
-| Precision (macro) | 0.821 | 0.880 |
-| Recall (macro) | 0.812 | 0.892 |
-| F1-score (macro) | 0.813 | 0.886 |
+| Accuracy | 0.793 | **0.884** |
+| Precision | 0.803 | 0.873 |
+| Recall | 0.755 | 0.896 |
+| F1-score | 0.767 | 0.879 |
 
-5-fold CV accuracy **0.802 (± 0.025)**, computed over the whole pipeline including the
+Four-class precision, recall and F1 are macro averages. 5-fold CV accuracy **0.815 (± 0.020)**, computed over the whole pipeline including the
 vectorizer. (It previously fit the vectorizer on every row before cross-validating the
 classifier, leaking the test fold's vocabulary and IDF into training.)
 
-The model exports to **130 KB** of vocabulary, IDF weights and coefficients, so inference is
+The model exports to **285 KB** of vocabulary, IDF weights and coefficients, so inference is
 one sparse dot product in JavaScript: no server, no WASM, and prompt text never leaves the
 browser. The transform settings travel with the model in a `config` block that the JavaScript
 reads, so the two implementations cannot drift apart — and `tests/ml-parity.test.js` proves

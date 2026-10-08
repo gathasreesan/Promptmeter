@@ -60,8 +60,8 @@ instead of 3,443, which is both a smaller download and a slightly better model.
 
 ## Results
 
-Trained on **621 labeled phrases** — 512 hand-written originals plus 109 curated
-additions — stratified 75/25. Hyperparameters are grid-searched on every run (60 points
+Trained on **1,275 labeled phrases** — 512 hand-written originals, 109 curated additions
+and 654 annotated phrases — stratified 75/25 (956 train, 319 test). Hyperparameters are grid-searched on every run (60 points
 over n-gram range, sublinear TF, bigram floor and `C`) and scored by cross-validated
 **KEEP/DROP** accuracy, not four-way accuracy. That choice changes which model wins: the
 optimizer never acts on the four labels, so a grid point that trades a FILLER/REDUNDANT
@@ -69,18 +69,18 @@ confusion for a correct KEEP/DROP call is better for this application and worse 
 four-way number.
 
 Selected: `TfidfVectorizer(ngram=1-2, sublinear_tf=True, bigram_min_df=2)` +
-`LogisticRegression(C=4.0, balanced)` · 1,281 features · 130 KB shipped
+`LogisticRegression(C=2.0, balanced)` · 3,445 features · 285 KB shipped
 
-### Four-class classification (held-out test set, n=156)
+### Four-class classification (held-out test set, n=319)
 
 | Class | F1 |
 | :--- | ---: |
-| FILLER | 0.83 |
-| IMPORTANT | 0.83 |
-| REDUNDANT | 0.82 |
-| REPETITIVE | 0.77 |
+| FILLER | 0.81 |
+| IMPORTANT | 0.85 |
+| REDUNDANT | 0.76 |
+| REPETITIVE | 0.65 |
 
-**Accuracy 0.814** · 5-fold CV accuracy **0.802 (± 0.025)**
+**Accuracy 0.793** · 5-fold CV accuracy **0.815 (± 0.020)**
 
 The CV figure is computed over the **whole pipeline**, vectorizer included. It previously
 fit the vectorizer on every row before cross-validating the classifier over that matrix,
@@ -92,10 +92,10 @@ which leaked the test fold's vocabulary and IDF weights into training.
 
 | Metric | Score |
 | :--- | ---: |
-| Accuracy | **0.910** |
-| Precision (macro) | 0.880 |
-| Recall (macro) | 0.892 |
-| F1 (macro) | 0.886 |
+| Accuracy | **0.884** |
+| Precision | 0.873 |
+| Recall | 0.896 |
+| F1 | 0.879 |
 
 Higher than the four-way figure because most four-way errors are between two *removable*
 classes — calling filler "redundant" changes no decision.
@@ -186,7 +186,7 @@ on their own.
 
 | File | Role |
 | :--- | :--- |
-| `dataset/phrases.csv` | 1,227 labeled phrases with span offsets: 621 human-written (`seed`, `curated`) and 606 assistant-written (`annotated`) — **the only training data that ships** |
+| `dataset/phrases.csv` | 1,275 labeled phrases with span offsets: 621 human-written (`seed`, `curated`) and 654 assistant-written (`annotated`) — **the only training data that ships** |
 | `dataset/expand.py` | Corpus generator — **an experiment that did not pay off**; see above |
 | `train.py` | Trains, evaluates, exports |
 | `metrics.json` | Full generated report |
@@ -213,7 +213,7 @@ on their own.
 `generate_synthetic.py` produces new labeled phrases and validates them;
 `evaluate_synthetic.py` decides whether they are worth training on. Neither script
 touches `phrases.csv`, `metrics.json` or the exported model. **The shipped model is
-still trained on the 621 human-written rows alone** — see *The verdict* below for why.
+trained on `phrases.csv` alone, with no synthetic rows** — see *The verdict* below for why.
 
 ### Running it
 
